@@ -1,0 +1,137 @@
+/* Sidebar chính */
+.sidebar {
+  width: 18%;
+  min-width: 200px;
+  max-width: 280px;
+  background-color: #14202a;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+  font-family: 'Poppins', sans-serif;
+  color: #e0e6eb;
+}
+
+/* Header */
+.sidebar-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 36px;
+  padding: 0 20px;
+}
+
+.sidebar-logo {
+  font-weight: 700;
+  font-size: 25px;
+  color: #00FFFF;
+  user-select: none;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  text-align: center;
+  width: 100%;
+}
+
+/* Danh sách menu */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 20px;
+}
+
+/* Mục menu chung */
+.nav-item {
+  font-weight: 700;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #d4d9dfcc;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  background-color: rgba(0, 255, 255, 0.1);
+  color: #00FFFF;
+}
+
+.nav-item svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
+.nav-item:hover svg,
+.nav-item.active svg {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.7));
+}
+
+/* Khối chứa submenu */
+.has-submenu {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: visible;
+  position: relative;
+}
+
+/* Highlight Study Zone khi hover */
+.has-submenu:hover .nav-item {
+  background-color: rgba(0, 255, 255, 0.1);
+  color: #00FFFF;
+}
+
+.has-submenu:hover .nav-item svg {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.7));
+}
+
+/* Submenu */
+.submenu {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+  padding-left: 0;
+  margin-top: 10px;
+  box-sizing: border-box;
+}
+
+.has-submenu:hover .submenu {
+  display: flex;
+}
+
+/* Submenu item */
+.submenu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #d4d9dfcc;
+  transition: all 0.3s ease;
+  margin-left: 25px;
+  width: 70%;
+}
+
+.submenu-item:hover {
+  background-color: rgba(0, 255, 255, 0.1);
+  color: #00FFFF;
+}
+
+.submenu-item svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
+.submenu-item:hover svg {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.7));
+}
