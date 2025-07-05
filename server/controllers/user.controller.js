@@ -1,35 +1,82 @@
-const userService = require('../services/user.service');
+const UserService = require("../services/user.service");
 
 class UserController {
+  // Lấy danh sách tất cả người dùng
   static async getAllUsers(req, res) {
     try {
-      const users = await userService.getAllUsers();
-      return res.status(200).json({ success: true, data: users, message: 'Lấy danh sách user thành công' });
+      const users = await UserService.getAllUsers();
+      res.json(users);
     } catch (error) {
-      console.error('Error getting all users:', error);
-      return res.status(500).json({ success: false, message: 'Lỗi lấy danh sách user' });
+      res.status(500).json({ message: "Lỗi khi lấy danh sách người dùng", error: error.message });
     }
   }
 
-  static async createUser(req, res) {
-    try {
-      const { name, email } = req.body;
-      const user = await userService.createUser({ name, email });
-      return res.status(201).json({ success: true, data: user, message: 'Tạo user thành công' });
-    } catch (error) {
-      console.error('Error creating user:', error);
-      return res.status(500).json({ success: false, message: 'Lỗi tạo user' });
-    }
-  }
-
+  // Lấy người dùng theo ID
   static async getUserById(req, res) {
     try {
-      const user = await userService.getUserById(req.params.id);
-      if (!user) return res.status(404).json({ success: false, message: 'Không tìm thấy user' });
-      return res.status(200).json({ success: true, data: user, message: 'Lấy user thành công' });
+      const { id } = req.params;
+      const user = await UserService.getUserById(id);
+
+      if (!user) {
+        return res.status(404).json({ message: "Không tìm thấy người dùng" });
+      }
+
+      res.json(user);
     } catch (error) {
-      console.error('Error getting user by id:', error);
-      return res.status(500).json({ success: false, message: 'Lỗi lấy user' });
+      res.status(500).json({ message: "Lỗi khi lấy người dùng", error: error.message });
+    }
+  }
+
+  // Tạo người dùng mới
+  static async createUser(req, res) {
+    try {
+      const {name, email, password, role } = req.body;
+
+      console.log(req.body);
+
+      // Kiểm tra trùng email
+      const existingUser = await UserService.findUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email đã tồn tại" });
+      }
+
+      const newUser = await UserService.createUser({ name, email, password, role });
+      res.status(201).json(newUser);
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi khi tạo người dùng", error: error.message });
+    }
+  }
+
+  // Cập nhật người dùng
+  static async updateUser(req, res) {
+    try {
+      const { id } = req.params;
+      const { email, role } = req.body;
+
+      const updatedUser = await UserService.updateUser(id, { email, role });
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Không tìm thấy người dùng để cập nhật" });
+      }
+
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi khi cập nhật người dùng", error: error.message });
+    }
+  }
+
+  // Xoá người dùng
+  static async deleteUser(req, res) {
+    try {
+      const { id } = req.params;
+
+      const deleted = await UserService.deleteUser(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Không tìm thấy người dùng để xoá" });
+      }
+
+      res.json({ message: "Xoá người dùng thành công" });
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi khi xoá người dùng", error: error.message });
     }
   }
 }

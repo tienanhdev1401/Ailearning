@@ -1,9 +1,18 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const AuthController = require('../controllers/auth.controller');
+const AuthController = require("../controllers/auth.controller");
+const verifyTokenAndRole = require("../middlewares/auth.middleware");
 
-router.post('/login', AuthController.login);
-router.post('/refresh', AuthController.refreshToken);
-router.post('/logout', AuthController.logout);
+// Đăng nhập
+router.post("/login", AuthController.login);
+
+// Refresh token
+router.post("/refresh", AuthController.refreshToken);
+
+// Đăng xuất
+router.post("/logout", AuthController.logout);
+
+// Lấy thông tin người dùng đang đăng nhập
+router.get("/me", verifyTokenAndRole(), AuthController.getMe);
 
 module.exports = router;

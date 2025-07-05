@@ -1,13 +1,11 @@
-// src/components/ProtectedRoute.jsx
-import React, { useContext } from 'react';
-import { Navigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import React from "react";
+import { Navigate } from "react-router-dom";
 
-const ProtectedRoute = ({ children }) => {
-  const { accessToken, loading } = useContext(AuthContext);
-
-  if (loading) return <p>Đang xác thực...</p>;
-  return accessToken ? children : <Navigate to="/login" />;
-};
+function ProtectedRoute({ accessToken, children }) {
+  if (!accessToken) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
 
 export default ProtectedRoute;

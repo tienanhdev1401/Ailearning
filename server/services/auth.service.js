@@ -1,22 +1,39 @@
-const jwt = require('jsonwebtoken');
-const ACCESS_SECRET_KEY = 'your_access_secret_key'; // Nên dùng biến môi trường
-const REFRESH_SECRET_KEY = 'your_refresh_secret_key'; // Nên dùng biến môi trường
-// const User = require('../models/user'); // Nếu có model User
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
+
+const ACCESS_SECRET = "access_secret";
+const REFRESH_SECRET = "refresh_secret";
 
 class AuthService {
-  static async login(email, password) {
-    // TODO: Kiểm tra email, password với DB
-    // Ví dụ cứng:
-    if (email === 'test@gmail.com' && password === '123456') {
-      const user = { id: 1, email };
-      // Access token có thời gian sống ngắn
-      const accessToken = jwt.sign(user, ACCESS_SECRET_KEY, { expiresIn: '15m' });
-      // Refresh token có thời gian sống dài
-      const refreshToken = jwt.sign(user, REFRESH_SECRET_KEY, { expiresIn: '7d' });
-      return { accessToken, refreshToken };
-    }
-    // Nếu sai trả về null
-    return { accessToken: null, refreshToken: null };
+  static async authenticateUser(email, password) {
+    const user = await User.findOne({ where: { email, password } }); // Nên hash password trong thực tế!
+    return user;
+  }
+
+  static generateAccessToken(user) {
+    return jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      ACCESS_SECRET,
+      { expiresIn: "30s" }
+    );
+  }
+
+  static generateRefreshToken(user) {
+    return jwt.sign(
+      { id: user.id, role: user.role },
+      REFRESH_SECRET,
+      { expiresIn: "1m" }
+    );
+  }
+
+  static verifyRefreshToken(token) {
+    return jwt.verify(token, REFRESH_SECRET);
+  }
+
+  static async getUserById(id) {
+    return await User.findByPk(id, {
+      attributes: ["id", "name", "email", "role"],
+    });
   }
 }
 

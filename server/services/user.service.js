@@ -1,17 +1,43 @@
 const User = require('../models/user');
 
 class UserService {
+  // Lấy danh sách tất cả người dùng
   static async getAllUsers() {
     return await User.findAll();
   }
 
-  static async createUser({ name, email }) {
-    return await User.create({ name, email });
+  // Tạo người dùng mới
+  static async createUser({ name, email, password, role }) {
+    return await User.create({ name, email, password, role });
   }
 
+  // Lấy người dùng theo ID
   static async getUserById(id) {
     return await User.findByPk(id);
   }
+
+  // Tìm người dùng theo email
+  static async findUserByEmail(email) {
+    return await User.findOne({ where: { email } });
+  }
+
+  // Cập nhật người dùng
+  static async updateUser(id, updateData) {
+    const user = await User.findByPk(id);
+    if (!user) return null;
+
+    await user.update(updateData);
+    return user;
+  }
+
+  // Xoá người dùng
+  static async deleteUser(id) {
+    const user = await User.findByPk(id);
+    if (!user) return null;
+
+    await user.destroy();
+    return true;
+  }
 }
 
-module.exports = UserService; 
+module.exports = UserService;

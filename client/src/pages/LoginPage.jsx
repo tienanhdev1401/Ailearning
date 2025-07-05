@@ -1,35 +1,34 @@
-// src/pages/LoginPage.jsx
-import React, { useState, useContext } from 'react';
-import { login } from '../services/authService';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import React, { useState} from "react";
+import api from "../api/api";
 
 const LoginPage = () => {
-  const { setAccessToken } = useContext(AuthContext);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const { setAccessToken } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const login = async () => {
     try {
-      const data = await login(email, password);
-      setAccessToken(data.accessToken);
-      navigate('/');
-    } catch (err) {
-      setError('Sai email hoặc mật khẩu');
+      const res = await api.post("/auth/login", { email, password });
+      setAccessToken(res.data.accessToken);
+      console.log("access token lúc login", res.data.accessToken);
+      navigate("/");
+    } catch {
+      alert("Đăng nhập thất bại");
     }
   };
-
   return (
-    <form onSubmit={handleLogin}>
+    <div>
       <h2>Đăng nhập</h2>
-      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" /><br />
-      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" /><br />
-      <button type="submit">Đăng nhập</button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-    </form>
+      <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+      <input type="password" placeholder="Mật khẩu" value={password} onChange={e => setPassword(e.target.value)} required />
+      <button onClick={login}>Đăng nhập</button>
+
+    </div>
+      
+
   );
 };
 

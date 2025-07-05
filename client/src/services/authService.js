@@ -19,6 +19,7 @@ export const login = async (email, password) => {
   }
 
   const data = await response.json(); // { accessToken: '...' }
+  console.log('acess token',data);
   return data;
 };
 
@@ -36,6 +37,7 @@ export const refreshToken = async () => {
   }
 
   const data = await response.json(); // { accessToken: '...' }
+  console.log("after acessToken", data);
   return data;
 };
 
