@@ -38,6 +38,20 @@ class UserService {
     await user.destroy();
     return true;
   }
+
+  // Tìm người dùng theo email
+  static async findByEmail(email) {
+    return await User.findOne({ where: { email } });
+  }
+
+  // Cập nhật mật khẩu người dùng (có mã hóa)
+  static async updatePassword(userId, newPassword) {
+    const user = await User.findByPk(userId);
+    if (!user) return null;
+
+    await user.update({ password: newPassword });
+    return user;
+  }
 }
 
 module.exports = UserService;

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
-import SignInPage from "./pages/SignInPage"
+import ForgetPassword from "./pages/ForgetPasswordPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import api, { setAccessToken as setGlobalAccessToken } from "./api/api";
 import { useAuth } from "./context/AuthContext";
@@ -19,7 +19,7 @@ function App() {
   }, [setAccessToken]);
 
   useEffect(() => {
-    const publicRoutes = ["/login", "/signin"];
+    const publicRoutes = ["/login","/forget-password"];
 
     // Nếu là route không cần xác thực, dừng kiểm tra
     if (publicRoutes.includes(location.pathname)) {
@@ -65,7 +65,7 @@ function App() {
         }
       />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/signin" element={<SignInPage />} />
+      <Route path="/forget-password" element={<ForgetPassword />} />
     </Routes>
   );
 }
