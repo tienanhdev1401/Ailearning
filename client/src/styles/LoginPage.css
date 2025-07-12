@@ -1,0 +1,203 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+.sign-up-page {
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(to right, #4dd0e1, #808080);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sign-up-container {
+  display: flex;
+  max-width: 1000px;
+  width: 100%;
+  height: 650px;
+  background: #1f2937;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+.sign-up-left {
+  width: 50%;
+  background: linear-gradient(to right, #4dd0e1, #4dd0b0);
+  color: white;
+  text-align: center;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.sign-up-text {
+  font-size: 18px;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.sign-up-image {
+  margin-top: 40px;
+  width: 250px;
+  height: auto;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sign-up-dots {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sign-up-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: white;
+  opacity: 0.5;
+}
+
+.sign-up-dot.active {
+  opacity: 1;
+}
+
+.sign-up-right {
+  width: 50%;
+  background: #1f2937;
+  color: #cbd5e1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sign-up-tabs {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.sign-up-tab {
+  padding: 6px 16px;
+  border: 1px solid #4b5563;
+  background: none;
+  color: #9ca3af;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.sign-up-tab.active {
+  background-color: #4dd0b0;
+  color: white;
+  border-color: #4dd0b0;
+}
+
+.sign-up-switch {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.sign-up-link {
+  color: white;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.sign-up-forms {
+  position: relative;
+  flex: 1;
+}
+
+.sign-up-form {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.sign-up-form.visible {
+  display: flex;
+}
+
+.sign-up-form label {
+  font-size: 12px;
+  font-weight: bold;
+  color: #9ca3af;
+}
+
+.sign-up-form input[type="text"],
+.sign-up-form input[type="email"],
+.sign-up-form input[type="password"] {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #4b5563;
+  color: white;
+  padding: 5px 0;
+  outline: none;
+}
+
+.sign-up-checkbox {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  align-items: center;
+}
+
+.sign-up-options {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.sign-up-submit {
+  background-color: #4dd0b0;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 30px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.sign-up-submit:hover {
+  background-color: #3bb39a;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+
+/* Icon mắt trong ô password */
+.sign-up-password-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sign-up-password-container input {
+  flex: 1;
+  padding-right: 35px;
+}
+
+.sign-up-password-container i {
+  position: absolute;
+  right: 10px;
+  color: gray;
+  cursor: pointer;
+  font-size: 14px;
+}
