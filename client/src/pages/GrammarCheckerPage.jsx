@@ -3,7 +3,7 @@ import { diffWords } from 'diff';
 import '../styles/GrammarCheckerPage.css';
 
 const GrammarCheckerPage = () => {
-  const [inputText, setInputText] = useState("I goes to the park yesterday with my friend. We play football for about two hour.The weather was very nice and sunny.There were many people walking their dogs.I saw a man who was painting a beautiful landscape.Some children were running around and laughing.We brought some sandwiches and drinks with us.Unfortunately, I forgot to bring my hat and got sunburnt. It was a fun day, and we really enjoyed our time.I hope to go again next week if the weather is goods.");
+  const [inputText, setInputText] = useState("");
   const [correctedText, setCorrectedText] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -70,11 +70,30 @@ const GrammarCheckerPage = () => {
     setIsLoading(true);
     
     try {
-      setCorrectedText("I went to the park yesterday with my friend. We played football for one about two hours.The weather was very nice and sunny. There were many people walking their dogs. I saw a man who was painting a beautiful landscape. Some children were running around and laughing. We brought some sandwiches and drinks with us. Unfortunately, I forgot to bring my hat and got sunburnt. It was a fun day, and we really enjoyed our time. I hope to go again next week if the weather is good.");
+      // setCorrectedText("I went to the park yesterday with my friend. We played football for one about two hours.The weather was very nice and sunny. There were many people walking their dogs. I saw a man who was painting a beautiful landscape. Some children were running around and laughing. We brought some sandwiches and drinks with us. Unfortunately, I forgot to bring my hat and got sunburnt. It was a fun day, and we really enjoyed our time. I hope to go again next week if the weather is good.");
       
-      const highlighted = highlightErrors(inputText, "I went to the park yesterday with my friend. We played football for one about two hours.The weather was very nice and sunny. There were many people walking their dogs. I saw a man who was painting a beautiful landscape. Some children were running around and laughing. We brought some sandwiches and drinks with us. Unfortunately, I forgot to bring my hat and got sunburnt. It was a fun day, and we really enjoyed our time. I hope to go again next week if the weather is good.");
+      // const highlighted = highlightErrors(inputText, "I went to the park yesterday with my friend. We played football for one about two hours.The weather was very nice and sunny. There were many people walking their dogs. I saw a man who was painting a beautiful landscape. Some children were running around and laughing. We brought some sandwiches and drinks with us. Unfortunately, I forgot to bring my hat and got sunburnt. It was a fun day, and we really enjoyed our time. I hope to go again next week if the weather is good.");
+      // setHighlightedText(highlighted);
+      
+      // setShowResults(true);
+        const response = await fetch('http://localhost:5001/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: inputText })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch from grammar correction API');
+      }
+
+      const data = await response.json();
+      const result = data.result;
+
+      setCorrectedText(result);
+      const highlighted = highlightErrors(inputText, result);
       setHighlightedText(highlighted);
-      
       setShowResults(true);
     } catch (error) {
       console.error('Error:', error);
