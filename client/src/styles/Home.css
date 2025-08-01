@@ -12,8 +12,9 @@ body {
   }
   
   .main {
-    width: 82%;
-    padding: 24px 32px;
+    width: 100%;
+    padding-top: 24px;
+    padding-left: 0%;
     overflow-y: auto;
   }
   

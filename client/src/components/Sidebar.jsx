@@ -1,17 +1,19 @@
 import React from 'react';
 import '../styles/Sidebar.css';
+import { useNavigate } from 'react-router-dom'; 
 
 const Sidebar = () => {
+  const navigate = useNavigate();
   return (
     <nav className="sidebar" aria-label="Navigation menu">
       <div className="sidebar-header">
-        <h1 className="sidebar-logo">AelanG</h1>
+        <h1 className="sidebar-logo" onClick={() => navigate("/")}>AelanG</h1>
       </div>
       <div className="sidebar-nav" role="list">
 
         {/* Study Zone với submenu (đã fix) */}
-        <div className="has-submenu">
-          <div className="nav-item">
+        <div className="has-submenu" >
+          <div className="nav-item" >
             <svg viewBox="0 0 24 24" fill="none">
               <path fill="#00FFFF" d="M12 3l7 7h-2v7H7v-7H5l7-7Z" />
             </svg>
@@ -37,7 +39,7 @@ const Sidebar = () => {
               </svg>
               Đọc
             </div>
-            <div className="submenu-item">
+            <div className="submenu-item" onClick={() => navigate("/grammar")}>
               <svg viewBox="0 0 24 24" fill="none">
                 <path fill="#facc15" d="M6 12h12v2H6z" />
               </svg>

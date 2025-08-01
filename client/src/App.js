@@ -2,10 +2,13 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
+import GrammarCheckerPage from "./pages/GrammarCheckerPage";
+import Layout from './components/Layout';
 import ForgetPassword from "./pages/ForgetPasswordPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import api, { setAccessToken as setGlobalAccessToken } from "./api/api";
 import { useAuth } from "./context/AuthContext";
+
 
 function App() {
   const navigate = useNavigate();
@@ -60,7 +63,15 @@ function App() {
         path="/"
         element={
           <ProtectedRoute accessToken={accessToken}>
-            <HomePage />
+            {<Layout><HomePage /></Layout>}
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/grammar"
+        element={
+          <ProtectedRoute accessToken={accessToken}>
+            <Layout><GrammarCheckerPage /></Layout>
           </ProtectedRoute>
         }
       />

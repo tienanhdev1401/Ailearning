@@ -1,5 +1,4 @@
 import '../styles/Home.css';
-import Sidebar from '../components/Sidebar';
 import React from "react";
 import api, { setAccessToken as unsetGlobalToken } from "../api/api";
 import { useNavigate } from "react-router-dom";
@@ -33,7 +32,6 @@ const HomePage = () => {
   
   return (
     <div className="layout">
-      <Sidebar />
       <main className="main" role="main">
         {/* Nội dung bài học sẽ hiển thị ở đây */}
         <h1>Chào mừng bạn đến với AelanG!</h1>
