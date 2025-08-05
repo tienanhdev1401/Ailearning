@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node app.js",
+    "dev": "concurrently \"node app.js\" \"cd ../client && npm start\" --names \"SERVER,CLIENT\" --prefix-colors \"red,blue\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,6 +13,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "concurrently": "^8.2.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
