@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import api from '../api/api';
 import '../styles/LoginPage.css';
 
@@ -13,49 +12,43 @@ const LoginPage = () => {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState("");
 
-  const { setAccessToken } = useAuth();
   const navigate = useNavigate();
 
-
-  //login bang JWT
+  // Login bằng JWT
   const login = async (e) => {
     e.preventDefault();
     try {
       const res = await api.post("/auth/login", { email, password });
-      setAccessToken(res.data.accessToken);
+      localStorage.setItem("accessToken", res.data.accessToken);
       navigate("/");
     } catch {
       alert("Login failed");
     }
   };
 
-  //login bang Google OAUTH 2.0
+  // Login bằng Google
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tokenFromGoogle = params.get("accessToken");
-    console.log(tokenFromGoogle);
     if (tokenFromGoogle) {
-      setAccessToken(tokenFromGoogle);
+      localStorage.setItem("accessToken", tokenFromGoogle);
       navigate("/");
     }
-  }, [setAccessToken, navigate]);
+  }, [navigate]);
 
+  // Đăng ký
   const signUp = async (e) => {
     e.preventDefault();
     setError("");
-
-
     try {
-      const userData = {
+      await api.post("/users", {
         name: fullName,
-        email: email,
-        password: password,
-        role: "user" 
-      };
-  
-      await api.post("/users", userData);
-      alert("Registration successful! Please sign in.");
-      setIsSignIn(true); // Switch to sign in form after successful registration
+        email,
+        password,
+        role: "user",
+      });
+      alert("Đăng ký thành công! Hãy đăng nhập.");
+      setIsSignIn(true);
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
     }

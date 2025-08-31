@@ -1,13 +1,11 @@
 import '../styles/Home.css';
 import React from "react";
-import api, { setAccessToken as unsetGlobalToken } from "../api/api";
+import api from "../api/api";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; 
 
 const HomePage = () => {
   // const [users, setUsers] = useState([]);
   const navigate = useNavigate();
-  const { setAccessToken } = useAuth(); 
 
   // const fetchUsers = async () => {
   //   try {
@@ -20,8 +18,7 @@ const HomePage = () => {
 
   const logout = async () => {
     await api.post("/auth/logout");
-    unsetGlobalToken(null);
-    setAccessToken(null);
+    localStorage.removeItem("accessToken");
     navigate("/login");
   };
 

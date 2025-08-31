@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-const ACCESS_SECRET = "access_secret";
 
 const verifyTokenAndRole = (allowedRoles = []) => {
   return (req, res, next) => {
@@ -11,7 +10,7 @@ const verifyTokenAndRole = (allowedRoles = []) => {
     }
 
     try {
-      const user = jwt.verify(token, ACCESS_SECRET);
+      const user = jwt.verify(token, process.env.JWT_SECRET);
       req.user = user;
 
       // Nếu có chỉ định role → kiểm tra

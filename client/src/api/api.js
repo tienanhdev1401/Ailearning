@@ -5,22 +5,19 @@ const api = axios.create({
   withCredentials: true,
 });
 
-let storeAccessToken = null;
-
-export const setAccessToken = (token) => {
-  storeAccessToken = token;
-};
-
+// Gắn access token từ localStorage vào mỗi request
 api.interceptors.request.use(
   (config) => {
-    if (storeAccessToken) {
-      config.headers.Authorization = `Bearer ${storeAccessToken}`;
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
+// Xử lý khi token hết hạn → refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -28,20 +25,20 @@ api.interceptors.response.use(
 
     if (
       error.response?.status === 401 &&
-      !originalRequest._retry &&                          //Nếu đã retry rồi mà vẫn lỗi, không được gọi lại nữa.
-      !originalRequest.url.includes("/auth/refresh") &&  //tránh vòng lập refesh token bị gọi đi nhiều lần
-      !originalRequest.url.includes("/auth/login")      // khong refesh token khi đăng nhập
+      !originalRequest._retry &&
+      !originalRequest.url.includes("/auth/refresh") &&
+      !originalRequest.url.includes("/auth/login")
     ) {
       originalRequest._retry = true;
       try {
         const res = await api.post("/auth/refresh");
         const newAccessToken = res.data.accessToken;
-        console.log('new acess token', newAccessToken);
-        setAccessToken(newAccessToken);
+        localStorage.setItem("accessToken", newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (err) {
-        console.error("❌ Refresh token hết hạn. Chuyển về /login.");
+        console.error("❌ Refresh token hết hạn → quay về /login");
+        localStorage.removeItem("accessToken");
         window.location.href = "/login";
       }
     }

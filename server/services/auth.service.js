@@ -1,8 +1,9 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
-const ACCESS_SECRET = "access_secret";
-const REFRESH_SECRET = "refresh_secret";
+dotenv.config();
+const ACCESS_SECRET = process.env.ACCESS_SECRET;
+const REFRESH_SECRET = process.env.REFRESH_SECRET;
 
 class AuthService {
   static async authenticateUser(email, password) {
