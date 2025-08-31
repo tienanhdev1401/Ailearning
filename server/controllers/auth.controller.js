@@ -43,7 +43,7 @@ class AuthController {
     if (!token) return res.sendStatus(204);
 
     res.clearCookie("refreshToken");
-    res.sendStatus(200);
+    res.sendStatus(200).json({ message: "Logout thành công" });
   }
 
   static async getMe(req, res) {

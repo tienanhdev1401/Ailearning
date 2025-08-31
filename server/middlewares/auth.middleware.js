@@ -10,7 +10,7 @@ const verifyTokenAndRole = (allowedRoles = []) => {
     }
 
     try {
-      const user = jwt.verify(token, process.env.JWT_SECRET);
+      const user = jwt.verify(token, process.env.ACCESS_SECRET);
       req.user = user;
 
       // Nếu có chỉ định role → kiểm tra
