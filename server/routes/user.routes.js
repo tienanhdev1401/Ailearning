@@ -1,6 +1,7 @@
-const express = require("express");
-const router = express.Router();
-const UserController = require("../controllers/user.controller");
+import express from 'express'
+import UserController from '../controllers/user.controller.js'
+
+const router = express.Router()
 
 router.get("/", UserController.getAllUsers);
 router.get("/:id", UserController.getUserById);
@@ -15,5 +16,4 @@ router.post('/send-verification-code', UserController.sendVerificationCode);
 // Route quên mật khẩu (reset password bằng OTP)
 router.post('/reset-password', UserController.resetPassword);
 
-
-module.exports = router;
+export default router

@@ -1,6 +1,6 @@
-require('dotenv').config(); // Load biến môi trường từ .env
-
-const { Sequelize } = require('sequelize');
+import dotenv from "dotenv";
+import { Sequelize } from "sequelize";
+dotenv.config(); // Load biến môi trường từ .env
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
@@ -13,4 +13,4 @@ const sequelize = new Sequelize(
   }
 );
 
-module.exports = sequelize;
+export default sequelize;

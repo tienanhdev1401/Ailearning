@@ -1,7 +1,7 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
-const { USER_ROLE } = require("../enums/userRole.enum");
-const { AUTH_PROVIDER } = require("../enums/authProvider.enum");
+import { DataTypes } from "sequelize";
+import sequelize from "../config/database.js";
+import USER_ROLE  from "../enums/userRole.enum.js";
+import AUTH_PROVIDER  from "../enums/authProvider.enum.js";
 
 const User = sequelize.define(
   "User",
@@ -58,4 +58,4 @@ const User = sequelize.define(
   }
 );
 
-module.exports = User;
+export default User;

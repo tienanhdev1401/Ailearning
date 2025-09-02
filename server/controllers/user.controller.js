@@ -1,9 +1,8 @@
-const { HttpStatusCode } = require("axios");
-const UserService = require("../services/user.service");
+import { HttpStatusCode } from 'axios'
+import UserService from '../services/user.service.js'
+import nodemailer from 'nodemailer'
 
 const otpStore = new Map(); // Không cần kiểu dữ liệu
-
-const nodemailer = require('nodemailer'); // Đảm bảo bạn đã import thư viện
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -207,4 +206,4 @@ class UserController {
   
 }
 
-module.exports = UserController;
+export default UserController;

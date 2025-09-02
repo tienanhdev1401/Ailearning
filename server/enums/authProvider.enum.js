@@ -3,4 +3,4 @@ const AUTH_PROVIDER = {
   GOOGLE: "google",
 };
 
-module.exports = { AUTH_PROVIDER };
+export default AUTH_PROVIDER;

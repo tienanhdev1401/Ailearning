@@ -1,7 +1,8 @@
-const express = require("express");
+import express from "express";
+import passport from "passport";
+import AuthService from "../services/auth.service.js";
+
 const router = express.Router();
-const passport = require("passport");
-const AuthService = require("../services/auth.service");
 
 // Route: Bắt đầu xác thực với Google
 router.get("/google", (req, res, next) => {
@@ -39,4 +40,4 @@ router.get("/login-failed", (req, res) => {
   res.status(401).json({ message: "Đăng nhập bằng Google thất bại." });
 });
 
-module.exports = router;
+export default router;

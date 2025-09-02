@@ -1,4 +1,4 @@
-const User = require('../models/user');
+import User from "../models/user.js";
 
 class UserService {
   // Lấy danh sách tất cả người dùng
@@ -54,4 +54,4 @@ class UserService {
   }
 }
 
-module.exports = UserService;
+export default UserService;

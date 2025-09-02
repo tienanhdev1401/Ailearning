@@ -1,5 +1,5 @@
-const { HttpStatusCode } = require("axios");
-const jwt = require("jsonwebtoken");
+import { HttpStatusCode } from "axios";
+import jwt from "jsonwebtoken";
 
 const verifyTokenAndRole = (allowedRoles = []) => {
   return (req, res, next) => {
@@ -26,4 +26,4 @@ const verifyTokenAndRole = (allowedRoles = []) => {
   };
 };
 
-module.exports = verifyTokenAndRole;
+export default verifyTokenAndRole;

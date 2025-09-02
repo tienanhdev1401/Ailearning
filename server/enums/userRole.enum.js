@@ -4,4 +4,4 @@ const USER_ROLE = {
   GUEST: "guest"
 };
 
-module.exports = { USER_ROLE};
+export default USER_ROLE;

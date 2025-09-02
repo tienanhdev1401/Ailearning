@@ -1,8 +1,8 @@
-const express = require("express");
-const router = express.Router();
-const AuthController = require("../controllers/auth.controller");
-const verifyTokenAndRole = require("../middlewares/auth.middleware");
+import express from "express";
+import AuthController from "../controllers/auth.controller.js";
+import verifyTokenAndRole from "../middlewares/auth.middleware.js";
 
+const router = express.Router();
 // Đăng nhập
 router.post("/login", AuthController.login);
 
@@ -15,4 +15,4 @@ router.post("/logout", AuthController.logout);
 // Lấy thông tin người dùng đang đăng nhập
 router.get("/me", verifyTokenAndRole(), AuthController.getMe);
 
-module.exports = router;
+export default router;
