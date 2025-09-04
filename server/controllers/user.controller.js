@@ -1,6 +1,7 @@
 import { HttpStatusCode } from 'axios'
 import UserService from '../services/user.service.js'
 import nodemailer from 'nodemailer'
+import ApiError from '../utils/ApiError.js';
 
 const otpStore = new Map(); // Không cần kiểu dữ liệu
 
@@ -14,60 +15,52 @@ const transporter = nodemailer.createTransport({
 
 class UserController {
   // Lấy danh sách tất cả người dùng
-  static async getAllUsers(req, res) {
+  static async getAllUsers(req, res, next) {
     try {
       const users = await UserService.getAllUsers();
       res.status(HttpStatusCode.Ok).json(users);
     } catch (error) {
-      res.status(500).json({ message: "Lỗi khi lấy danh sách người dùng", error: error.message });
+      next(error)
     }
   }
 
   // Lấy người dùng theo ID
-  static async getUserById(req, res) {
+  static async getUserById(req, res, next) {
     try {
       const { id } = req.params;
       const user = await UserService.getUserById(id);
 
       if (!user) {
-        return res.status(HttpStatusCode.NotFound).json({ message: "Không tìm thấy người dùng" });
+        throw new ApiError(HttpStatusCode.NotFound,"Không tìm thấy người dùng");
       }
 
       res.status(HttpStatusCode.Ok).json(user);
     } catch (error) {
-      res.status(HttpStatusCode.InternalServerError).json({ message: "Lỗi khi lấy người dùng", error: error.message });
+      next(error);
     }
   }
 
   // Tạo người dùng mới
-  static async createUser(req, res) {
+  static async createUser(req, res, next) {
     try {
-      const {name, email, password, role } = req.body;
-
-      console.log(req.body);
-
-      // Kiểm tra trùng email
-      const existingUser = await UserService.findUserByEmail(email);
-      if (existingUser) {
-        return res.status(HttpStatusCode.BadRequest).json({ message: "Email đã tồn tại" });
-      }
+      const { name, email, password, role } = req.body;
 
       const newUser = await UserService.createUser({ name, email, password, role });
       res.status(HttpStatusCode.Created).json(newUser);
     } catch (error) {
-      res.status(HttpStatusCode.InternalServerError).json({ message: "Lỗi khi tạo người dùng", error: error.message });
+      next(error);
     }
   }
 
   // Cập nhật người dùng
-  static async updateUser(req, res) {
+  static async updateUser(req, res, next) {
     try {
       const { id } = req.params;
       const { email, role } = req.body;
 
       const updatedUser = await UserService.updateUser(id, { email, role });
       if (!updatedUser) {
-        return res.status(HttpStatusCode.NotFound).json({ message: "Không tìm thấy người dùng để cập nhật" });
+        throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy người dùng để cập nhật");
       }
 
       res.status(HttpStatusCode.Ok).json(updatedUser);
@@ -77,7 +70,7 @@ class UserController {
   }
 
   // Xoá người dùng
-  static async deleteUser(req, res) {
+  static async deleteUser(req, res, next) {
     try {
       const { id } = req.params;
 
@@ -94,7 +87,7 @@ class UserController {
 
 
   //gửi mã OTP
-  static async sendVerificationCode(req, res) {
+  static async sendVerificationCode(req, res, next) {
     try {
       const { email } = req.body;
   
@@ -131,7 +124,7 @@ class UserController {
     }
   }
 
-  static async resetPassword(req, res) {
+  static async resetPassword(req, res, next) {
     try {
       const { email, otp, newPassword } = req.body;
   

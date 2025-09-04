@@ -4,37 +4,56 @@ import ApiError from "../utils/ApiError.js";
 
 class AuthController {
   static async login(req, res, next) {
-    const { email, password } = req.body;
-
     try {
-      const user = await AuthService.authenticateUser(email, password);
-      if (!user) {
-        throw new ApiError(HttpStatusCode.Unauthorized, "Sai tài khoản hoặc mật khẩu");
-      }
+      const { email, password } = req.body;
 
-      const accessToken = AuthService.generateAccessToken(user);
-      const refreshToken = AuthService.generateRefreshToken(user);
-
-      res.cookie("refreshToken", refreshToken, {
+      const result = await AuthService.login(email, password);
+      
+      res.cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
         sameSite: "strict",
         secure: false,
       });
 
-      res.status(HttpStatusCode.Ok).json({ accessToken });
+      res.status(HttpStatusCode.Ok).json({ accessToken: result.accessToken });
     } catch (error) {
       next(error);
     }
   }
 
+  // Đăng ký người dùng
+  static async register(req, res, next) {
+    try {
+      const { name, email, password } = req.body;
+
+      const newUser = await AuthService.register(name, email, password);
+      res.status(HttpStatusCode.Created).json(newUser);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // static async refreshToken(req, res, next) {
+  //   const token = req.cookies.refreshToken;
+  //   if (!token) 
+  //     throw new ApiError(HttpStatusCode.Unauthorized,"Không có refresh token" );
+
+  //   try {
+  //     const payload = AuthService.verifyRefreshToken(token);
+  //     const accessToken = AuthService.generateAccessToken(payload);
+  //     res.status(HttpStatusCode.Ok).json({ accessToken });
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // }
+
   static async refreshToken(req, res, next) {
-    const token = req.cookies.refreshToken;
-    if (!token) 
+    try {
+      const token = req.cookies.refreshToken;
+      if (!token) 
       throw new ApiError(HttpStatusCode.Unauthorized,"Không có refresh token" );
 
-    try {
-      const payload = AuthService.verifyRefreshToken(token);
-      const accessToken = AuthService.generateAccessToken(payload);
+      const accessToken = await AuthService.refreshAccessToken(token);
       res.status(HttpStatusCode.Ok).json({ accessToken });
     } catch (error) {
       next(error);
@@ -49,14 +68,9 @@ class AuthController {
     res.status(HttpStatusCode.Ok).json({ message: "Logout thành công" });
   }
 
-  static async getMe(req, res) {
+  static async getMe(req, res, next) {
     try {
       const user = await AuthService.getUserById(req.user.id);
-
-      if (!user) {
-        throw ApiError(HttpStatusCode.NotFound,"Không tìm thấy người dùng");
-      }
-
       res.status(HttpStatusCode.Ok).json(user);
     } catch (error) {
       next(error);

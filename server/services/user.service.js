@@ -7,8 +7,26 @@ class UserService {
   }
 
   // Tạo người dùng mới
-  static async createUser({ name, email, password, role }) {
-    return await User.create({ name, email, password, role,  authProvider: 'local'});
+  // static async createUser({ name, email, password, role }) {
+  //   return await User.create({ name, email, password, role,  authProvider: 'local'});
+  // }
+
+  static async createUser(user) {
+    const { name, email, password, role } = user;
+
+    // Kiểm tra trùng email (business logic nên ở service)
+    const existingUser = await this.findUserByEmail(email);
+    if (existingUser) {
+      throw new ApiError(HttpStatusCode.BadRequest, "Email đã tồn tại");
+    }
+
+    return await User.create({ 
+      name, 
+      email, 
+      password, // nên thay bằng hashedPassword
+      role,  
+      authProvider: 'local'
+    });
   }
 
   // Lấy người dùng theo ID

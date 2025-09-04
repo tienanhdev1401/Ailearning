@@ -41,11 +41,10 @@ const LoginPage = () => {
     e.preventDefault();
     setError("");
     try {
-      await api.post("/users", {
+      await api.post("/auth/register", {
         name: fullName,
         email,
-        password,
-        role: "user",
+        password
       });
       alert("Đăng ký thành công! Hãy đăng nhập.");
       setIsSignIn(true);
