@@ -1,21 +1,11 @@
 import '../styles/Home.css';
-import React from "react";
-import api from "../api/api";
+import api from '../../api/api';
 import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
   // const [users, setUsers] = useState([]);
   const navigate = useNavigate();
-
-  // const fetchUsers = async () => {
-  //   try {
-  //     const res = await api.get("/users");
-  //     setUsers(res.data);
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // };
-
+  
   const logout = async () => {
     await api.post("/auth/logout");
     localStorage.removeItem("accessToken");

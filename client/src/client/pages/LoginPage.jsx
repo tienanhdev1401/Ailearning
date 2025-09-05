@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/api';
+import api from '../../api/api';
 import '../styles/LoginPage.css';
+import USER_ROLE from '../../enums/userRole.enum';
+import { jwtDecode } from "jwt-decode";
 
 const LoginPage = () => {
   const [isSignIn, setIsSignIn] = useState(true);
@@ -20,7 +22,15 @@ const LoginPage = () => {
     try {
       const res = await api.post("/auth/login", { email, password });
       localStorage.setItem("accessToken", res.data.accessToken);
-      navigate("/");
+      const decoded = jwtDecode(res.data.accessToken);
+      const role = decoded.role;
+      console.log(role);
+
+      if (role === USER_ROLE.ADMIN || role === USER_ROLE.STAFF) {
+        navigate("/dashboard");
+      } else {
+        navigate("/");
+      }
     } catch {
       alert("Login failed");
     }
@@ -32,7 +42,15 @@ const LoginPage = () => {
     const tokenFromGoogle = params.get("accessToken");
     if (tokenFromGoogle) {
       localStorage.setItem("accessToken", tokenFromGoogle);
-      navigate("/");
+      const decoded = jwtDecode(tokenFromGoogle);
+      const role = decoded.role;
+      console.log(role);
+
+      if (role === USER_ROLE.ADMIN || role === USER_ROLE.STAFF) {
+        navigate("/dashboard");
+      } else {
+        navigate("/");
+      }
     }
   }, [navigate]);
 

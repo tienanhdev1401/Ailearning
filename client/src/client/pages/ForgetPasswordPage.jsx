@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import '../styles/ForgetPasswordPage.css';
 import { useNavigate } from 'react-router-dom';
-import userService from '../services/userService';
+import userService from '../../services/userService'
 
 
 const ForgetPassword = () => {
