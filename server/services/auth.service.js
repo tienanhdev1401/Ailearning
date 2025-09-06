@@ -4,6 +4,10 @@ import USER_ROLE from "../enums/userRole.enum.js";
 import AUTH_PROVIDER from "../enums/authProvider.enum.js";
 import { HttpStatusCode } from "axios";
 import ApiError from "../utils/ApiError.js";
+
+import dotenv from "dotenv";
+dotenv.config();
+
 const ACCESS_SECRET = process.env.ACCESS_SECRET;
 const REFRESH_SECRET = process.env.REFRESH_SECRET;
 
@@ -60,6 +64,8 @@ class AuthService {
   static async refreshAccessToken(refreshToken) {
     try {
       const payload = this.verifyRefreshToken(refreshToken);
+      console.log(REFRESH_SECRET,ACCESS_SECRET);
+      console.log(refreshToken);
       
       // Kiểm tra user có tồn tại không
       const user = await User.findByPk(payload.id);
@@ -69,11 +75,11 @@ class AuthService {
 
       return this.generateAccessToken(user);
     } catch (error) {
-      if (error instanceof jwt.JsonWebTokenError) {
-        throw new ApiError(HttpStatusCode.Unauthorized, "Refresh token không hợp lệ");
-      }
       if (error instanceof jwt.TokenExpiredError) {
         throw new ApiError(HttpStatusCode.Unauthorized, "Refresh token đã hết hạn");
+      }
+      if (error instanceof jwt.JsonWebTokenError) {
+        throw new ApiError(HttpStatusCode.Unauthorized, "Refresh token không hợp lệ");
       }
       throw error;
     }
@@ -85,7 +91,7 @@ class AuthService {
   }
 
   static verifyAccessToken(accessToken) {
-    return jwt.verify(accessToken, ACCESS_SECRET_SECRET);
+    return jwt.verify(accessToken, ACCESS_SECRET);
   }
 
   static async getUserById(id) {
