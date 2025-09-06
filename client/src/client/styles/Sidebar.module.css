@@ -135,3 +135,24 @@
   transform: scale(1.1);
   filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.7));
 }
+
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 16px;
+  }
+
+  .sidebar-header {
+    margin-bottom: 0;
+    margin-right: 16px;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    gap: 12px;
+    padding: 0;
+  }
+}

@@ -5,7 +5,7 @@ import Navbar from "../admin/components/Navbar";
 import Footer from "../admin/components/Footer";
 import feather from "feather-icons";
 
-import '../admin/AdminPage.css'
+import styles from "../admin/AdminPage.module.css";
 
 const AdminLayout = ({ children }) => {
   useEffect(() => {
@@ -13,13 +13,13 @@ const AdminLayout = ({ children }) => {
   }, []);
 
   return (
-    <div className="wrapper">
-      <Sidebar />
-      <div className="main">
+    <div className={styles.wrapper}>
+    <Sidebar />
+    <div className={styles.main}>
         <Navbar />
-        <main className="content">{children}</main>
+        <main className={styles.content}>{children}</main>
         <Footer />
-      </div>
+    </div>
     </div>
   );
 };

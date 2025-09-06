@@ -1,13 +1,11 @@
-import Sidebar from '../client/components/Sidebar';
-import '../client/styles/Home.css'
+import Sidebar from "../client/components/Sidebar";
+import styles from "../client/styles/ClientLayout.module.css";
 
 const ClientLayout = ({ children }) => {
   return (
-    <div className="layout">
+    <div className={styles.layout}>
       <Sidebar />
-      <main className="main" role="main">
-        {children}
-      </main>
+      {children}
     </div>
   );
 };

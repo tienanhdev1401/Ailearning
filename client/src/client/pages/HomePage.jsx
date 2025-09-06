@@ -1,31 +1,30 @@
-import '../styles/Home.css';
-import api from '../../api/api';
+import React from "react";
+import api from "../../api/api";
 import { useNavigate } from "react-router-dom";
 
+// import CSS module
+import styles from "../styles/Home.module.css";
+
 const HomePage = () => {
-  // const [users, setUsers] = useState([]);
   const navigate = useNavigate();
-  
+
   const logout = async () => {
-    await api.post("/auth/logout");
-    localStorage.removeItem("accessToken");
-    navigate("/login");
+    try {
+      await api.post("/auth/logout");
+      localStorage.removeItem("accessToken");
+      navigate("/login");
+    } catch (error) {
+      console.error("Lỗi khi đăng xuất:", error);
+    }
   };
 
-  // useEffect(() => {
-  //   fetchUsers();
-  // }, []);
-
-  
   return (
-    <div className="layout">
-      <main className="main" role="main">
-        {/* Nội dung bài học sẽ hiển thị ở đây */}
-        <h1>Chào mừng bạn đến với AelanG!</h1>
-        <button onClick={logout}>Đăng xuất</button>
-      </main>
+    <div className={styles.mainHome}>
+      <h1>Chào mừng bạn đến với AelanG!</h1>
+      <button onClick={logout}>Đăng xuất</button>
     </div>
-  );
+    );
+
 };
 
 export default HomePage;
