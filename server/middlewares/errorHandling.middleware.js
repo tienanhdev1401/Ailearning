@@ -15,7 +15,7 @@ const errorHandlingMiddleware = (err, req, res, next) => {
   const responseError = {
     statusCode: err.statusCode,
     message: err.message || getReasonPhrase(err.statusCode),
-    // stack: err.stack => chỉ rõ lỗi sai nằm ở đâu
+    stack: err.stack 
   };
 
   console.error(responseError);

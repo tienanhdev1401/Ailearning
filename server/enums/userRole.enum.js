@@ -1,7 +1,8 @@
 const USER_ROLE = {
   ADMIN: "admin",
   USER: "user",
-  GUEST: "guest"
+  GUEST: "guest",
+  STAFF: "staff",
 };
 
 export default USER_ROLE;

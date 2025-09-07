@@ -65,3 +65,7 @@ Ailearning/
 - Đảm bảo đã cài đặt Node.js và npm
 - Kiểm tra ports 3000 và 5000 không bị chiếm dụng
 - Cấu hình database và environment variables trước khi chạy
+
+
+## Swagger
+- Swagger docs: http://localhost:5000/api-docs

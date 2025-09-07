@@ -7,10 +7,10 @@ const verifyTokenAndRole = (allowedRoles = []) => {
     const token = authHeader?.split(" ")[1];
 
     if (!token) {
-      return res.status(StatusCode.Unauthorized).json({ message: "Không có token truy cập" });
+      return res.status(HttpStatusCode.Unauthorized).json({ message: "Không có token truy cập" });
     }
 
-    try {
+    try { 
       const user = jwt.verify(token, process.env.ACCESS_SECRET);
       req.user = user;
 

@@ -13,14 +13,14 @@ import oauthRoutes from './routes/oauth.routes.js'
 import './config/passport.js'   // chạy file config để đăng ký strategy
 import errorHandlingMiddleware from './middlewares/errorHandling.middleware.js'
 
+import { swaggerUi, swaggerSpec } from "./config/swagger.js";
+
 const app = express();
 app.use(cookieParser());
 
 app.use(express.json());
 
 app.use(passport.initialize()); 
-
-
 
 app.use(cors({
   origin: 'http://localhost:3000',
@@ -31,6 +31,9 @@ app.use('/api/auth', authRouter);
 app.use("/api/auth", oauthRoutes);
 app.use('/api/users', userRouter);
 
+// swagger endpoint
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.use(errorHandlingMiddleware);
 
 // Kết nối và sync Sequelize
@@ -39,6 +42,7 @@ sequelize.sync().then(() => {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log('Sequelize connected & synced');
+    console.log(`📑 Swagger docs: http://localhost:${PORT}/api-docs`);
   });
 }).catch((err) => {
   console.error('Sequelize connection failed:', err);
