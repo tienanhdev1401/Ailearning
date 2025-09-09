@@ -9,11 +9,15 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.11.0",
     "diff": "^8.0.2",
+    "feather-icons": "^4.29.2",
+    "jwt-decode": "^4.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.6.3",
     "react-scripts": "5.0.1",
+    "simplebar": "^6.3.2",
+    "simplebar-react": "^3.3.2",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

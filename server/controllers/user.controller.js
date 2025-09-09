@@ -1,8 +1,9 @@
-const UserService = require("../services/user.service");
+import { HttpStatusCode } from 'axios'
+import UserService from '../services/user.service.js'
+import nodemailer from 'nodemailer'
+import ApiError from '../utils/ApiError.js';
 
 const otpStore = new Map(); // Không cần kiểu dữ liệu
-
-const nodemailer = require('nodemailer'); // Đảm bảo bạn đã import thư viện
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -14,92 +15,84 @@ const transporter = nodemailer.createTransport({
 
 class UserController {
   // Lấy danh sách tất cả người dùng
-  static async getAllUsers(req, res) {
+  static async getAllUsers(req, res, next) {
     try {
       const users = await UserService.getAllUsers();
-      res.json(users);
+      res.status(HttpStatusCode.Ok).json(users);
     } catch (error) {
-      res.status(500).json({ message: "Lỗi khi lấy danh sách người dùng", error: error.message });
+      next(error)
     }
   }
 
   // Lấy người dùng theo ID
-  static async getUserById(req, res) {
+  static async getUserById(req, res, next) {
     try {
       const { id } = req.params;
       const user = await UserService.getUserById(id);
 
       if (!user) {
-        return res.status(404).json({ message: "Không tìm thấy người dùng" });
+        throw new ApiError(HttpStatusCode.NotFound,"Không tìm thấy người dùng");
       }
 
-      res.json(user);
+      res.status(HttpStatusCode.Ok).json(user);
     } catch (error) {
-      res.status(500).json({ message: "Lỗi khi lấy người dùng", error: error.message });
+      next(error);
     }
   }
 
   // Tạo người dùng mới
-  static async createUser(req, res) {
+  static async createUser(req, res, next) {
     try {
-      const {name, email, password, role } = req.body;
-
-      console.log(req.body);
-
-      // Kiểm tra trùng email
-      const existingUser = await UserService.findUserByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ message: "Email đã tồn tại" });
-      }
+      const { name, email, password, role } = req.body;
 
       const newUser = await UserService.createUser({ name, email, password, role });
-      res.status(201).json(newUser);
+      res.status(HttpStatusCode.Created).json(newUser);
     } catch (error) {
-      res.status(500).json({ message: "Lỗi khi tạo người dùng", error: error.message });
+      next(error);
     }
   }
 
   // Cập nhật người dùng
-  static async updateUser(req, res) {
+  static async updateUser(req, res, next) {
     try {
       const { id } = req.params;
       const { email, role } = req.body;
 
       const updatedUser = await UserService.updateUser(id, { email, role });
       if (!updatedUser) {
-        return res.status(404).json({ message: "Không tìm thấy người dùng để cập nhật" });
+        throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy người dùng để cập nhật");
       }
 
-      res.json(updatedUser);
+      res.status(HttpStatusCode.Ok).json(updatedUser);
     } catch (error) {
-      res.status(500).json({ message: "Lỗi khi cập nhật người dùng", error: error.message });
+      res.status(HttpStatusCode.InternalServerError).json({ message: "Lỗi khi cập nhật người dùng", error: error.message });
     }
   }
 
   // Xoá người dùng
-  static async deleteUser(req, res) {
+  static async deleteUser(req, res, next) {
     try {
       const { id } = req.params;
 
       const deleted = await UserService.deleteUser(id);
       if (!deleted) {
-        return res.status(404).json({ message: "Không tìm thấy người dùng để xoá" });
+        return res.status(HttpStatusCode.NotFound).json({ message: "Không tìm thấy người dùng để xoá" });
       }
 
-      res.json({ message: "Xoá người dùng thành công" });
+      res.status(HttpStatusCode.Ok).json({ message: "Xoá người dùng thành công" });
     } catch (error) {
-      res.status(500).json({ message: "Lỗi khi xoá người dùng", error: error.message });
+      res.status(HttpStatusCode.InternalServerError).json({ message: "Lỗi khi xoá người dùng", error: error.message });
     }
   }
 
 
   //gửi mã OTP
-  static async sendVerificationCode(req, res) {
+  static async sendVerificationCode(req, res, next) {
     try {
       const { email } = req.body;
   
       if (!email) {
-        res.status(400).json({ error: 'Vui lòng nhập email' });
+        res.status(HttpStatusCode.BadRequest).json({ error: 'Vui lòng nhập email' });
         return;
       }
       
@@ -121,29 +114,29 @@ class UserController {
         text: `Mã xác thực của bạn là: ${otp}`
       });
   
-      res.status(200).json({
+      res.status(HttpStatusCode.Ok).json({
         success: true,
         message: 'Mã xác thực đã được gửi đến email của bạn'
       });
     } catch (error) {
       console.error('Lỗi gửi mã xác thực:', error);
-      res.status(500).json({ error: 'Lỗi máy chủ' });
+      res.status(HttpStatusCode.InternalServerError).json({ error: 'Lỗi máy chủ' });
     }
   }
 
-  static async resetPassword(req, res) {
+  static async resetPassword(req, res, next) {
     try {
       const { email, otp, newPassword } = req.body;
   
       if (!email || !otp || !newPassword) {
-        res.status(400).json({ error: 'Vui lòng nhập đầy đủ thông tin' });
+        res.status(HttpStatusCode.BadRequest).json({ error: 'Vui lòng nhập đầy đủ thông tin' });
         return;
       }
   
       // Kiểm tra mã OTP
       const otpData = otpStore.get(email);
       if (!otpData) {
-        res.status(400).json({
+        res.status(HttpStatusCode.BadRequest).json({
           success: false,
           message: 'Bạn cần gửi mã xác thực trước'
         });
@@ -153,7 +146,7 @@ class UserController {
       // Kiểm tra mã OTP có hết hạn không
       if (new Date() > otpData.expires) {
         otpStore.delete(email);
-        res.status(400).json({
+        res.status(HttpStatusCode.BadGateway).json({
           success: false,
           message: 'Mã xác thực đã hết hạn, vui lòng yêu cầu mã mới'
         });
@@ -162,7 +155,7 @@ class UserController {
   
       // Kiểm tra mã xác thực
       if (otp !== otpData.otp) {
-        res.status(401).json({
+        res.status(HttpStatusCode.Unauthorized).json({
           success: false,
           message: 'Mã xác thực không đúng'
         });
@@ -172,7 +165,7 @@ class UserController {
       // Tìm người dùng theo email
       const user = await UserService.findByEmail(email);
       if (!user) {
-        res.status(404).json({ error: 'Người dùng không tồn tại' });
+        res.status(HttpStatusCode.NotFound).json({ error: 'Người dùng không tồn tại' });
         return;
       }
   
@@ -190,14 +183,14 @@ class UserController {
       // Xóa mã OTP sau khi đổi mật khẩu thành công
       otpStore.delete(email);
   
-      res.status(200).json({
+      res.status(HttpStatusCode.Ok).json({
         success: true,
         message: 'Đổi mật khẩu thành công'
       });
   
     } catch (error) {
       console.error('Lỗi reset mật khẩu:', error);
-      res.status(500).json({ error: 'Lỗi máy chủ' });
+      res.status(HttpStatusCode.InternalServerError).json({ error: 'Lỗi máy chủ' });
     }
   }
 
@@ -206,4 +199,4 @@ class UserController {
   
 }
 
-module.exports = UserController;
+export default UserController;

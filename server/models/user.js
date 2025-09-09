@@ -1,5 +1,7 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+import { DataTypes } from "sequelize";
+import sequelize from "../config/database.js";
+import USER_ROLE  from "../enums/userRole.enum.js";
+import AUTH_PROVIDER  from "../enums/authProvider.enum.js";
 
 const User = sequelize.define(
   "User",
@@ -27,7 +29,7 @@ const User = sequelize.define(
       validate: {
         // Password bắt buộc nếu authProvider là 'local'
         passwordRequiredIfLocal(value) {
-          if (this.authProvider === 'local' && !value) {
+          if (this.authProvider === AUTH_PROVIDER.LOCAL && !value) {
             throw new Error('Password là bắt buộc khi đăng nhập bằng phương thức local');
           }
         },
@@ -36,17 +38,17 @@ const User = sequelize.define(
     role: {
       type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: "user",
+      defaultValue: USER_ROLE.USER,
       validate: {
-        isIn: [["admin", "user"]],
+        isIn: [Object.values(USER_ROLE)],
       },
     },
     authProvider: {
       type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: "local", // hoặc 'google', 'facebook', ...
+      defaultValue: AUTH_PROVIDER.LOCAL,
       validate: {
-        isIn: [["local", "google"]],
+        isIn: [Object.values(AUTH_PROVIDER)], 
       },
     },
   },
@@ -56,4 +58,4 @@ const User = sequelize.define(
   }
 );
 
-module.exports = User;
+export default User;

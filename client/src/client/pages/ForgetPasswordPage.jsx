@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import '../styles/ForgetPasswordPage.css';
+import styles from '../styles/ForgetPasswordPage.module.css';
 import { useNavigate } from 'react-router-dom';
-import userService from '../services/userService';
-
+import userService from '../../services/userService';
 
 const ForgetPassword = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +14,9 @@ const ForgetPassword = () => {
   const [countdown, setCountdown] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -75,41 +77,36 @@ const ForgetPassword = () => {
     }
   };
 
-  const togglePassword = () => {
-    setShowPassword((prev) => !prev);
-  };
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const toggleConfirmPassword = () => {
-    setShowConfirmPassword((prev) => !prev);
-  };
-
   return (
-    <div className="forgetpassword-register-container">
-      <div className="forgetpassword-bg-overlay"></div>
-      <div className="forgetpassword-floating-card">
+    <div className={styles["forgetpassword-register-container"]}>
+      <div className={styles["forgetpassword-bg-overlay"]}></div>
+      <div className={styles["forgetpassword-floating-card"]}>
         {/* Left content section */}
-        <div className="forgetpassword-content-section">
-          <div className="forgetpassword-content-inner">
+        <div className={styles["forgetpassword-content-section"]}>
+          <div className={styles["forgetpassword-content-inner"]}>
             <h1>TOEIC ONLINE</h1>
             <p>Quên mật khẩu? Đặt lại mật khẩu mới cho tài khoản của bạn.</p>
-            <div className="forgetpassword-illustration">
+            <div className={styles["forgetpassword-illustration"]}>
               <img src="/assets/img/education-illustration.png" alt="Education" />
             </div>
           </div>
-          <div className="forgetpassword-deco-circle pink"></div>
-          <div className="forgetpassword-deco-circle yellow"></div>
-          <div className="forgetpassword-deco-circle blue"></div>
+          <div className={`${styles["forgetpassword-deco-circle"]} ${styles.pink}`}></div>
+          <div className={`${styles["forgetpassword-deco-circle"]} ${styles.yellow}`}></div>
+          <div className={`${styles["forgetpassword-deco-circle"]} ${styles.blue}`}></div>
         </div>
+
         {/* Right form section */}
-        <div className="forgetpassword-form-section">
+        <div className={styles["forgetpassword-form-section"]}>
           <h2>QUÊN MẬT KHẨU</h2>
-          <p className="forgetpassword-subtitle">Nhập email để nhận mã xác thực và đặt lại mật khẩu</p>
+          <p className={styles["forgetpassword-subtitle"]}>
+            Nhập email để nhận mã xác thực và đặt lại mật khẩu
+          </p>
+
           <form onSubmit={handleSubmit}>
             {/* Email field */}
-            <div className="forgetpassword-form-group">
-              <div className="forgetpassword-input-wrapper">
-                <span className="forgetpassword-input-icon">
+            <div className={styles["forgetpassword-form-group"]}>
+              <div className={styles["forgetpassword-input-wrapper"]}>
+                <span className={styles["forgetpassword-input-icon"]}>
                   <i className="fas fa-envelope"></i>
                 </span>
                 <input
@@ -117,19 +114,20 @@ const ForgetPassword = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="forgetpassword-custom-input"
+                  className={styles["forgetpassword-custom-input"]}
                   placeholder="Địa chỉ email"
                   required
                 />
-                <span className="forgetpassword-input-check">
+                <span className={styles["forgetpassword-input-check"]}>
                   <i className="fas fa-check"></i>
                 </span>
               </div>
             </div>
+
             {/* OTP Section */}
-            <div className="forgetpassword-form-group forgetpassword-otp-group">
-              <div className="forgetpassword-input-wrapper">
-                <span className="forgetpassword-input-icon">
+            <div className={`${styles["forgetpassword-form-group"]} ${styles["forgetpassword-otp-group"]}`}>
+              <div className={styles["forgetpassword-input-wrapper"]}>
+                <span className={styles["forgetpassword-input-icon"]}>
                   <i className="fas fa-key"></i>
                 </span>
                 <input
@@ -142,14 +140,14 @@ const ForgetPassword = () => {
                       setFormData({ ...formData, otp: value });
                     }
                   }}
-                  className="forgetpassword-custom-input"
+                  className={styles["forgetpassword-custom-input"]}
                   placeholder="Nhập mã OTP"
                   required
                   maxLength={6}
                 />
                 <button
                   type="button"
-                  className="forgetpassword-otp-btn"
+                  className={styles["forgetpassword-otp-btn"]}
                   onClick={handleSendCode}
                   disabled={countdown > 0 || isLoading}
                 >
@@ -157,10 +155,11 @@ const ForgetPassword = () => {
                 </button>
               </div>
             </div>
+
             {/* New password */}
-            <div className="forgetpassword-form-group">
-              <div className="forgetpassword-input-wrapper">
-                <span className="forgetpassword-input-icon">
+            <div className={styles["forgetpassword-form-group"]}>
+              <div className={styles["forgetpassword-input-wrapper"]}>
+                <span className={styles["forgetpassword-input-icon"]}>
                   <i className="fas fa-lock"></i>
                 </span>
                 <input
@@ -168,19 +167,23 @@ const ForgetPassword = () => {
                   name="newPassword"
                   value={formData.newPassword}
                   onChange={handleInputChange}
-                  className="forgetpassword-custom-input"
+                  className={styles["forgetpassword-custom-input"]}
                   placeholder="Mật khẩu mới"
                   required
                 />
-                <span className="forgetpassword-input-toggle" onClick={togglePassword}>
+                <span
+                  className={styles["forgetpassword-input-toggle"]}
+                  onClick={() => setShowPassword((prev) => !prev)}
+                >
                   <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                 </span>
               </div>
             </div>
+
             {/* Confirm password */}
-            <div className="forgetpassword-form-group">
-              <div className="forgetpassword-input-wrapper">
-                <span className="forgetpassword-input-icon">
+            <div className={styles["forgetpassword-form-group"]}>
+              <div className={styles["forgetpassword-input-wrapper"]}>
+                <span className={styles["forgetpassword-input-icon"]}>
                   <i className="fas fa-lock"></i>
                 </span>
                 <input
@@ -188,23 +191,30 @@ const ForgetPassword = () => {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className="forgetpassword-custom-input"
+                  className={styles["forgetpassword-custom-input"]}
                   placeholder="Xác nhận mật khẩu mới"
                   required
                 />
-                <span className="forgetpassword-input-toggle" onClick={toggleConfirmPassword}>
+                <span
+                  className={styles["forgetpassword-input-toggle"]}
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                >
                   <i className={`fas ${showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                 </span>
               </div>
             </div>
-            <button type="submit" className="forgetpassword-submit-btn" disabled={isLoading}>
+
+            <button type="submit" className={styles["forgetpassword-submit-btn"]} disabled={isLoading}>
               {isLoading ? (
-                <div className="forgetpassword-spinner-border text-light" role="status">
+                <div className={styles["forgetpassword-spinner-border"]} role="status">
                   <span className="visually-hidden"></span>
                 </div>
-              ) : 'ĐỔI MẬT KHẨU'}
+              ) : (
+                'ĐỔI MẬT KHẨU'
+              )}
             </button>
-            <div className="forgetpassword-login-link">
+
+            <div className={styles["forgetpassword-login-link"]}>
               Đã nhớ mật khẩu? <a href="/login">Đăng nhập ngay</a>
             </div>
           </form>
@@ -214,4 +224,4 @@ const ForgetPassword = () => {
   );
 };
 
-export default ForgetPassword; 
+export default ForgetPassword;

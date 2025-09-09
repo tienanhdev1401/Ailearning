@@ -1,0 +1,7 @@
+.mainHome {
+  flex: 1;                
+  background-color: #19212b;
+  color: #e0e6eb;       
+  padding: 24px;
+  box-sizing: border-box;
+}

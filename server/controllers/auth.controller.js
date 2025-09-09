@@ -1,64 +1,81 @@
-const AuthService = require("../services/auth.service");
+import { HttpStatusCode } from "axios";
+import AuthService from "../services/auth.service.js";
+import ApiError from "../utils/ApiError.js";
 
 class AuthController {
-  static async login(req, res) {
-    const { email, password } = req.body;
-
+  static async login(req, res, next) {
     try {
-      const user = await AuthService.authenticateUser(email, password);
-      if (!user) {
-        return res.status(401).json({ message: "Sai tài khoản hoặc mật khẩu" });
-      }
+      const { email, password } = req.body;
 
-      const accessToken = AuthService.generateAccessToken(user);
-      const refreshToken = AuthService.generateRefreshToken(user);
-
-      res.cookie("refreshToken", refreshToken, {
+      const result = await AuthService.login(email, password);
+      
+      res.cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
         sameSite: "strict",
         secure: false,
       });
 
-      res.json({ accessToken });
+      res.status(HttpStatusCode.Ok).json({ accessToken: result.accessToken });
     } catch (error) {
-      res.status(500).json({ message: "Lỗi server khi đăng nhập", error: error.message });
+      next(error);
     }
   }
 
-  static async refreshToken(req, res) {
-    const token = req.cookies.refreshToken;
-    if (!token) return res.status(401).json({ message: "Không có refresh token" });
-
+  // Đăng ký người dùng
+  static async register(req, res, next) {
     try {
-      const payload = AuthService.verifyRefreshToken(token);
-      const accessToken = AuthService.generateAccessToken(payload);
-      res.json({ accessToken });
-    } catch (err) {
-      return res.status(401).json({ message: "Refresh token không hợp lệ hoặc đã hết hạn" });
+      const { name, email, password } = req.body;
+
+      const newUser = await AuthService.register(name, email, password);
+      res.status(HttpStatusCode.Created).json(newUser);
+    } catch (error) {
+      next(error);
     }
   }
 
-  static logout(req, res) {
-    const token = req.cookies.refreshToken;
-    if (!token) return res.sendStatus(204);
+  // static async refreshToken(req, res, next) {
+  //   const token = req.cookies.refreshToken;
+  //   if (!token) 
+  //     throw new ApiError(HttpStatusCode.Unauthorized,"Không có refresh token" );
+
+  //   try {
+  //     const payload = AuthService.verifyRefreshToken(token);
+  //     const accessToken = AuthService.generateAccessToken(payload);
+  //     res.status(HttpStatusCode.Ok).json({ accessToken });
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // }
+
+  static async refreshToken(req, res, next) {
+    try {
+      const token = req.cookies.refreshToken;
+      if (!token) 
+      throw new ApiError(HttpStatusCode.Unauthorized,"Không có refresh token" );
+
+      const accessToken = await AuthService.refreshAccessToken(token);
+      res.status(HttpStatusCode.Ok).json({ accessToken });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static logout(req, res, next) {
+    // const token = req.cookies.refreshToken;
+    // if (!token) return res.sendStatus(204);
 
     res.clearCookie("refreshToken");
-    res.sendStatus(200);
+    res.status(HttpStatusCode.Ok).json({ message: "Logout thành công" });
   }
 
-  static async getMe(req, res) {
+  static async getMe(req, res, next) {
     try {
       const user = await AuthService.getUserById(req.user.id);
-
-      if (!user) {
-        return res.status(404).json({ message: "Không tìm thấy người dùng" });
-      }
-
-      res.json(user);
+      res.status(HttpStatusCode.Ok).json(user);
     } catch (error) {
-      res.status(500).json({ message: "Lỗi server khi lấy thông tin người dùng", error: error.message });
+      next(error);
     }
   }
 }
 
-module.exports = AuthController;
+export default AuthController;
