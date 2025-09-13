@@ -10,6 +10,7 @@ import sequelize from './config/database.js'
 import userRouter from './routes/user.routes.js'
 import authRouter from './routes/auth.routes.js'
 import oauthRoutes from './routes/oauth.routes.js'
+import grammarCheckerRouter from './routes/grammarChecker.routes.js'
 import './config/passport.js'   // chạy file config để đăng ký strategy
 import errorHandlingMiddleware from './middlewares/errorHandling.middleware.js'
 
@@ -30,6 +31,8 @@ app.use(cors({
 app.use('/api/auth', authRouter);
 app.use("/api/auth", oauthRoutes);
 app.use('/api/users', userRouter);
+
+app.use('/api',grammarCheckerRouter);
 
 // swagger endpoint
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
