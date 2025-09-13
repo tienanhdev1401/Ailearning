@@ -9,6 +9,10 @@
   padding: 24px 0;
   font-family: 'Poppins', sans-serif;
   color: #e0e6eb;
+  position: sticky; /* luôn dính ở top */
+  top: 0;
+  height: 100vh; /* chiếm toàn bộ chiều cao màn hình */
+  overflow-y: auto; /* bật scroll dọc nếu nội dung quá dài */
 }
 
 /* Header */
