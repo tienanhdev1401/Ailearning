@@ -9,6 +9,7 @@ import ForgetPassword from "./client/pages/ForgetPasswordPage";
 import ProtectedRoute from "./routers/ProtectedRoute";
 
 import Dashboard from "./admin/pages/Dashboard";
+import VideoPraticePage from "./client/pages/VideoPraticePage";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
       />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forget-password" element={<ForgetPassword />} />
+      <Route path="/video" element={<VideoPraticePage />} />
 
       <Route
         path="/dashboard"
