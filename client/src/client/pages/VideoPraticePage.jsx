@@ -3,6 +3,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import api from '../../api/api';
 
+import successSound from "../sounds/success.mp3";
+
+
 export default function VideoPraticePage() {
   const [lesson, setLesson] = useState(null);
   const [words, setWords] = useState([]);
@@ -22,6 +25,9 @@ export default function VideoPraticePage() {
   const segmentRefs = useRef([]);
 
   const [inputText, setInputText] = useState("");
+
+  const [segmentSuccess, setSegmentSuccess] = useState(false);// kiểm tra segment thành công
+
 
   // Convert time string to seconds
   const timeToSeconds = (timeStr) => {
@@ -65,6 +71,8 @@ export default function VideoPraticePage() {
     console.log(segmentWords);
     setWords(segmentWords);
     setRevealed(Array(segmentWords.length).fill(false));
+    setInputText("");
+    setSegmentSuccess(false);
     setAllRevealed(false);
     }, [lesson]);
 
@@ -313,28 +321,41 @@ export default function VideoPraticePage() {
     }
     }, [currentSegment]);
 
-    const handleInputChange = (e) => {
-        const text = e.target.value.trim().toLowerCase();
-        setInputText(e.target.value);
+  const handleInputChange = (e) => {
+    const text = e.target.value.trim().toLowerCase();
+    setInputText(e.target.value);
+    setRevealed((prev) => {
+      const newRevealed = [...prev];
+      // Lặp qua các từ theo thứ tự
+      for (let i = 0; i < words.length; i++) {
+        if (!newRevealed[i]) {
+          // Nếu từ tiếp theo chưa reveal và người dùng gõ đúng
+          if (text.endsWith(words[i].toLowerCase())) {
+            newRevealed[i] = true;
+          }
+          // Chỉ kiểm tra từ đầu tiên chưa reveal
+          break;
+        }
+      }
+      // Nếu tất cả từ đã reveal -> trigger success (chỉ trigger 1 lần)
+      const allRevealed = newRevealed.length > 0 && newRevealed.every(Boolean);
+      if (allRevealed && !segmentSuccess) {
+        setSegmentSuccess(true);
 
-        setRevealed((prev) => {
-            const newRevealed = [...prev];
+        // phát âm thanh success (đặt file public/sounds/success.mp3)
+        try {
+          const audio = new Audio(successSound);
+          audio.volume = 1;
+          audio.play().catch((err) => console.warn("Audio play blocked:", err));
+        } catch (err) {
+          console.warn("Audio error:", err);
+        }
 
-            // Lặp qua các từ theo thứ tự
-            for (let i = 0; i < words.length; i++) {
-            if (!newRevealed[i]) {
-                // Nếu từ tiếp theo chưa reveal và người dùng gõ đúng
-                if (text.endsWith(words[i].toLowerCase())) {
-                newRevealed[i] = true;
-                }
-                // Chỉ kiểm tra từ đầu tiên chưa reveal
-                break;
-            }
-            }
-
-            return newRevealed;
-        });
-        };
+      
+    }
+      return newRevealed;
+    });
+  };
 
   const progress = lesson
     ? Math.round(
@@ -594,10 +615,18 @@ export default function VideoPraticePage() {
                 ))}
               </div>
 
-              <p className="text-muted small">
-                <i className="bi bi-info-circle"></i> Các từ được tiết lộ sẽ bị
-                tính là lỗi và ảnh hưởng đến điểm số của bạn.
-              </p>
+              
+
+              {!segmentSuccess ? (
+                <p className="text-muted small">
+                  <i className="bi bi-info-circle"></i> Các từ được tiết lộ sẽ bị
+                  tính là lỗi và ảnh hưởng đến điểm số của bạn.
+                </p>
+              ) : (
+                <div className="alert alert-success text-center mb-3">
+                  🎉 Bạn đã nhập chính xác toàn bộ từ trong segment này!
+                </div>
+              )}
 
               <div className="action-buttons d-flex gap-2 mt-3">
                 <button
