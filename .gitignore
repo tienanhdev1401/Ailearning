@@ -1,4 +1,25 @@
-# Ngăn file cấu hình môi trường (chứa thông tin nhạy cảm như API keys, DB credentials)
+/.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.h5
+*.tar.gz
+*.zip
+env/
+/.idea/
+.vscode/
+node_modules/
+dist/
+build/
+\.DS_Store
+*.log
+l2artic_model/.venv/
 .DS_Store
 .env
 .env.local

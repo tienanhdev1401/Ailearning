@@ -1,0 +1,7 @@
+flask==2.3.3
+gramformer==1.0.2
+torch==2.0.1
+transformers==4.21.3
+sentencepiece==0.1.97
+spacy>=3.4.0
+errant
