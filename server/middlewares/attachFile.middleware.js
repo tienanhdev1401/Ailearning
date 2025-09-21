@@ -1,7 +1,10 @@
 const attachFileToBody = (fieldName) => (req, res, next) => {
-  if (req.file) {
-    req.body[fieldName] = req.file;
+  const file = req.file;
+
+  if (file) {
+    req.body[fieldName] = file;
   }
+
   next();
 };
 

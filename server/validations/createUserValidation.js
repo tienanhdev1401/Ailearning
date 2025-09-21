@@ -3,7 +3,7 @@ import USER_ROLE from "../enums/userRole.enum.js";
 import AUTH_PROVIDER from "../enums/authProvider.enum.js";
 
 const createUserValidation = Joi.object({
-    name: Joi.required()
+    name: Joi.string().required()
     .example("Nguyễn Văn A")
     .messages({
         "string.empty": "{{#label}} không được để trống",

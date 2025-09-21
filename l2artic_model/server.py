@@ -37,4 +37,4 @@ async def score_endpoint(text: str = Form(...), audio: UploadFile = File(...), b
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run('server:app', host='0.0.0.0', port=5002, log_level='info')
+    uvicorn.run('server:app', host='0.0.0.0', port=5005, log_level='info')

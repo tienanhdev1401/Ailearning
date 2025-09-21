@@ -112,7 +112,7 @@ export default function VideoPraticePage() {
     async function fetchLesson() {
       try {
         setLoading(true);
-        const res = await api.get("/lessons/16");
+        const res = await api.get("/lessons/1");
         setLesson(res.data.lesson);
       } catch (err) {
         console.error("Lỗi fetch lesson:", err);

@@ -14,6 +14,7 @@ const options = {
         Register: swaggerSchemas.registerSchema,
         CreateUser: swaggerSchemas.createUserSchema,
         UpdateUser: swaggerSchemas.updateUserSchema,
+        CreateLesson: swaggerSchemas.createLessonSchema,
 
       },
       securitySchemes: {

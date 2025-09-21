@@ -45,8 +45,8 @@ class LessonService {
         // 4. Commit transaction
         await transaction.commit();
 
-        // 5. Xóa file tạm
-        fs.unlinkSync(srtPath);
+        // // 5. Xóa file tạm
+        // fs.unlinkSync(srtPath);
 
         return { lesson, subtitlesCount: subtitles.length };
         } catch (err) {
@@ -61,7 +61,13 @@ class LessonService {
         if (err.name === "SequelizeForeignKeyConstraintError") {
             throw new ApiError(HttpStatusCode.BadRequest, "Invalid foreign key", "FOREIGN_KEY_ERROR");
         }
-        throw new ApiError(HttpStatusCode.InternalServerError, "Server error", "SERVER_ERROR");
+        throw err;
+        } finally {
+        // Luôn xóa file tạm sau khi xử lý*
+            if (srtPath && fs.existsSync(srtPath)) {
+                console.log("Xóa file tạm:", srtPath);
+                fs.unlinkSync(srtPath);
+            }
         }
     }
 
