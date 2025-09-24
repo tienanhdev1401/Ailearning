@@ -30,6 +30,14 @@ const Subtitle = sequelize.define(
       allowNull: false,
       validate: { notEmpty: true },
     },
+    phonetic: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    translation: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
   },
   {
     tableName: "subtitles",

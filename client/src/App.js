@@ -10,6 +10,7 @@ import ProtectedRoute from "./routers/ProtectedRoute";
 
 import Dashboard from "./admin/pages/Dashboard";
 import VideoPraticePage from "./client/pages/VideoPraticePage";
+import ListeningPraticePage from "./client/pages/ListeningVideoPraticePage";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forget-password" element={<ForgetPassword />} />
       <Route path="/video" element={<VideoPraticePage />} />
+      <Route path="/listen" element={<ListeningPraticePage />} />
 
       <Route
         path="/dashboard"
