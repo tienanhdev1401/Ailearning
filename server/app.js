@@ -12,6 +12,7 @@ import authRouter from './routes/auth.routes.js'
 import oauthRoutes from './routes/oauth.routes.js'
 import grammarCheckerRouter from './routes/grammarChecker.routes.js'
 import lessonRouter from './routes/lesson.routes.js'
+import transcriptRouter from './routes/transcript.routes.js'
 import './config/passport.js'   // chạy file config để đăng ký strategy
 import errorHandlingMiddleware from './middlewares/errorHandling.middleware.js'
 
@@ -35,6 +36,7 @@ app.use('/api/users', userRouter);
 
 app.use('/api',grammarCheckerRouter);
 app.use('/api/lessons',lessonRouter);
+app.use('/api/transcript', transcriptRouter);
 
 
 
