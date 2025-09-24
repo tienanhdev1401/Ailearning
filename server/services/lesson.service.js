@@ -1,12 +1,15 @@
 // services/lesson.service.js
 import fs from "fs";
-import { Sequelize } from "sequelize";
 import SrtParser from "srt-parser-2";
 import Lesson from "../models/lesson.js";
 import Subtitle from "../models/subtitle.js";
 import ApiError from "../utils/ApiError.js";
 import { HttpStatusCode } from "axios";
 import sequelize from "../config/database.js"; 
+
+import { translateText } from "../helpers/translateHelper.js";
+import { phoneticSentence } from "../helpers/phoneticHelper.js";
+
 
 class LessonService {
     static async createLesson({ title, video_url, thumbnail_url, srtPath }) {
@@ -32,20 +35,31 @@ class LessonService {
             throw new ApiError(HttpStatusCode.BadRequest, "Error in parse SRT file");
         }
 
-        const subtitles = srtArray.map((item) => ({
+        // 3. Tạo subtitles với dịch + phiên âm
+        const subtitles = [];
+        for (const item of srtArray) {
+            // Dịch text
+            const translated_text = await translateText(item.text);
+            // Phiên âm
+            const phonetic_text = await phoneticSentence(item.text);
+
+            subtitles.push({
             lesson_id: lesson.id,
             start_time: item.startTime,
             end_time: item.endTime,
             full_text: item.text,
-        }));
+            translated_text,
+            phonetic_text,
+            });
+        }
 
-        // 3. Lưu subtitles
+        // 4. Lưu subtitles
         await Subtitle.bulkCreate(subtitles, { transaction });
 
-        // 4. Commit transaction
+        // 5. Commit transaction
         await transaction.commit();
 
-        // // 5. Xóa file tạm
+        // 6. Xóa file tạm
         // fs.unlinkSync(srtPath);
 
         return { lesson, subtitlesCount: subtitles.length };
