@@ -145,6 +145,38 @@ class LessonService {
             },
         };
     }
+
+    static async deleteLesson(id) {
+        const transaction = await sequelize.transaction();
+        try {
+            // 1. Kiểm tra lesson tồn tại
+            const lesson = await Lesson.findByPk(id, { transaction });
+            if (!lesson) {
+                throw new ApiError(HttpStatusCode.NotFound, "Lesson not found");
+            }
+
+            // 2. Xóa subtitles trước
+            await Subtitle.destroy({
+                where: { lesson_id: id },
+                transaction,
+            });
+
+            // 3. Xóa lesson
+            await Lesson.destroy({
+                where: { id },
+                transaction,
+            });
+
+            // 4. Commit transaction
+            await transaction.commit();
+
+            return { message: `Lesson deleted successfully` };
+        } catch (err) {
+            // Rollback nếu có lỗi
+            await transaction.rollback();
+            throw err;
+        }
+    }
 }
 
 export default LessonService;

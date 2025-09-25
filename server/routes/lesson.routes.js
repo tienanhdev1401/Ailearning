@@ -87,4 +87,7 @@ router.get("/", LessonController.getAllLessons);
 // GET /lessons/:id -> lấy lesson theo id
 router.get("/:id", LessonController.getLessonById);
 
+
+
+router.delete("/:id", LessonController.deleteLesson);
 export default router;
