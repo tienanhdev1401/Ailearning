@@ -87,4 +87,29 @@ router.get("/", LessonController.getAllLessons);
 // GET /lessons/:id -> lấy lesson theo id
 router.get("/:id", LessonController.getLessonById);
 
+
+/**
+ * @swagger
+ * /api/lessons/{id}:
+ *   delete:
+ *     summary: Xóa lesson theo id 
+ *     tags: [Lessons]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID của lesson
+ *     responses:
+ *       200:
+ *         description: Xóa thành công lesson
+ *       404:
+ *         description: Không tìm thấy lesson
+ *       500:
+ *         description: Lỗi server
+ */
+// DELETE /lessons/:id -> lấy lesson theo id
+router.delete("/:id", LessonController.deleteLesson);
+
 export default router;
