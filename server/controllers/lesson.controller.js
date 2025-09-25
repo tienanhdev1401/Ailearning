@@ -36,10 +36,30 @@ class LessonController {
 
   static async getLessonById(req, res, next) {
     try {
-      const lesson = await LessonService.getLessonById(req.params.id);
+      const { id } = req.params;
+      if (!id) {
+          throw new ApiError(HttpStatusCode.BadRequest, "Missing lesson id");
+      }
+      const lesson = await LessonService.getLessonById(id);
       res.status(HttpStatusCode.Ok).json(lesson);
     } catch (error) {
       next(error);
+    }
+  }
+
+  static async deleteLesson (req, res, next){
+    try {
+        const { id } = req.params;
+        if (!id) {
+            throw new ApiError(HttpStatusCode.BadRequest, "Missing lesson id");
+        }
+
+        const result = await LessonService.deleteLesson(id);
+        return res.status(HttpStatusCode.Ok).json({
+            message: result.message,
+        });
+    } catch (err) {
+        next(err); 
     }
   }
 }
