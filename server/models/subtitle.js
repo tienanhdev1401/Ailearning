@@ -1,6 +1,5 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
-import Lesson from "./lesson.js";
 
 const Subtitle = sequelize.define(
   "Subtitle",

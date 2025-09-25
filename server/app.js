@@ -38,6 +38,12 @@ app.use('/api',grammarCheckerRouter);
 app.use('/api/lessons',lessonRouter);
 app.use('/api/transcript', transcriptRouter);
 
+import { phoneticText } from "./helpers/phoneticHelper.js";
+(async () => {
+  const result = await phoneticText("however you can rise to meet it if you choose");
+  console.log("Phonetic:", result);
+})();
+
 
 
 // swagger endpoint

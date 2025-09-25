@@ -14,7 +14,9 @@
   "type": "module",
   "dependencies": {
     "@vitalets/google-translate-api": "^9.2.1",
+    "arpabet-to-ipa": "^1.0.0",
     "axios": "^1.11.0",
+    "cmu-pronouncing-dictionary": "^3.0.0",
     "cmudict": "^1.0.2",
     "concurrently": "^8.2.2",
     "cookie-parser": "^1.4.7",

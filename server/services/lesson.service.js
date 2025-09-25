@@ -8,7 +8,7 @@ import { HttpStatusCode } from "axios";
 import sequelize from "../config/database.js"; 
 
 import { translateText } from "../helpers/translateHelper.js";
-import { phoneticSentence } from "../helpers/phoneticHelper.js";
+import { phoneticText } from "../helpers/phoneticHelper.js";
 
 
 class LessonService {
@@ -35,23 +35,34 @@ class LessonService {
             throw new ApiError(HttpStatusCode.BadRequest, "Error in parse SRT file");
         }
 
-        // 3. Tạo subtitles với dịch + phiên âm
-        const subtitles = [];
-        for (const item of srtArray) {
-            // Dịch text
-            const translated_text = await translateText(item.text);
-            // Phiên âm
-            const phonetic_text = await phoneticSentence(item.text);
+        // 3. Dịch & phiên âm song song
+        const subtitles = await Promise.all(
+            srtArray.map(async (item) => {
+            let translated_text = item.text;
+            let phonetic_text = "";
 
-            subtitles.push({
-            lesson_id: lesson.id,
-            start_time: item.startTime,
-            end_time: item.endTime,
-            full_text: item.text,
-            translated_text,
-            phonetic_text,
-            });
-        }
+            try {
+                // chạy song song cả 2 request
+                const [translated, phonetic] = await Promise.all([
+                translateText(item.text),
+                phoneticText(item.text),
+                ]);
+                translated_text = translated;
+                phonetic_text = phonetic;
+            } catch (err) {
+                console.error("Lỗi xử lý subtitle:", item.text, err.message);
+            }
+
+            return {
+                lesson_id: lesson.id,
+                start_time: item.startTime,
+                end_time: item.endTime,
+                full_text: item.text,
+                translation: translated_text,
+                phonetic: phonetic_text,
+            };
+            })
+        );
 
         // 4. Lưu subtitles
         await Subtitle.bulkCreate(subtitles, { transaction });
@@ -62,7 +73,7 @@ class LessonService {
         // 6. Xóa file tạm
         // fs.unlinkSync(srtPath);
 
-        return { lesson, subtitlesCount: subtitles.length };
+        return { lesson, subtitles };
         } catch (err) {
         await transaction.rollback();
         // Phân loại lỗi Sequelize
