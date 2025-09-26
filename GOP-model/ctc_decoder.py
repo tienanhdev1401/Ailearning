@@ -110,8 +110,41 @@ class CTCDecoder:
                     tokens.append(token)
                 prev_id = token_id
                 
-            # Lọc ra các special tokens không mong muốn
-            tokens = [t for t in tokens if t and t not in {'|', '▁', '<space>'}]
+            # Lọc ra các special tokens không mong muốn - giữ lại markers như '▁' và '|' vì
+            # chúng biểu thị ranh giới chunk/word do một số tokenizer sử dụng.
+            tokens = [t for t in tokens if t is not None]
+
+            # Collapse character-level tokens into phoneme tokens and convert spaces
+            # (or separate marker tokens) into leading '▁' markers on the next phoneme.
+            def _collapse(tokens_list: List[str]) -> List[str]:
+                collapsed = []
+                current = ''
+                pending_marker = False
+                for tk in tokens_list:
+                    if not tk:
+                        continue
+                    # treat explicit space-like tokens or single-space strings as boundaries
+                    if tk == ' ' or tk == '\u2581' or tk == '▁' or tk == '|' or tk.isspace():
+                        if current:
+                            collapsed.append(current)
+                            current = ''
+                        pending_marker = True
+                        continue
+                    # Normal token character (could be multi-char)
+                    if current == '':
+                        if pending_marker:
+                            current = '▁' + tk
+                            pending_marker = False
+                        else:
+                            current = tk
+                    else:
+                        current = current + tk
+
+                if current:
+                    collapsed.append(current)
+                return collapsed
+
+            tokens = _collapse(tokens)
             return tokens
             
         except Exception as e:

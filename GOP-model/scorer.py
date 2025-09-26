@@ -56,11 +56,12 @@ class PronunciationScorer:
             nltk.download('cmudict', quiet=True)
     
     def score_pronunciation(
-        self, 
-        script_text: str, 
-        audio_path: str, 
+        self,
+        script_text: str,
+        audio_path: str,
         model_name: str = "mrrubino/wav2vec2-large-xlsr-53-l2-arctic-phoneme",
-        thresholds: Tuple[float, float] = (0.15, 0.35)
+        thresholds: Tuple[float, float] = (0.15, 0.35),
+        segmentation_policy: str = 'alignment'  # 'marker' or 'alignment'
     ) -> PronunciationResult:
         """
         Chấm điểm chất lượng phát âm
@@ -75,39 +76,41 @@ class PronunciationScorer:
             PronunciationResult: Kết quả chấm điểm đầy đủ
         """
         
-        # Bước 1: Decode audio thành predicted phonemes
+        # Bước 1: Decode audio thành predicted phonemes (flat)
         predicted_tokens = self.ctc_decoder.decode_audio(audio_path, model_name)
-        # Normalize tokens from CTCDecoder: strip special markers and join without spaces
-        norm_tokens = [t.replace('▁', '').replace('|', '').strip() for t in predicted_tokens if t]
-        joined = ''.join(norm_tokens)
-        predicted_phones = self.phoneme_mapper.tokenize_ipa(joined)
-        
+        # Build a single string from tokens, converting boundary markers to spaces so
+        # tokenizer can split properly when model emitted boundaries; otherwise just
+        # join tokens with spaces.
+        token_str = ' '.join([t.replace('▁', ' ').replace('|', ' ').strip() for t in predicted_tokens if t is not None])
+        predicted_phones = self.phoneme_mapper.tokenize_ipa(token_str)
+
         # Bước 2: Chuyển text thành target phonemes
         words = re.findall(r"\w+", script_text.lower())
         target_phones_per_word = self._get_target_pronunciations(words)
-        
-        # Bước 3: Căn chỉnh và tính lỗi
-        flat_target = [p for word_phones in target_phones_per_word for p in word_phones]
-        errors = self.aligner.align_with_errors(flat_target, predicted_phones)
-        
-        # Bước 4: Tính điểm cho từng từ
-        word_scores = self._calculate_word_scores(
-            words, target_phones_per_word, predicted_phones, thresholds
-        )
-        
+
+        # Bước 3: Segment predicted flat phonemes into per-word chunks using markers/tokens
+        predicted_chunks = self.segment_predicted_by_words(predicted_tokens, predicted_phones, target_phones_per_word, policy=segmentation_policy)
+
+        # Bước 4: So sánh từng chunk với nhau và tính lỗi
+        word_scores = self._calculate_word_scores_from_chunks(words, target_phones_per_word, predicted_chunks, thresholds)
+        errors = []
+        for tphones, pchunk in zip(target_phones_per_word, predicted_chunks):
+            errors.extend(self.aligner.align_with_errors(tphones, pchunk))
+
         # Bước 5: Tính điểm tổng thể
+        flat_target = [p for word_phones in target_phones_per_word for p in word_phones]
         total_errors = sum(error.severity for error in errors)
         total_phonemes = len(flat_target)
         accuracy = max(0.0, 1.0 - (total_errors / total_phonemes)) if total_phonemes > 0 else 0.0
         overall_score = int(accuracy * 100)
-        
+
         return PronunciationResult(
             overall_score=overall_score,
             accuracy=accuracy,
             words=word_scores,
             global_errors=errors,
             target_ipa=' '.join(flat_target),
-            predicted_ipa=' '.join(predicted_phones),
+            predicted_ipa=' '.join([p for ch in predicted_chunks for p in ch]),
             metadata={
                 'model_used': model_name,
                 'thresholds': thresholds,
@@ -150,127 +153,178 @@ class PronunciationScorer:
             result.append(ipa_phones)
         
         return result
-    
-    def _calculate_word_scores(
-        self, 
-        words: List[str], 
-        target_per_word: List[List[str]], 
-        predicted_phones: List[str],
+    # Note: legacy function `_calculate_word_scores` (aligning entire predicted sequence
+    # to the flat target and distributing errors) has been removed in favor of the
+    # chunk-based flow implemented in `_calculate_word_scores_from_chunks`.
+
+    def _calculate_word_scores_from_chunks(
+        self,
+        words: List[str],
+        target_per_word: List[List[str]],
+        predicted_chunks: List[List[str]],
         thresholds: Tuple[float, float]
     ) -> List[WordScore]:
         """
-        Tính điểm pronunciation cho TẤT CẢ các từ
-        
-        Args:
-            words: Danh sách các từ
-            target_per_word: Target phonemes cho mỗi từ
-            predicted_phones: Toàn bộ predicted phonemes
-            thresholds: (excellent_threshold, good_threshold)
-            
-        Returns:
-            List[WordScore]: Điểm số cho từng từ
+        Tính điểm khi predicted đã được chunked tương ứng với từng từ.
+        Mỗi predicted_chunks[i] tương ứng với target_per_word[i].
         """
-        
-        # Tạo flat target với mapping đến từ
-        flat_target = []
-        phone_to_word = []  # Mapping từ phoneme index đến word index
-        word_phone_ranges = []  # Track phone ranges cho mỗi từ
-        
-        start_idx = 0
-        for word_idx, phones in enumerate(target_per_word):
-            end_idx = start_idx + len(phones)
-            word_phone_ranges.append((start_idx, end_idx))
-            
-            for phone in phones:
-                flat_target.append(phone)
-                phone_to_word.append(word_idx)
-            start_idx = end_idx
-        
-        # Lấy alignment operations
-        operations = self.aligner._get_edit_operations(flat_target, predicted_phones)
-        
-        # Khởi tạo lỗi và predicted phones cho TẤT CẢ từ
-        word_errors = [[] for _ in words]
-        word_predicted_phones = [[] for _ in words]
-        
-        target_idx = 0
-        predicted_idx = 0
-        
-        # Xử lý từng operation
-        for op, expected, actual in operations:
-            if op == 'M':  # Match
-                word_idx = phone_to_word[target_idx] if target_idx < len(phone_to_word) else len(words) - 1
-                word_predicted_phones[word_idx].append(actual)
-                target_idx += 1
-                predicted_idx += 1
-            elif op == 'S':  # Substitution
-                word_idx = phone_to_word[target_idx] if target_idx < len(phone_to_word) else len(words) - 1
-                severity = 1.0 - self.phoneme_mapper.get_similarity(expected, actual)
-                
-                word_errors[word_idx].append(PhonemeError(
-                    type='substitution',
-                    position=target_idx,
-                    expected=expected,
-                    actual=actual,
-                    severity=severity
-                ))
-                word_predicted_phones[word_idx].append(actual)
-                target_idx += 1
-                predicted_idx += 1
-            elif op == 'D':  # Deletion
-                word_idx = phone_to_word[target_idx] if target_idx < len(phone_to_word) else len(words) - 1
-                
-                word_errors[word_idx].append(PhonemeError(
-                    type='deletion',
-                    position=target_idx,
-                    expected=expected,
-                    actual=None,
-                    severity=1.0
-                ))
-                target_idx += 1
-            elif op == 'I':  # Insertion
-                # Gán insertion cho từ trước đó hoặc từ đầu tiên
-                word_idx = phone_to_word[target_idx - 1] if target_idx > 0 and target_idx - 1 < len(phone_to_word) else 0
-                word_errors[word_idx].append(PhonemeError(
-                    type='insertion',
-                    position=target_idx,
-                    expected=None,
-                    actual=actual,
-                    severity=0.8
-                ))
-                word_predicted_phones[word_idx].append(actual)
-                predicted_idx += 1
-        
-        # Tính điểm cho TẤT CẢ từ (bao gồm cả những từ phát âm hoàn hảo)
         word_scores = []
-        for i, (word, target_phones) in enumerate(zip(words, target_per_word)):
-            total_error = sum(error.severity for error in word_errors[i])
+        for i, word in enumerate(words):
+            target_phones = target_per_word[i] if i < len(target_per_word) else []
+            predicted_phones = predicted_chunks[i] if i < len(predicted_chunks) else []
+
+            # Align target_phones vs predicted_phones to compute errors
+            errors = self.aligner.align_with_errors(target_phones, predicted_phones)
+            total_error = sum(e.severity for e in errors)
             total_phones = len(target_phones)
-            
+
             accuracy = max(0.0, 1.0 - (total_error / total_phones)) if total_phones > 0 else 1.0
-            
-            # Xác định label dựa trên error rate
             error_rate = total_error / total_phones if total_phones > 0 else 0.0
             if error_rate <= thresholds[0]:
-                label = 1  # excellent
+                label = 1
             elif error_rate <= thresholds[1]:
-                label = 2  # good
+                label = 2
             else:
-                label = 3  # needs work
-            
-            # Tạo predicted IPA string cho từ này
-            predicted_ipa = ' '.join(word_predicted_phones[i]) if word_predicted_phones[i] else ''
-            
+                label = 3
+
+            # If there is no predicted phones for this word, use None so JSON emits null
+            predicted_ipa = ' '.join(predicted_phones) if predicted_phones else None
+
             word_scores.append(WordScore(
                 word=word,
                 target_ipa=' '.join(target_phones),
                 predicted_ipa=predicted_ipa,
                 accuracy=accuracy,
                 label=label,
-                errors=word_errors[i]
+                errors=errors
             ))
-        
+
         return word_scores
+
+    def segment_predicted_by_words(self, predicted_tokens: List[str], predicted_phones: List[str], target_per_word: List[List[str]], policy: str = 'marker') -> List[List[str]]:
+        """
+        Segment predicted phonemes into exactly len(target_per_word) chunks corresponding
+        to words in the script. This function prefers marker-based grouping using
+        `predicted_tokens` (which may contain '▁' or '|' markers). If markers are not
+        present, it will partition `predicted_phones` evenly (with simple heuristics)
+        and split/merge chunks until the number of chunks equals number of words.
+
+        Returns a list of lists of phonemes (length == number of words).
+        """
+        num_words = len(target_per_word)
+
+        # Helper: tokenize a token string into phonemes
+        def token_to_phones(tok: str) -> List[str]:
+            s = tok.replace('|', '').replace('▁', ' ').strip()
+            # tokenize_ipa expects chunk(s) separated by spaces
+            phones = self.phoneme_mapper.tokenize_ipa(s)
+            return phones
+
+        # Normalize predicted_tokens: expand tokens that contain spaces into atomic tokens
+        # while preserving leading markers like '▁' or '|'. This keeps behavior
+        # consistent whether the decoder returns grouped tokens or atomic ones.
+        use_tokens = []
+        for t in predicted_tokens:
+            if not t:
+                continue
+            s = t.strip()
+            if ' ' in s:
+                parts = s.split()
+                # preserve leading marker if present on the original token
+                has_lead_marker = s.startswith('▁') or s.startswith('|')
+                for i, p in enumerate(parts):
+                    if i == 0 and has_lead_marker:
+                        # ensure marker is attached to first part
+                        if p.startswith('▁') or p.startswith('|'):
+                            use_tokens.append(p)
+                        else:
+                            # attach the same leading marker as original
+                            lead = '▁' if s.startswith('▁') else '|'
+                            use_tokens.append(lead + p)
+                    else:
+                        use_tokens.append(p)
+            else:
+                use_tokens.append(s)
+        chunks = []
+        if any('▁' in t or t.startswith('|') for t in use_tokens):
+            current = []
+            for t in use_tokens:
+                clean = t
+                if '▁' in t or t.startswith('|'):
+                    # start new chunk
+                    if current:
+                        # flatten current tokens into phones
+                        phones = []
+                        for tok in current:
+                            phones.extend(token_to_phones(tok))
+                        chunks.append(phones)
+                    current = [clean]
+                else:
+                    current.append(clean)
+            if current:
+                phones = []
+                for tok in current:
+                    phones.extend(token_to_phones(tok))
+                chunks.append(phones)
+        else:
+            # No markers: fallback to splitting predicted_phones evenly
+            if num_words == 0:
+                return []
+            L = len(predicted_phones)
+            if L == 0:
+                return [[] for _ in range(num_words)]
+            base = L // num_words
+            rem = L % num_words
+            idx = 0
+            for i in range(num_words):
+                sz = base + (1 if i < rem else 0)
+                if sz > 0:
+                    chunks.append(predicted_phones[idx:idx+sz])
+                else:
+                    chunks.append([])
+                idx += sz
+
+        # Now adjust chunks to have exactly num_words
+        # If too many chunks: merge smallest adjacent until match
+        while len(chunks) > num_words:
+            # merge the two smallest adjacent chunks (prefer right-side)
+            min_pair_idx = None
+            min_pair_size = None
+            for i in range(len(chunks)-1):
+                size = len(chunks[i]) + len(chunks[i+1])
+                if min_pair_size is None or size < min_pair_size:
+                    min_pair_size = size
+                    min_pair_idx = i
+            # merge at min_pair_idx
+            chunks[min_pair_idx] = chunks[min_pair_idx] + chunks[min_pair_idx+1]
+            del chunks[min_pair_idx+1]
+
+        # If there are fewer chunks than words, assume the model produced fewer
+        # spoken words than the script. Do NOT split existing chunks; instead
+        # append empty chunks so the remaining target words receive no predicted
+        # phones (they will be reported as null predicted_ipa).
+        if len(chunks) < num_words:
+            chunks.extend([[] for _ in range(num_words - len(chunks))])
+
+        # Finally, ensure length == num_words
+        if len(chunks) != num_words:
+            # if still mismatch, normalize by merging/slicing into exactly num_words
+            flat = [p for ch in chunks for p in ch]
+            L = len(flat)
+            base = L // num_words if num_words else 0
+            rem = L % num_words if num_words else 0
+            new_chunks = []
+            idx = 0
+            for i in range(num_words):
+                sz = base + (1 if i < rem else 0)
+                if sz > 0:
+                    new_chunks.append(flat[idx:idx+sz])
+                else:
+                    new_chunks.append([])
+                idx += sz
+            chunks = new_chunks
+
+        return chunks
 
     def to_json(self, result: PronunciationResult) -> dict:
         """

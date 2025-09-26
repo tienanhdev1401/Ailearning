@@ -51,7 +51,8 @@ async def score_endpoint(text: str = Form(...), audio: UploadFile = File(...), b
             use_path = norm_tmp_path if norm_tmp_path else tmp_path
             result = scorer.score_pronunciation(text, use_path)
             # score_pronunciation trả về dataclass PronunciationResult -> chuyển sang dict để JSONResponse serialize được
-            return JSONResponse(scorer.to_json(result))
+            resp = scorer.to_json(result)
+            return JSONResponse(resp)
         finally:
             # remove normalized temp file if created
             if norm_tmp_path:
