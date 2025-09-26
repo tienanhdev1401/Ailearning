@@ -1,0 +1,6 @@
+__pycache__
+*.pyc
+.venv
+.env
+data/
+!data/ipa_data.json
