@@ -28,6 +28,9 @@ export default function SpeakingVideoPraticePage() {
   const recorderRef = useRef(null);
   const streamRef = useRef(null);
 
+  // store last recording blob + object URL so we can play it later
+  const [lastRecording, setLastRecording] = useState(null); // { blob, url }
+
   const segmentRefs = useRef([]);
   const [segmentSuccess, setSegmentSuccess] = useState(false);
 
@@ -211,16 +214,23 @@ export default function SpeakingVideoPraticePage() {
   const playVideo = () => { if (player) player.playVideo(); };
   const pauseVideo = () => { if (player) player.pauseVideo(); };
 
+  // cleanup on unmount: stop stream, destroy recorder, revoke object URL
   useEffect(() => {
     return () => {
-      // cleanup recorder/stream on unmount
-      if (recorderRef.current) {
-        try { recorderRef.current.destroy(); } catch(e) {}
-      }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(t => t.stop());
+      try {
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(t => t.stop());
+        }
+      } catch (e) {}
+      try {
+        recorderRef.current && recorderRef.current.destroy && recorderRef.current.destroy();
+      } catch (e) {}
+      if (lastRecording && lastRecording.url) {
+        URL.revokeObjectURL(lastRecording.url);
       }
     };
+    // intentionally include lastRecording in deps to revoke on change is handled elsewhere
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -238,8 +248,15 @@ export default function SpeakingVideoPraticePage() {
   // === Recording logic using RecordRTC (WAV 16k mono) ===
   const startRecording = async () => {
     try {
-      // reset previous result
+      // reset previous API result
       setApiResult(null);
+
+      // If there's an existing object URL for lastRecording, revoke it because we will replace it soon
+      if (lastRecording && lastRecording.url) {
+        try { URL.revokeObjectURL(lastRecording.url); } catch (e) {}
+        setLastRecording(null);
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
@@ -273,38 +290,59 @@ export default function SpeakingVideoPraticePage() {
       });
 
       const blob = recorderRef.current.getBlob();
-      // optional: preview: URL.createObjectURL(blob)
+      if (!blob) throw new Error("Không lấy được blob ghi âm.");
+
+      // create object URL for playback and store blob+url in state
+      const url = URL.createObjectURL(blob);
+      // revoke previous if any (already handled in startRecording but keep safe)
+      if (lastRecording && lastRecording.url) {
+        try { URL.revokeObjectURL(lastRecording.url); } catch(e) {}
+      }
+      setLastRecording({ blob, url });
+
+      // prepare form and send to server
       const formData = new FormData();
-      // IMPORTANT: API expects 'audio' (wav file) and 'text' (current segment text)
       formData.append("audio", blob, "recording.wav");
       const currentText = lesson?.subtitles?.[currentSegment]?.text || "";
       formData.append("text", currentText);
 
-      // send to your API endpoint (adjust path if needed)
       try {
-          const response = await fetch("http://localhost:5005/score", {
-            method: "POST",
-            body: formData,
-          });
+        const response = await fetch("http://localhost:5005/score", {
+          method: "POST",
+          body: formData,
+        });
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
-          setApiResult(data);
-        } catch (err) {
-          console.error("Lỗi khi gọi API:", err);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        const data = await response.json();
+        setApiResult(data);
+        console.log(data);
+
+        const allGood = (data.words || []).every(w => w.label === 1);
+        setSegmentSuccess(allGood);
+        if (allGood) {
+          try { new Audio(successSound).play(); } catch (e) {}
+        }
+      } catch (err) {
+        console.error("Lỗi khi gọi API:", err);
+        alert("Lỗi khi gửi audio lên server.");
+      }
+    } catch (err) {
+      console.error("Lỗi stopRecording:", err);
     } finally {
       setSending(false);
-      // cleanup stream & recorder
+      // stop tracks to free mic, but keep lastRecording blob for playback
       try {
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(t => t.stop());
         }
       } catch (e) {}
-      try { recorderRef.current && recorderRef.current.destroy(); } catch(e){}
+
+      // destroy the recorder object but DO NOT revoke lastRecording blob/url here
+      try { recorderRef.current && recorderRef.current.destroy && recorderRef.current.destroy(); } catch(e){}
+
       recorderRef.current = null;
       streamRef.current = null;
     }
@@ -347,6 +385,18 @@ export default function SpeakingVideoPraticePage() {
 
     // fallback: show original text uncolored
     return originalWords.map((w, i) => <span key={i}>{w}{i < originalWords.length - 1 ? ' ' : ''}</span>);
+  };
+
+  // playback lastRecording (only plays the latest saved blob)
+  const playLastRecording = () => {
+    if (lastRecording && lastRecording.url) {
+      const a = new Audio(lastRecording.url);
+      a.play();
+      // optional: revoke after playback ended (if you want to free memory immediately)
+      // a.onended = () => { URL.revokeObjectURL(lastRecording.url); setLastRecording(null); };
+    } else {
+      alert("Chưa có bản ghi");
+    }
   };
 
   return (
@@ -446,32 +496,107 @@ export default function SpeakingVideoPraticePage() {
                 <div className="segment-display mt-3 text-center">
                   {lesson?.subtitles?.length > 0 && (
                     <>
-                      {/* Subtitle text -> render colored if apiResult present */}
-                      <div className="fw-bold fs-5">
-                        {renderSegmentText()}
-                      </div>
+                        <div style={{ textAlign: "center", width: "100%", position: "relative", overflow: "visible" }}>
+                            {/* inline-block để nội dung được căn giữa, và làm container relative cho score */}
+                            <div style={{ display: "inline-block", position: "relative" }}>
+                                <div className="fw-bold fs-5">
+                                {renderSegmentText()}
+                                </div>
 
-                      {/* Buttons */}
-                      <div className="d-flex justify-content-center gap-2 mt-3">
-                        <button className="btn btn-outline-secondary btn-sm" onClick={() => {
-                          // play back last recorded audio if available (simple preview)
-                          if (recorderRef.current) {
-                            const blob = recorderRef.current.getBlob();
-                            if (blob) {
-                              const url = URL.createObjectURL(blob);
-                              const a = new Audio(url);
-                              a.play();
-                            } else alert("Chưa có bản ghi");
-                          } else alert("Chưa có bản ghi");
-                        }}>
-                          <i className="bi bi-play-circle me-2"></i>Phát lại ghi âm
+                                {/* Điểm segment - nửa vòng tròn, đổi màu theo score */}
+                                {apiResult && typeof apiResult.overall_score === "number" && (() => {
+                                    const score = apiResult.overall_score;
+                                    let bgColor = "#e9f5ff";
+                                    let borderColor = "#007bff";
+                                    let textColor = "#007bff";
+
+                                    if (score < 40) { // dưới 40% => đỏ
+                                        bgColor = "#ffe5e5";
+                                        borderColor = "#dc3545";
+                                        textColor = "#dc3545";
+                                    } else if (score >= 40 && score < 80) { // 40%-79% => vàng
+                                        bgColor = "#fff8e1";
+                                        borderColor = "#ffc107";
+                                        textColor = "#856404";
+                                    } else if (score >= 80 && score < 100) { // 80%-99% => xanh biển
+                                        bgColor = "#e7f3ff";
+                                        borderColor = "#0d6efd";
+                                        textColor = "#0d6efd";
+                                    } else if (score === 100) { // 100% => xanh lá
+                                        bgColor = "#e8f5e9";
+                                        borderColor = "#28a745";
+                                        textColor = "#28a745";
+                                    }
+
+                                    return (
+                                        <span
+                                            style={{
+                                                position: "absolute",
+                                                left: "100%",
+                                                top: "50%",
+                                                transform: "translate(8px, -50%)",
+                                                width: "50px",
+                                                height: "25px",
+                                                display: "flex",
+                                                justifyContent: "center",
+                                                alignItems: "center",
+                                                borderTopLeftRadius: "50px",
+                                                borderTopRightRadius: "50px",
+                                                backgroundColor: bgColor,
+                                                border: `2px solid ${borderColor}`,
+                                                borderBottom: "none",
+                                                color: textColor,
+                                                fontWeight: "bold",
+                                                fontSize: "1.05rem",
+                                                zIndex: 20,
+                                                whiteSpace: "nowrap"
+                                            }}
+                                        >
+                                            {score}
+                                        </span>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+
+                        {/* Hiển thị IPA của từng từ nếu có kết quả API */}
+                        {apiResult && Array.isArray(apiResult.words) && (
+                        <div className="d-flex justify-content-center align-items-center gap-3 my-3">
+                            <div className="d-flex flex-column">
+                            {apiResult.words?.map((w, i) => (
+                                <div
+                                key={i}
+                                className="d-flex justify-content-center align-items-center my-1 text-center"
+                                style={{ gap: "1rem" }}
+                                >
+                                <div className="text-muted">
+                                    <strong>{w.word}</strong>
+                                </div>
+                                <div>
+                                    <span className="badge bg-light text-dark me-2">
+                                    🎯 IPA của bạn {w.predicted_ipa}
+                                    </span>
+                                    <span className="badge bg-light text-dark">
+                                    🎤 IPA của từ {w.target_ipa}
+                                    </span>
+                                </div>
+                                </div>
+                            ))}
+                            </div>
+                        </div>
+                        )}
+
+                        {/* Buttons */}
+                        <div className="d-flex justify-content-center gap-2 mt-3">
+                        <button className="btn btn-outline-secondary btn-sm" onClick={playLastRecording} disabled={!lastRecording}>
+                            <i className="bi bi-play-circle me-2"></i>Phát lại ghi âm
                         </button>
 
                         <button className={`btn ${isRecording ? 'btn-danger' : 'btn-primary'} btn-sm`} onClick={handleRecordButton} disabled={sending}>
-                          <i className={`bi ${isRecording ? 'bi-stop-fill' : 'bi-mic-fill'} me-2`}></i>
-                          {sending ? 'Đang gửi...' : (isRecording ? 'Dừng & Gửi' : 'Ghi âm')}
+                            <i className={`bi ${isRecording ? 'bi-stop-fill' : 'bi-mic-fill'} me-2`}></i>
+                            {sending ? 'Đang gửi...' : (isRecording ? 'Dừng & Gửi' : 'Ghi âm')}
                         </button>
-                      </div>
+                        </div>
                     </>
                   )}
                 </div>

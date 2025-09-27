@@ -7,8 +7,19 @@ from fastapi.responses import JSONResponse
 from typing import Optional
 
 from scorer import PronunciationScorer
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Pronunciation Scoring API")
+
+
+# Thêm CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Khởi tạo scorer dùng lại cho tất cả request
 scorer = PronunciationScorer()
