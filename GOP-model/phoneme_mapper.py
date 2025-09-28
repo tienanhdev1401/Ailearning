@@ -90,7 +90,7 @@ class PhonemeMapper:
         
         # Các nhóm consonant (phụ âm) tương tự
         consonant_groups = [
-            ['p', 'b'], ['t', 'd'], ['k', 'ɡ'], ['f', 'v'], ['θ', 'ð'], ['s', 'z']
+            ['p', 'b'], ['t', 'd'], ['k', 'g'], ['f', 'v'], ['θ', 'ð'], ['s', 'z']
         ]
         
         self.similarity = {}
