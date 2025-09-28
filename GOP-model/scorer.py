@@ -30,6 +30,7 @@ class PronunciationScorer:
     - Căn chỉnh và tính điểm
     - Xuất kết quả có cấu trúc
     """
+    # IPA normalization mapping is read from data/ipa_data.json via PhonemeMapper
     
     def __init__(self, data_path: str = None):
         """
@@ -91,10 +92,14 @@ class PronunciationScorer:
         # Bước 3: Segment predicted flat phonemes into per-word chunks using markers/tokens
         predicted_chunks = self.segment_predicted_by_words(predicted_tokens, predicted_phones, target_phones_per_word, policy=segmentation_policy)
 
+        # Chuẩn hóa ký tự IPA (các biến thể phổ biến) cho cả target và predicted
+        norm_target_per_word = [self.phoneme_mapper.normalize_ipa_variants(phones) for phones in target_phones_per_word]
+        norm_predicted_chunks = [self.phoneme_mapper.normalize_ipa_variants(chunk) for chunk in predicted_chunks]
+
         # Bước 4: So sánh từng chunk với nhau và tính lỗi
-        word_scores = self._calculate_word_scores_from_chunks(words, target_phones_per_word, predicted_chunks, thresholds)
+        word_scores = self._calculate_word_scores_from_chunks(words, norm_target_per_word, norm_predicted_chunks, thresholds)
         errors = []
-        for tphones, pchunk in zip(target_phones_per_word, predicted_chunks):
+        for tphones, pchunk in zip(norm_target_per_word, norm_predicted_chunks):
             errors.extend(self.aligner.align_with_errors(tphones, pchunk))
 
         # Bước 5: Tính điểm tổng thể

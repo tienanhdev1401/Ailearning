@@ -70,6 +70,9 @@ class PhonemeMapper:
                 # ensure canonical maps to itself
                 self.canonical_map[c] = c
         
+        # Load normalization variants mapping if present
+        self.normalize_ipa_variants_map = data.get('normalize_ipa_variants', {})
+        
         # Tạo mapping ngược
         self.ipa_to_arpabet = {}
         for k, v in self.arpabet_to_ipa.items():
@@ -90,7 +93,7 @@ class PhonemeMapper:
         
         # Các nhóm consonant (phụ âm) tương tự
         consonant_groups = [
-            ['p', 'b'], ['t', 'd'], ['k', 'g'], ['f', 'v'], ['θ', 'ð'], ['s', 'z']
+            ['p', 'b'], ['t', 'd'], ['k', 'ɡ'], ['f', 'v'], ['θ', 'ð'], ['s', 'z']
         ]
         
         self.similarity = {}
@@ -122,6 +125,10 @@ class PhonemeMapper:
         # normalize via canonical map
         p1c = self.canonical_map.get(p1, p1)
         p2c = self.canonical_map.get(p2, p2)
+        # Apply normalize_ipa_variants_map if available
+        if hasattr(self, 'normalize_ipa_variants_map'):
+            p1c = self.normalize_ipa_variants_map.get(p1c, p1c)
+            p2c = self.normalize_ipa_variants_map.get(p2c, p2c)
         if p1c == p2c:
             return 1.0
         # Nếu là cặp tương đương (equiv_pairs), trả giá trị cao
@@ -212,6 +219,12 @@ class PhonemeMapper:
             i += 1
 
         return collapsed
+
+    def normalize_ipa_variants(self, phones: List[str]) -> List[str]:
+        """Normalize phones using mapping loaded from data file."""
+        if not hasattr(self, 'normalize_ipa_variants_map') or not self.normalize_ipa_variants_map:
+            return phones
+        return [self.normalize_ipa_variants_map.get(p, p) for p in phones]
     
     def arpabet_to_ipa_list(self, arpabet_tokens: List[str], ignore_stress: bool = True) -> List[str]:
         """
