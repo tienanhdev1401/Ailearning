@@ -5,6 +5,8 @@ import validateRequest from "../middlewares/validateRequest.middleware.js";
 import loginValidation from "../validations/loginValidation.js";
 import registerValidation from "../validations/registerValidation.js";
 
+import { loginLimiter } from "../middlewares/ratelimit.middleware.js";
+
 const router = express.Router();
 
 
@@ -117,7 +119,7 @@ const router = express.Router();
 
 
 // Đăng nhập
-router.post("/login",validateRequest(loginValidation) ,AuthController.login);
+router.post("/login",loginLimiter,validateRequest(loginValidation) ,AuthController.login);
 
 // Đăng ký
 router.post("/register",validateRequest(registerValidation) ,AuthController.register);

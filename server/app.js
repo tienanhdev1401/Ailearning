@@ -17,6 +17,7 @@ import lessonRouter from './routes/lesson.routes.js'
 import pronunciationRouter from './routes/pronunciation.routes.js'
 import './config/passport.js'   // chạy file config để đăng ký strategy
 import errorHandlingMiddleware from './middlewares/errorHandling.middleware.js'
+import { limiter } from './middlewares/ratelimit.middleware.js'
 
 import { swaggerUi, swaggerSpec } from "./config/swagger.js";
 
@@ -31,6 +32,8 @@ app.use(cors({
   origin: 'http://localhost:3000',
   credentials: true
 }));
+
+app.use(limiter);
 
 app.use('/api/auth', authRouter);
 app.use("/api/auth", oauthRoutes);
