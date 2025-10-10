@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import prisma from "../config/prisma.js";
+import UserRepository from "../repositories/UserRepository.js";
 import USER_ROLE from "../enums/userRole.enum.js";
 import AUTH_PROVIDER from "../enums/authProvider.enum.js";
 import { HttpStatusCode } from "axios";
@@ -12,11 +12,12 @@ const ACCESS_SECRET = process.env.ACCESS_SECRET;
 const REFRESH_SECRET = process.env.REFRESH_SECRET;
 
 class AuthService {
+  static userRepository = new UserRepository()
 
   static async login(email, password) {
     // Tìm user bằng email
-    const user = await prisma.users.findFirst({ where: { email, password } });
-    if (!user) {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user || user.password !== password) {
       throw new ApiError(HttpStatusCode.Unauthorized, "Sai tài khoản hoặc mật khẩu");
     }
 
@@ -51,13 +52,13 @@ class AuthService {
 
   static async register(name, email, password) {
     // Kiểm tra trùng email
-    const existingUser = await prisma.users.findUnique({ where: { email } });
+    const existingUser = await this.userRepository.findByEmail(email);
     if (existingUser) {
       throw new ApiError(HttpStatusCode.BadRequest, "Email đã tồn tại");
     }
 
     // Tạo user
-    return await prisma.users.create({ data: { name, email, password, role: USER_ROLE.USER,  authProvider: AUTH_PROVIDER.LOCAL } });
+    return await this.userRepository.create({ name, email, password, role: USER_ROLE.USER,  authProvider: AUTH_PROVIDER.LOCAL });
   }
   
 
@@ -68,7 +69,7 @@ class AuthService {
       console.log(refreshToken);
       
       // Kiểm tra user có tồn tại không
-      const user = await prisma.users.findUnique({ where: { id: Number(payload.id) } });
+      const user = await this.userRepository.findById(payload.id);
       if (!user) {
         throw new ApiError(HttpStatusCode.Unauthorized, "User không tồn tại");
       }

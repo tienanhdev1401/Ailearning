@@ -4,6 +4,11 @@ import SrtParser from "srt-parser-2";
 import ApiError from "../utils/ApiError.js";
 import { HttpStatusCode } from "axios";
 import prisma from "../config/prisma.js";
+import SubtitleRepository from "../repositories/SubtitleRepository.js";
+import LessonRepository from "../repositories/LessonRepository.js";
+
+const subtitleRepository = new SubtitleRepository()
+const lessonRepository = new LessonRepository()
 
 class LessonService {
     static async createLesson({ title, video_url, thumbnail_url, srtPath }) {
@@ -22,22 +27,20 @@ class LessonService {
         }
 
         const result = await prisma.$transaction(async (tx) => {
-            const lesson = await tx.lessons.create({
-                data: { title, video_url, thumbnail_url }
-            });
+            const lesson = await tx.lessons.create({ data: { title, video_url, thumbnail_url } })
 
-            const subtitles = srtArray.map((item) => ({
+            const data = srtArray.map((item) => ({
                 lesson_id: lesson.id,
                 start_time: item.startTime,
                 end_time: item.endTime,
                 full_text: item.text,
-            }));
+            }))
 
-            if (subtitles.length) {
-                await tx.subtitles.createMany({ data: subtitles });
+            if (data.length) {
+                await tx.subtitles.createMany({ data })
             }
 
-            return { lesson, subtitlesCount: subtitles.length };
+            return { lesson, subtitlesCount: data.length };
         });
 
         return result;
@@ -51,10 +54,7 @@ class LessonService {
     }
 
     static async getAllLessons() {
-        const lessons = await prisma.lessons.findMany({
-            include: { subtitles: { orderBy: { id: 'asc' } } },
-            orderBy: { id: 'asc' }
-        });
+        const lessons = await lessonRepository.findAll();
 
         return lessons.map((lesson) => ({
             lesson: {
@@ -74,10 +74,11 @@ class LessonService {
     }
 
     static async getLessonById(id) {
-        const lesson = await prisma.lessons.findUnique({
-            where: { id: Number(id) },
-            include: { subtitles: { orderBy: { id: 'asc' } } }
-        });
+        const numericId = Number(id)
+        if (!Number.isInteger(numericId) || numericId <= 0) {
+            throw new ApiError(HttpStatusCode.BadRequest, "Invalid lesson id", "INVALID_ID")
+        }
+        const lesson = await lessonRepository.findById(numericId);
 
         if (!lesson) {
             throw new ApiError(HttpStatusCode.NotFound, "Lesson not found", "LESSON_NOT_FOUND");
@@ -101,13 +102,17 @@ class LessonService {
     }
 
     static async deleteLesson(id) {
+        const numericId = Number(id)
+        if (!Number.isInteger(numericId) || numericId <= 0) {
+            throw new ApiError(HttpStatusCode.BadRequest, "Invalid lesson id", "INVALID_ID")
+        }
         await prisma.$transaction(async (tx) => {
-            const lesson = await tx.lessons.findUnique({ where: { id: Number(id) } });
-            if (!lesson) {
+            const existing = await tx.lessons.findUnique({ where: { id: numericId } })
+            if (!existing) {
                 throw new ApiError(HttpStatusCode.NotFound, "Lesson not found");
             }
-            await tx.subtitles.deleteMany({ where: { lesson_id: Number(id) } });
-            await tx.lessons.delete({ where: { id: Number(id) } });
+            await tx.subtitles.deleteMany({ where: { lesson_id: numericId } })
+            await tx.lessons.delete({ where: { id: numericId } })
         });
 
         return { message: `Lesson deleted successfully` };
