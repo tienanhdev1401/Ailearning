@@ -8,7 +8,7 @@ import cors from 'cors'
 dotenv.config(); // load env
 
 // Configs & routes
-import sequelize from './config/database.js'
+import prisma from './config/prisma.js'
 import userRouter from './routes/user.routes.js'
 import authRouter from './routes/auth.routes.js'
 import oauthRoutes from './routes/oauth.routes.js'
@@ -50,14 +50,10 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(errorHandlingMiddleware);
 
-// Kết nối và sync Sequelize
+// Start server (Prisma lazy-connects on first query)
 const PORT = 5000;
-sequelize.sync().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    console.log('Sequelize connected & synced');
-    console.log(`📑 Swagger docs: http://localhost:${PORT}/api-docs`);
-  });
-}).catch((err) => {
-  console.error('Sequelize connection failed:', err);
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+  console.log('Prisma client ready');
+  console.log(`📑 Swagger docs: http://localhost:${PORT}/api-docs`);
 });

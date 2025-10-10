@@ -1,12 +1,9 @@
 // services/lesson.service.js
 import fs from "fs";
-import { Sequelize } from "sequelize";
 import SrtParser from "srt-parser-2";
-import Lesson from "../models/lesson.js";
-import Subtitle from "../models/subtitle.js";
 import ApiError from "../utils/ApiError.js";
 import { HttpStatusCode } from "axios";
-import sequelize from "../config/database.js"; 
+import prisma from "../config/prisma.js";
 
 class LessonService {
     static async createLesson({ title, video_url, thumbnail_url, srtPath }) {
@@ -14,16 +11,8 @@ class LessonService {
             throw new ApiError(HttpStatusCode.BadRequest, "Missing required data", "MISSING_DATA");
         }
 
-        const transaction = await sequelize.transaction();
-
         try {
-        // 1. Tạo lesson
-        const lesson = await Lesson.create(
-            { title, video_url, thumbnail_url },
-            { transaction }
-        );
-
-        // 2. Parse SRT
+        // 1. Parse SRT trước để fail-fast
         const parser = new SrtParser();
         const srtData = fs.readFileSync(srtPath, "utf-8");
         const srtArray = parser.fromSrt(srtData);
@@ -32,36 +21,26 @@ class LessonService {
             throw new ApiError(HttpStatusCode.BadRequest, "Error in parse SRT file");
         }
 
-        const subtitles = srtArray.map((item) => ({
-            lesson_id: lesson.id,
-            start_time: item.startTime,
-            end_time: item.endTime,
-            full_text: item.text,
-        }));
+        const result = await prisma.$transaction(async (tx) => {
+            const lesson = await tx.lessons.create({
+                data: { title, video_url, thumbnail_url }
+            });
 
-        // 3. Lưu subtitles
-        await Subtitle.bulkCreate(subtitles, { transaction });
+            const subtitles = srtArray.map((item) => ({
+                lesson_id: lesson.id,
+                start_time: item.startTime,
+                end_time: item.endTime,
+                full_text: item.text,
+            }));
 
-        // 4. Commit transaction
-        await transaction.commit();
+            if (subtitles.length) {
+                await tx.subtitles.createMany({ data: subtitles });
+            }
 
-        // // 5. Xóa file tạm
-        // fs.unlinkSync(srtPath);
+            return { lesson, subtitlesCount: subtitles.length };
+        });
 
-        return { lesson, subtitlesCount: subtitles.length };
-        } catch (err) {
-        await transaction.rollback();
-        // Phân loại lỗi Sequelize
-        if (err.name === "SequelizeValidationError") {
-            throw new ApiError(HttpStatusCode.BadRequest, "Validation failed", "VALIDATION_ERROR");
-        }
-        if (err.name === "SequelizeUniqueConstraintError") {
-            throw new ApiError(HttpStatusCode.BadRequest, "Duplicate entry", "DUPLICATE_ERROR");
-        }
-        if (err.name === "SequelizeForeignKeyConstraintError") {
-            throw new ApiError(HttpStatusCode.BadRequest, "Invalid foreign key", "FOREIGN_KEY_ERROR");
-        }
-        throw err;
+        return result;
         } finally {
         // Luôn xóa file tạm sau khi xử lý*
             if (srtPath && fs.existsSync(srtPath)) {
@@ -72,9 +51,9 @@ class LessonService {
     }
 
     static async getAllLessons() {
-        const lessons = await Lesson.findAll({
-            include: [{ model: Subtitle, as: "subtitles", order: [["id", "ASC"]] }],
-            order: [["id", "ASC"]],
+        const lessons = await prisma.lessons.findMany({
+            include: { subtitles: { orderBy: { id: 'asc' } } },
+            orderBy: { id: 'asc' }
         });
 
         return lessons.map((lesson) => ({
@@ -83,7 +62,7 @@ class LessonService {
             title: lesson.title,
             video_url: lesson.video_url,
             thumbnail_url: lesson.thumbnail_url,
-            subtitles: lesson.subtitles.map((sub) => ({  // <-- dùng lesson.subtitles
+            subtitles: lesson.subtitles.map((sub) => ({
                 id: sub.id,
                 lesson_id: sub.lesson_id,
                 start_time: sub.start_time,
@@ -95,9 +74,9 @@ class LessonService {
     }
 
     static async getLessonById(id) {
-        const lesson = await Lesson.findOne({
-            where: { id },
-            include: [{ model: Subtitle, as: "subtitles", order: [["id", "ASC"]] }],
+        const lesson = await prisma.lessons.findUnique({
+            where: { id: Number(id) },
+            include: { subtitles: { orderBy: { id: 'asc' } } }
         });
 
         if (!lesson) {
@@ -110,7 +89,7 @@ class LessonService {
             title: lesson.title,
             video_url: lesson.video_url,
             thumbnail_url: lesson.thumbnail_url,
-            subtitles: lesson.subtitles.map((sub) => ({  // <-- dùng lesson.subtitles
+            subtitles: lesson.subtitles.map((sub) => ({
                 id: sub.id,
                 lesson_id: sub.lesson_id,
                 start_time: sub.start_time,
@@ -122,35 +101,16 @@ class LessonService {
     }
 
     static async deleteLesson(id) {
-        const transaction = await sequelize.transaction();
-        try {
-            // 1. Kiểm tra lesson tồn tại
-            const lesson = await Lesson.findByPk(id, { transaction });
+        await prisma.$transaction(async (tx) => {
+            const lesson = await tx.lessons.findUnique({ where: { id: Number(id) } });
             if (!lesson) {
                 throw new ApiError(HttpStatusCode.NotFound, "Lesson not found");
             }
+            await tx.subtitles.deleteMany({ where: { lesson_id: Number(id) } });
+            await tx.lessons.delete({ where: { id: Number(id) } });
+        });
 
-            // 2. Xóa subtitles trước
-            await Subtitle.destroy({
-                where: { lesson_id: id },
-                transaction,
-            });
-
-            // 3. Xóa lesson
-            await Lesson.destroy({
-                where: { id },
-                transaction,
-            });
-
-            // 4. Commit transaction
-            await transaction.commit();
-
-            return { message: `Lesson deleted successfully` };
-        } catch (err) {
-            // Rollback nếu có lỗi
-            await transaction.rollback();
-            throw err;
-        }
+        return { message: `Lesson deleted successfully` };
     }
 }
 

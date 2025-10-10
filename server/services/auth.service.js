@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import User from "../models/user.js";
+import prisma from "../config/prisma.js";
 import USER_ROLE from "../enums/userRole.enum.js";
 import AUTH_PROVIDER from "../enums/authProvider.enum.js";
 import { HttpStatusCode } from "axios";
@@ -15,7 +15,7 @@ class AuthService {
 
   static async login(email, password) {
     // Tìm user bằng email
-    const user = await User.findOne({ where: { email, password } });
+    const user = await prisma.users.findFirst({ where: { email, password } });
     if (!user) {
       throw new ApiError(HttpStatusCode.Unauthorized, "Sai tài khoản hoặc mật khẩu");
     }
@@ -51,13 +51,13 @@ class AuthService {
 
   static async register(name, email, password) {
     // Kiểm tra trùng email
-    const existingUser = await User.findOne({ where: { email } });
+    const existingUser = await prisma.users.findUnique({ where: { email } });
     if (existingUser) {
       throw new ApiError(HttpStatusCode.BadRequest, "Email đã tồn tại");
     }
 
     // Tạo user
-    return await User.create({ name, email, password, role: USER_ROLE.USER,  authProvider: AUTH_PROVIDER.LOCAL });
+    return await prisma.users.create({ data: { name, email, password, role: USER_ROLE.USER,  authProvider: AUTH_PROVIDER.LOCAL } });
   }
   
 
@@ -68,7 +68,7 @@ class AuthService {
       console.log(refreshToken);
       
       // Kiểm tra user có tồn tại không
-      const user = await User.findByPk(payload.id);
+      const user = await prisma.users.findUnique({ where: { id: Number(payload.id) } });
       if (!user) {
         throw new ApiError(HttpStatusCode.Unauthorized, "User không tồn tại");
       }
@@ -95,8 +95,9 @@ class AuthService {
   }
 
   static async getUserById(id) {
-    const user = await User.findByPk(id, {
-      attributes: ["id", "name", "email", "role"],
+    const user = await prisma.users.findUnique({
+      where: { id: Number(id) },
+      select: { id: true, name: true, email: true, role: true }
     });
 
     if (!user) {
