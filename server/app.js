@@ -4,6 +4,7 @@ import mysql from 'mysql2'
 import cookieParser from 'cookie-parser'
 import passport from 'passport'
 import cors from 'cors'
+import { execSync } from 'child_process'
 
 dotenv.config(); // load env
 
@@ -15,6 +16,7 @@ import oauthRoutes from './routes/oauth.routes.js'
 import grammarCheckerRouter from './routes/grammarChecker.routes.js'
 import lessonRouter from './routes/lesson.routes.js'
 import pronunciationRouter from './routes/pronunciation.routes.js'
+import roadmapRouter from "./routes/roadmap.router.js";
 import './config/passport.js'   // chạy file config để đăng ký strategy
 import errorHandlingMiddleware from './middlewares/errorHandling.middleware.js'
 import { limiter } from './middlewares/ratelimit.middleware.js'
@@ -42,6 +44,7 @@ app.use('/api/users', userRouter);
 app.use('/api',grammarCheckerRouter);
 app.use('/api/lessons',lessonRouter);
 app.use('/api/pronunciation', pronunciationRouter);
+app.use('/api/roadmap', roadmapRouter);
 
 
 
@@ -50,6 +53,16 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(errorHandlingMiddleware);
 
+
+
+try {
+  console.log('🛠  Đang kiểm tra và đồng bộ database schema với Prisma...');
+  execSync('npx prisma db push', { stdio: 'inherit' });
+  console.log('✅ Prisma schema đã đồng bộ với database!');
+} catch (err) {
+  console.error('❌ Lỗi khi đồng bộ Prisma schema:', err);
+  process.exit(1);
+}
 // Start server (Prisma lazy-connects on first query)
 const PORT = 5000;
 app.listen(PORT, () => {
