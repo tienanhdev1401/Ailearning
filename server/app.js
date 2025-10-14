@@ -17,6 +17,7 @@ import grammarCheckerRouter from './routes/grammarChecker.routes.js'
 import lessonRouter from './routes/lesson.routes.js'
 import pronunciationRouter from './routes/pronunciation.routes.js'
 import roadmapRouter from "./routes/roadmap.router.js";
+import dayRouter from "./routes/day.routes.js";
 import './config/passport.js'   // chạy file config để đăng ký strategy
 import errorHandlingMiddleware from './middlewares/errorHandling.middleware.js'
 import { limiter } from './middlewares/ratelimit.middleware.js'
@@ -44,8 +45,8 @@ app.use('/api/users', userRouter);
 app.use('/api',grammarCheckerRouter);
 app.use('/api/lessons',lessonRouter);
 app.use('/api/pronunciation', pronunciationRouter);
-app.use('/api/roadmap', roadmapRouter);
-
+app.use('/api/roadmaps', roadmapRouter);
+app.use('/api/days', dayRouter);
 
 
 // swagger endpoint
