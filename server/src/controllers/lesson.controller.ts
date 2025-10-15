@@ -1,0 +1,68 @@
+import { HttpStatusCode } from "axios";
+import LessonService from "../services/lesson.service.js";
+import ApiError from "../utils/ApiError.js";
+import { Request, Response, NextFunction } from "express";
+
+class LessonController {
+  static async createLesson(req: Request & { file?: any }, res: Response, next: NextFunction) {
+    try {
+      const { title, video_url, thumbnail_url } = req.body;
+      const file = req.file;
+
+      if (!file) {
+        throw new ApiError(HttpStatusCode.BadRequest, "No SRT file uploaded");
+      }
+
+      const result = await LessonService.createLesson({
+        title,
+        video_url,
+        thumbnail_url,
+        srtPath: file.path,
+      });
+
+      res.status(HttpStatusCode.Created).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAllLessons(req: Request, res: Response, next: NextFunction) {
+    try {
+      const lessons = await LessonService.getAllLessons();
+      res.status(HttpStatusCode.Ok).json(lessons);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getLessonById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        throw new ApiError(HttpStatusCode.BadRequest, "Missing lesson id");
+      }
+      const lesson = await LessonService.getLessonById(Number(id));
+      res.status(HttpStatusCode.Ok).json(lesson);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteLesson(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        throw new ApiError(HttpStatusCode.BadRequest, "Missing lesson id");
+      }
+
+      const result = await LessonService.deleteLesson(Number(id));
+      return res.status(HttpStatusCode.Ok).json({
+        message: result.message,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+}
+
+export default LessonController;
