@@ -1,41 +1,20 @@
-import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
-import Subtitle from "./subtitle.js";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { Subtitle } from "./subtitle";
 
+@Entity({ name: "lessons" })
+export class Lesson {
+  @PrimaryGeneratedColumn()
+  id!: number;
 
-const Lesson = sequelize.define(
-  "Lesson",
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: { notEmpty: true },
-    },
-    video_url: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: { notEmpty: true, isUrl: true },
-    },
-    thumbnail_url: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: { notEmpty: true, isUrl: true },
-    },
-  },
-  {
-    tableName: "lessons",
-    timestamps: true,
-    createdAt: "created_at",
-    updatedAt: false,
-  }
-);
+  @Column()
+  title!: string;
 
-// Quan hệ 1-N
-Lesson.hasMany(Subtitle, { foreignKey: "lesson_id", as: "subtitles" });
+  @Column()
+  video_url!: string;
 
-export default Lesson;
+  @Column()
+  thumbnail_url!: string;
+
+  @OneToMany(() => Subtitle, (subtitle) => subtitle.lesson, { cascade: true })
+  subtitles!: Subtitle[];
+}

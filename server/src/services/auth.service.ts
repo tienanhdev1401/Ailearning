@@ -1,44 +1,34 @@
 import jwt from "jsonwebtoken";
-import User from "../models/user.js";
-import USER_ROLE from "../enums/userRole.enum.js";
-import AUTH_PROVIDER from "../enums/authProvider.enum.js";
+import { userRepository } from "../repositories/user.repository";
+import USER_ROLE from "../enums/userRole.enum";
+import AUTH_PROVIDER from "../enums/authProvider.enum";
 import { HttpStatusCode } from "axios";
-import ApiError from "../utils/ApiError.js";
+import ApiError from "../utils/ApiError";
 import dotenv from "dotenv";
+import { User } from "../models/user";
 dotenv.config();
 
 const ACCESS_SECRET = process.env.ACCESS_SECRET as string;
 const REFRESH_SECRET = process.env.REFRESH_SECRET as string;
 
-interface JwtPayload {
-  id: number;
-  email?: string;
-  role: string;
-  [key: string]: any;
-}
-
 class AuthService {
+  // Login
   static async login(email: string, password: string): Promise<{ accessToken: string; refreshToken: string }> {
-    // Tìm user bằng email
-    const user = await User.findOne({ where: { email, password } });
-    if (!user) {
+    const user = await userRepository.findOne({ where: { email } });
+
+    if (!user || user.password !== password) {
+      // Nếu dùng bcrypt, thay dòng trên bằng bcrypt.compare
       throw new ApiError(HttpStatusCode.Unauthorized, "Sai tài khoản hoặc mật khẩu");
     }
 
-    // // So sánh mật khẩu (đã hash)
-    // const isPasswordValid = await bcrypt.compare(password, user.password);
-    // if (!isPasswordValid) {
-    //   throw new ApiError(HttpStatusCode.Unauthorized, "Sai tài khoản hoặc mật khẩu");
-    // }
-
-    // Tạo tokens
     const accessToken = this.generateAccessToken(user);
     const refreshToken = this.generateRefreshToken(user);
 
     return { accessToken, refreshToken };
   }
 
-  static generateAccessToken(user: any): string {
+  // Tạo Access Token
+  static generateAccessToken(user: User): string {
     return jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       ACCESS_SECRET,
@@ -46,7 +36,8 @@ class AuthService {
     );
   }
 
-  static generateRefreshToken(user: any): string {
+  // Tạo Refresh Token
+  static generateRefreshToken(user: User): string {
     return jwt.sign(
       { id: user.id, role: user.role },
       REFRESH_SECRET,
@@ -54,22 +45,30 @@ class AuthService {
     );
   }
 
-  static async register(name: string, email: string, password: string): Promise<any> {
-    // Kiểm tra trùng email
-    const existingUser = await User.findOne({ where: { email } });
+  // Register
+  static async register(name: string, email: string, password: string): Promise<User> {
+    const existingUser = await userRepository.findOne({ where: { email } });
     if (existingUser) {
       throw new ApiError(HttpStatusCode.BadRequest, "Email đã tồn tại");
     }
 
-    // Tạo user
-    return await User.create({ name, email, password, role: USER_ROLE.USER, authProvider: AUTH_PROVIDER.LOCAL });
+    const newUser = userRepository.create({
+      name,
+      email,
+      password,
+      role: USER_ROLE.USER,
+      authProvider: AUTH_PROVIDER.LOCAL,
+    });
+
+    return await userRepository.save(newUser);
   }
 
+  // Refresh access token
   static async refreshAccessToken(refreshToken: string): Promise<string> {
     try {
-      const payload = this.verifyRefreshToken(refreshToken) as JwtPayload;
-      // Kiểm tra user có tồn tại không
-      const user = await User.findByPk(payload.id);
+      const payload = this.verifyRefreshToken(refreshToken) as any;
+      const user = await userRepository.findOne({ where: { id: payload.id } });
+
       if (!user) {
         throw new ApiError(HttpStatusCode.Unauthorized, "User không tồn tại");
       }
@@ -86,17 +85,20 @@ class AuthService {
     }
   }
 
-  static verifyRefreshToken(refreshToken: string): string | jwt.JwtPayload {
+  // Verify refresh token
+  static verifyRefreshToken(refreshToken: string): string | object {
     return jwt.verify(refreshToken, REFRESH_SECRET);
   }
 
-  static verifyAccessToken(accessToken: string): string | jwt.JwtPayload {
+  // Verify access token
+  static verifyAccessToken(accessToken: string): string | object {
     return jwt.verify(accessToken, ACCESS_SECRET);
   }
 
-  static async getUserById(id: number): Promise<any> {
-    const user = await User.findByPk(id, {
-      attributes: ["id", "name", "email", "role"],
+  // Lấy user theo id
+  static async getUserById(id: number): Promise<User> {
+    const user = await userRepository.findOne({
+      where: { id },
     });
 
     if (!user) {

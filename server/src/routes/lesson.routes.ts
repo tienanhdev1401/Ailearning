@@ -1,9 +1,11 @@
 import express from "express";
 import multer from "multer";
-import LessonController from "../controllers/lesson.controller.js";
-import attachFileToBody from "../middlewares/attachFile.middleware.js";
-import validateRequest from "../middlewares/validateRequest.middleware.js";
-import createLessonValidation from "../validations/createLessonValidation.js";
+import LessonController from "../controllers/lesson.controller";
+import attachFileToBody from "../middlewares/attachFile.middleware";
+import validateRequest from "../middlewares/validateRequest.middleware";
+import createLessonValidation from "../validations/createLessonValidation";
+import validateDto from "../middlewares/validateRequest.middleware";
+import { CreateLessonDto } from "../dto/request/CreateLessonDto";
 
 const router = express.Router();
 
@@ -28,7 +30,7 @@ const upload = multer({ dest: "uploads/" });
  *       content:
  *         multipart/form-data:
  *           schema:
- *             $ref: '#/components/schemas/CreateLesson'
+ *             $ref: '#/components/schemas/CreateLessonDto'
  *     responses:
  *       201:
  *         description: Tạo lesson thành công
@@ -42,7 +44,7 @@ router.post(
   "/",
   upload.single("srt_file"),                // multer xử lý upload
   attachFileToBody("srt_file"),             // gắn file vào req.body
-  validateRequest(createLessonValidation),  // Joi validate bao gồm file
+  validateDto(CreateLessonDto),              // validate DTO
   LessonController.createLesson
 );
 

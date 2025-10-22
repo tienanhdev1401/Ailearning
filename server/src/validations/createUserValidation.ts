@@ -1,6 +1,6 @@
 import Joi from "joi";
-import USER_ROLE from "../enums/userRole.enum.js";
-import AUTH_PROVIDER from "../enums/authProvider.enum.js";
+import USER_ROLE from "../enums/userRole.enum";
+import AUTH_PROVIDER from "../enums/authProvider.enum";
 
 const createUserValidation = Joi.object({
     name: Joi.string().required()

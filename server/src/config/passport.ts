@@ -2,7 +2,9 @@ import passport from "passport";
 import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
 import { VerifyCallback } from "passport-oauth2";
 import dotenv from "dotenv";
-import User from "../models/user";
+import { userRepository } from "../repositories/user.repository";
+import USER_ROLE from "../enums/userRole.enum";
+import AUTH_PROVIDER from "../enums/authProvider.enum";
 
 dotenv.config();
 
@@ -23,16 +25,17 @@ passport.use(
         const email = profile._json.email as string;
         const name = profile._json.name as string;
 
-        let user = await User.findOne({ where: { email } });
+        let user = await userRepository.findOne({ where: { email } });
 
         if (!user) {
-          user = await User.create({
+          user = userRepository.create({
             name,
             email,
             password: null,
-            role: "user",
-            authProvider: "google",
+            role: USER_ROLE.USER,               
+            authProvider: AUTH_PROVIDER.GOOGLE, 
           });
+          await userRepository.save(user);      
         }
 
         return done(null, user);
@@ -51,7 +54,7 @@ passport.serializeUser((user: any, done) => {
 
 passport.deserializeUser(async (id: number, done) => {
   try {
-    const user = await User.findByPk(id);
+    const user = await userRepository.findOne({ where: { id } });
     done(null, user);
   } catch (err) {
     done(err, null);

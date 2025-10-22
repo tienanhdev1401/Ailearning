@@ -1,6 +1,6 @@
 // controllers/grammarChecker.controller.js
 import axios, { HttpStatusCode } from "axios";
-import ApiError from "../utils/ApiError.js";
+import ApiError from "../utils/ApiError";
 import { Request, Response, NextFunction } from "express";
 
 class GrammarCheckerController {

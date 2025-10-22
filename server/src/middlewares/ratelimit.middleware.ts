@@ -1,6 +1,6 @@
 // ratelimit.middleware.js
 import rateLimit from "express-rate-limit";
-import ApiError from "../utils/ApiError.js";
+import ApiError from "../utils/ApiError";
 import { HttpStatusCode } from "axios";
 
 // Rate limit chung cho toàn bộ app

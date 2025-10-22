@@ -1,6 +1,6 @@
 import { HttpStatusCode } from "axios";
-import LessonService from "../services/lesson.service.js";
-import ApiError from "../utils/ApiError.js";
+import LessonService from "../services/lesson.service";
+import ApiError from "../utils/ApiError";
 import { Request, Response, NextFunction } from "express";
 
 class LessonController {
@@ -42,6 +42,7 @@ class LessonController {
         throw new ApiError(HttpStatusCode.BadRequest, "Missing lesson id");
       }
       const lesson = await LessonService.getLessonById(Number(id));
+      console.log(lesson);
       res.status(HttpStatusCode.Ok).json(lesson);
     } catch (error) {
       next(error);

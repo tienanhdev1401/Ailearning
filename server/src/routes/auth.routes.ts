@@ -1,11 +1,10 @@
 import express from "express";
-import AuthController from "../controllers/auth.controller.js";
-import verifyTokenAndRole from "../middlewares/auth.middleware.js";
-import validateRequest from "../middlewares/validateRequest.middleware.js";
-import loginValidation from "../validations/loginValidation.js";
-import registerValidation from "../validations/registerValidation.js";
-
-import { loginLimiter } from "../middlewares/ratelimit.middleware.js";
+import AuthController from "../controllers/auth.controller";
+import verifyTokenAndRole from "../middlewares/auth.middleware";
+import validateDto from "../middlewares/validateRequest.middleware";
+import { RegisterDto } from "../dto/request/RegisterDTO";
+import { LoginDto } from "../dto/request/LoginDTO";
+import { loginLimiter } from "../middlewares/ratelimit.middleware";
 
 const router = express.Router();
 
@@ -28,12 +27,11 @@ const router = express.Router();
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Login'
+ *             $ref: '#/components/schemas/LoginDto'
  *     responses:
  *       200:
  *         description: Đăng nhập thành công
  */
-
 /**
  * @swagger
  * /api/auth/register:
@@ -45,7 +43,7 @@ const router = express.Router();
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Register'
+ *             $ref: '#/components/schemas/RegisterDto'
  *     responses:
  *       201:
  *         description: Đăng ký thành công
@@ -119,10 +117,10 @@ const router = express.Router();
 
 
 // Đăng nhập
-router.post("/login",loginLimiter,validateRequest(loginValidation) ,AuthController.login);
+router.post("/login",loginLimiter,validateDto(LoginDto) ,AuthController.login);
 
 // Đăng ký
-router.post("/register",validateRequest(registerValidation) ,AuthController.register);
+router.post("/register",validateDto(RegisterDto) ,AuthController.register);
 
 // Refresh token
 router.post("/refresh", AuthController.refreshToken);

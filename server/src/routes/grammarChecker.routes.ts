@@ -1,9 +1,9 @@
 // routes/grammarChecker.routes.js
 import express from "express";
-import verifyTokenAndRole from "../middlewares/auth.middleware.js";
-import validateRequest from "../middlewares/validateRequest.middleware.js";
+import verifyTokenAndRole from "../middlewares/auth.middleware";
+import validateRequest from "../middlewares/validateRequest.middleware";
 import Joi from "joi";
-import GrammarCheckerController from "../controllers/grammarChecker.controller.js";
+import GrammarCheckerController from "../controllers/grammarChecker.controller";
 
 const router = express.Router();
 

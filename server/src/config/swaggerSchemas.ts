@@ -1,9 +1,9 @@
 import j2s from "joi-to-swagger";
-import loginValidation from "../validations/loginValidation.js";
-import registerValidation from "../validations/registerValidation.js";
-import createUserValidation from "../validations/createUserValidation.js";
-import updateUserValidation from "../validations/updateUserValidation.js";
-import createLessonValidation from "../validations/createLessonValidation.js";
+import loginValidation from "../validations/loginValidation";
+import registerValidation from "../validations/registerValidation";
+import createUserValidation from "../validations/createUserValidation";
+import updateUserValidation from "../validations/updateUserValidation";
+import createLessonValidation from "../validations/createLessonValidation";
 
 const { swagger: loginSchema } = j2s(loginValidation);
 const { swagger: registerSchema } = j2s(registerValidation);

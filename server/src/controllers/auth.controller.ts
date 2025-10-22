@@ -1,6 +1,6 @@
 import { HttpStatusCode } from "axios";
-import AuthService from "../services/auth.service.js";
-import ApiError from "../utils/ApiError.js";
+import AuthService from "../services/auth.service";
+import ApiError from "../utils/ApiError";
 import { Request, Response, NextFunction } from "express";
 
 class AuthController {

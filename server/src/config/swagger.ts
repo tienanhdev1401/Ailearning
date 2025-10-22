@@ -1,6 +1,5 @@
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
-import { swaggerSchemas } from "./swaggerSchemas.js";
 
 const options = {
   definition: {
@@ -11,12 +10,12 @@ const options = {
     },
     components: {
       schemas: {
-        Login: swaggerSchemas.loginSchema,
-        Register: swaggerSchemas.registerSchema,
-        CreateUser: swaggerSchemas.createUserSchema,
-        UpdateUser: swaggerSchemas.updateUserSchema,
-        CreateLesson: swaggerSchemas.createLessonSchema,
-
+        // Trùng tên với @swagger components trong DTO
+        LoginDto: {},
+        RegisterDto: {},
+        CreateUserDto: {},
+        UpdateUserDto: {},
+        CreateLessonDto: {},
       },
       securitySchemes: {
         bearerAuth: {
@@ -27,7 +26,8 @@ const options = {
       },
     },
   },
-  apis: ["./routes/*.js"],
+  // Nơi swagger-jsdoc tìm các comment @swagger trong file
+  apis: ["./src/routes/*.routes.ts", "./src/dto/request/*.ts"] 
 };
 
 const swaggerSpec = swaggerJSDoc(options);

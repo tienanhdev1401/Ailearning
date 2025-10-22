@@ -1,7 +1,7 @@
 // controllers/pronunciation.controller.js
 import { HttpStatusCode } from "axios";
-import theFluentApiService from "../services/pronunciation.service.js";
-import ApiError from "../utils/ApiError.js";
+import theFluentApiService from "../services/pronunciation.service";
+import ApiError from "../utils/ApiError";
 import { Request, Response, NextFunction } from "express";
 
 class PronunciationController {

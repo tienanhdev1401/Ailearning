@@ -1,10 +1,10 @@
 import express from "express";
-import UserController from "../controllers/user.controller.js";
-import validateRequest from "../middlewares/validateRequest.middleware";
-import createUserValidation from "../validations/createUserValidation";
-import updateUserValidation from "../validations/updateUserValidation";
+import UserController from "../controllers/user.controller";
 import verifyTokenAndRole from "../middlewares/auth.middleware";
 import USER_ROLE from "../enums/userRole.enum";
+import validateDto from "../middlewares/validateRequest.middleware";
+import { CreateUserDto } from "../dto/request/CreateUserDTO";
+import { UpdateUserDto } from "../dto/request/UpdateUserDTO";
 
 const router = express.Router();
 
@@ -39,7 +39,7 @@ router.get(
 
 /**
  * @swagger
- * api/users/{id}:
+ * /api/users/{id}:
  *   get:
  *     summary: Lấy thông tin chi tiết 1 user
  *     tags: [User]
@@ -66,7 +66,7 @@ router.get(
 
 /**
  * @swagger
- * api/users:
+ * /api/users:
  *   post:
  *     summary: Tạo mới user
  *     tags: [User]
@@ -77,14 +77,14 @@ router.get(
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CreateUser'
+ *             $ref: '#/components/schemas/CreateUserDto'
  *     responses:
  *       201:
  *         description: User được tạo thành công
  */
 router.post(
   "/",
-  validateRequest(createUserValidation),
+  validateDto(CreateUserDto),
   verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
   UserController.createUser
 );
@@ -109,7 +109,7 @@ router.post(
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UpdateUser'
+ *             $ref: '#/components/schemas/UpdateUserDto'
  *     responses:
  *       200:
  *         description: User được cập nhật thành công
@@ -120,7 +120,7 @@ router.post(
  */
 router.put(
   "/:id",
-  validateRequest(updateUserValidation),
+  validateDto(UpdateUserDto),
   verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
   UserController.updateUser
 )
@@ -128,7 +128,7 @@ router.put(
 
 /**
  * @swagger
- * api/users/{id}:
+ * /api/users/{id}:
  *   delete:
  *     summary: Xóa user
  *     tags: [User]
@@ -155,7 +155,7 @@ router.delete(
 
 /**
  * @swagger
- * api/users/send-verification-code:
+ * /api/users/send-verification-code:
  *   post:
  *     summary: Gửi mã OTP xác thực
  *     tags: [User]
@@ -167,7 +167,7 @@ router.post("/send-verification-code", UserController.sendVerificationCode);
 
 /**
  * @swagger
- * api/users/reset-password:
+ * /api/users/reset-password:
  *   post:
  *     summary: Quên mật khẩu (reset bằng OTP)
  *     tags: [User]

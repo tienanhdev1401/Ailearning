@@ -1,6 +1,7 @@
 import express from "express";
 import passport from "passport";
-import AuthService from "../services/auth.service.js";
+import AuthService from "../services/auth.service";
+import { User } from "../models/user";
 
 const router = express.Router();
 
@@ -19,8 +20,8 @@ router.get(
   (req, res) => {
     console.log("✅ Google authentication successful:", req.user);
 
-    const accessToken = AuthService.generateAccessToken(req.user);
-    const refreshToken = AuthService.generateRefreshToken(req.user);
+    const accessToken = AuthService.generateAccessToken(req.user as User);
+    const refreshToken = AuthService.generateRefreshToken(req.user as User);
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,

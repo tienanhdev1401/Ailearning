@@ -1,8 +1,11 @@
 import { HttpStatusCode } from 'axios'
-import UserService from '../services/user.service.js'
+import UserService from '../services/user.service'
 import nodemailer from 'nodemailer'
-import ApiError from '../utils/ApiError.js';
+import ApiError from '../utils/ApiError';
+import { CreateUserDto } from '../dto/request/CreateUserDTO'
+import { UpdateUserDto } from '../dto/request/UpdateUserDTO';
 import { Request, Response, NextFunction } from "express";
+import { plainToInstance } from "class-transformer";
 
 const otpStore = new Map<string, { otp: string; expires: Date; userData: { email: string } }>();
 
@@ -30,11 +33,6 @@ class UserController {
     try {
       const id = Number(req.params.id);
       const user = await UserService.getUserById(id);
-
-      if (!user) {
-        throw new ApiError(HttpStatusCode.NotFound,"Không tìm thấy người dùng");
-      }
-
       res.status(HttpStatusCode.Ok).json(user);
     } catch (error) {
       next(error);
@@ -44,9 +42,8 @@ class UserController {
   // Tạo người dùng mới
   static async createUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name, email, password, role } = req.body;
-
-      const newUser = await UserService.createUser({ name, email, password, role });
+      const createUserDto = plainToInstance(CreateUserDto, req.body);
+      const newUser = await UserService.createUser(createUserDto);
       res.status(HttpStatusCode.Created).json(newUser);
     } catch (error) {
       next(error);
@@ -57,9 +54,9 @@ class UserController {
   static async updateUser(req: Request, res: Response, next: NextFunction) {
     try {
       const id = Number(req.params.id);
-      const { email, role } = req.body;
+      const updateUserDto = plainToInstance(UpdateUserDto, req.body);
 
-      const updatedUser = await UserService.updateUser(id, { email, role });
+      const updatedUser = await UserService.updateUser(id, updateUserDto);
       if (!updatedUser) {
         throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy người dùng để cập nhật");
       }
@@ -163,7 +160,7 @@ class UserController {
       }
   
       // Tìm người dùng theo email
-      const user = await UserService.findByEmail(email);
+      const user = await UserService.findUserByEmail(email);
       if (!user) {
         res.status(HttpStatusCode.NotFound).json({ error: 'Người dùng không tồn tại' });
         return;

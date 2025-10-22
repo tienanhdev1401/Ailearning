@@ -1,80 +1,81 @@
 import { HttpStatusCode } from "axios";
 import ApiError from "../utils/ApiError";
-import User from "../models/user";
-
-interface CreateUserInput {
-  name: string;
-  email: string;
-  password?: string;
-  role?: string;
-}
-
+import { userRepository } from "../repositories/user.repository";
+import { User } from "../models/user";
+import AUTH_PROVIDER from "../enums/authProvider.enum";
+import USER_ROLE from "../enums/userRole.enum";
+import { CreateUserDto } from "../dto/request/CreateUserDTO";
+import { UpdateUserDto } from "../dto/request/UpdateUserDTO";
 class UserService {
   // Lấy danh sách tất cả người dùng
-  static async getAllUsers(): Promise<any[]> {
-    return await User.findAll();
+  static async getAllUsers(): Promise<User[]> {
+    return await userRepository.find();
   }
 
   // Tạo người dùng mới
-  static async createUser(user: CreateUserInput): Promise<any> {
-    const { name, email, password, role } = user;
+  static async createUser(createUserDto: CreateUserDto): Promise<User> {
 
     // Kiểm tra trùng email
-    const existingUser = await this.findUserByEmail(email);
+    const existingUser = await this.findUserByEmail(createUserDto.email);
     if (existingUser) {
       throw new ApiError(HttpStatusCode.BadRequest, "Email đã tồn tại");
     }
 
     // Tạo user mới
-    return await User.create({
-      name,
-      email,
-      password, // nên hash password thật
-      role,
-      authProvider: "local",
+    const newUser = userRepository.create({
+      name: createUserDto.name,
+      email: createUserDto.email,
+      password: createUserDto.password, 
+      role: createUserDto.role,
+      authProvider: AUTH_PROVIDER.LOCAL,
     });
+
+    return await userRepository.save(newUser);
   }
 
   // Lấy người dùng theo ID
-  static async getUserById(id: number): Promise<any> {
-    return await User.findByPk(id);
+  static async getUserById(id: number): Promise<User> {
+    const user = await userRepository.findOne({ where: { id } });
+
+    if (!user) {
+      throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy người dùng");
+    }
+
+    return user;
   }
 
   // Tìm người dùng theo email
-  static async findUserByEmail(email: string): Promise<any> {
-    return await User.findOne({ where: { email } });
+  static async findUserByEmail(email: string): Promise<User | null> {
+    const user = await userRepository.findOne({ where: { email } });
+    return user || null; 
   }
 
   // Cập nhật người dùng
-  static async updateUser(id: number, updateData: Record<string, any>): Promise<any> {
-    const user = await User.findByPk(id);
-    if (!user) return null;
+  static async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.getUserById(id); 
 
-    await user.update(updateData);
-    return user;
+    userRepository.merge(user, updateUserDto);
+    return await userRepository.save(user);
   }
 
   // Xoá người dùng
   static async deleteUser(id: number): Promise<boolean | null> {
-    const user = await User.findByPk(id);
+    const user = await this.getUserById(id);
     if (!user) return null;
 
-    await user.destroy();
+    await userRepository.remove(user);
     return true;
   }
 
-  // Tìm người dùng theo email (hàm phụ)
-  static async findByEmail(email: string): Promise<any> {
-    return await User.findOne({ where: { email } });
-  }
+
 
   // Cập nhật mật khẩu
-  static async updatePassword(userId: number, newPassword: string): Promise<any> {
-    const user = await User.findByPk(userId);
+  static async updatePassword(userId: number, newPassword: string): Promise<User | null> {
+    const user = await this.getUserById(userId);
     if (!user) return null;
 
-    await user.update({ password: newPassword });
-    return user;
+    user.password = newPassword; // giữ nguyên logic
+    return await userRepository.save(user);
   }
 }
 

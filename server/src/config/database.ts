@@ -1,27 +1,19 @@
+// src/config/data-source.ts
+import "reflect-metadata";
+import { DataSource } from "typeorm";
 import dotenv from "dotenv";
-import { Sequelize } from "sequelize";
-dotenv.config(); // Load biến môi trường từ .env
+dotenv.config();
 
-const dbName = process.env.DB_NAME;
-const dbUser = process.env.DB_USER;
-const dbPassword = process.env.DB_PASSWORD;
-const dbHost = process.env.DB_HOST;
-const dbPort = Number(process.env.DB_PORT) || 3306;
-const dbDialect = (process.env.DB_DIALECT as any) || 'mysql';
-
-if (!dbName || !dbUser || !dbPassword || !dbHost) {
-  throw new Error("Missing required database environment variables.");
-}
-
-const sequelize = new Sequelize(
-  dbName,
-  dbUser,
-  dbPassword,
-  {
-    host: dbHost,
-    port: dbPort,
-    dialect: dbDialect,
-  }
-);
-
-export default sequelize;
+export const AppDataSource = new DataSource({
+  type: "mysql",
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT) || 3306,
+  username: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  synchronize: true,
+  logging: false,
+  entities: [__dirname + "/../models/*.{ts,js}"],
+  migrations: [],
+  subscribers: [],
+});
