@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { Lesson } from "./lesson";
 
 @Entity({ name: "subtitles" })
@@ -17,4 +17,10 @@ export class Subtitle {
   @ManyToOne(() => Lesson, (lesson) => lesson.subtitles, { onDelete: "CASCADE" })
   @JoinColumn({ name: "lesson_id" })
   lesson!: Lesson;
+
+  @CreateDateColumn()
+  startedAt!: Date;
+    
+  @UpdateDateColumn()
+  updatedAt!: Date;
 }

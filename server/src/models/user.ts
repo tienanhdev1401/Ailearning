@@ -1,6 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn  } from "typeorm";
 import USER_ROLE from "../enums/userRole.enum";
 import AUTH_PROVIDER from "../enums/authProvider.enum";
+
+import { RoadmapEnrollment } from "./roadmapEnrollment";
+import { UserProgress } from "./userProgress";
 
 @Entity({ name: "users" })
 export class User {
@@ -37,5 +40,19 @@ export class User {
         "Password là bắt buộc khi đăng nhập bằng phương thức local"
       );
     }
-  }
+  };
+
+  // Một người có thể tham gia nhiều roadmap
+  @OneToMany(() => RoadmapEnrollment, (enroll) => enroll.user)
+  enrollments!: RoadmapEnrollment[];
+
+  // Một người có thể có nhiều tiến độ hoạt động
+  @OneToMany(() => UserProgress, (progress) => progress.user)
+  progresses!: UserProgress[];
+
+  @CreateDateColumn()
+  startedAt!: Date;
+  
+  @UpdateDateColumn()
+  updatedAt!: Date;
 }
