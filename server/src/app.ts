@@ -13,12 +13,13 @@ import { AppDataSource } from "./config/database";
 import userRouter from './routes/user.routes'
 import authRouter from './routes/auth.routes'
 import oauthRoutes from './routes/oauth.routes'
-import grammarCheckerRouter from './routes/grammarChecker.routes'
-import lessonRouter from './routes/lesson.routes'
-import pronunciationRouter from './routes/pronunciation.routes'
-import './config/passport'   // chạy file config để đăng ký strategy
-import errorHandlingMiddleware from './middlewares/errorHandling.middleware'
-import { limiter } from './middlewares/ratelimit.middleware'
+import grammarCheckerRouter from './routes/grammarChecker.routes.js'
+import lessonRouter from './routes/lesson.routes.js'
+import pronunciationRouter from './routes/pronunciation.routes.js'
+import roadmapRouter from './routes/roadmap.routes.js'
+import './config/passport.js'   // chạy file config để đăng ký strategy
+import errorHandlingMiddleware from './middlewares/errorHandling.middleware.js'
+import { limiter } from './middlewares/ratelimit.middleware.js'
 
 import { swaggerUi, swaggerSpec } from "./config/swagger";
 
@@ -43,13 +44,14 @@ app.use('/api/users', userRouter);
 app.use('/api',grammarCheckerRouter);
 app.use('/api/lessons',lessonRouter);
 app.use('/api/pronunciation', pronunciationRouter);
-
+app.use('/api/roadmaps', roadmapRouter);
 
 
 // swagger endpoint
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(errorHandlingMiddleware);
+
 
 // Kết nối và sync TypeORM
 const PORT = 5000;
