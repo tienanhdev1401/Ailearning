@@ -40,7 +40,7 @@ export class ActivityService {
   }
 
   // Lấy danh sách activity theo dayId
-  static async getAllByDay(dayId: number): Promise<Activity[]> {
+  static async getAllActivityByDayId(dayId: number): Promise<Activity[]> {
     const day = await this.dayRepository.findOne({ where: { id: dayId } });
     if (!day) throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy ngày");
 
