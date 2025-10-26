@@ -10,7 +10,10 @@ import { HttpStatusCode } from "axios";
  */
 const validateDto = (dtoClass: any) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const dtoObject = plainToInstance(dtoClass, req.body);
+    const dtoObject = dtoClass.fromPlain
+      ? dtoClass.fromPlain(req.body)
+      : plainToInstance(dtoClass, req.body);
+
     const errors: ValidationError[] = await validate(dtoObject, { 
       whitelist: true, 
       forbidNonWhitelisted: true,

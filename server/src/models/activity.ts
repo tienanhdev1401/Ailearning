@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { Day } from "./day";
 import Skill from "../enums/skill.enum";
+import ActivityType from "../enums/activityType.enum";
 import { UserProgress } from "./userProgress";
 
 @Entity({ name: "activities" })
@@ -10,6 +11,9 @@ export class Activity {
 
   @Column({ type: "varchar",nullable: false,})
   skill!: Skill;
+
+  @Column({ type: "varchar", nullable: false })
+  type!: ActivityType;
 
   @Column({ name: "point_of_ac", type: "int", nullable: false, default: 0 })
   pointOfAc!: number;
