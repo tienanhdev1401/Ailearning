@@ -4,6 +4,7 @@ import AUTH_PROVIDER from "../enums/authProvider.enum";
 
 import { RoadmapEnrollment } from "./roadmapEnrollment";
 import { UserProgress } from "./userProgress";
+import { Conversation } from "./conversation";
 
 @Entity({ name: "users" })
 export class User {
@@ -49,6 +50,12 @@ export class User {
   // Một người có thể có nhiều tiến độ hoạt động
   @OneToMany(() => UserProgress, (progress) => progress.user)
   progresses!: UserProgress[];
+
+  @OneToMany(() => Conversation, (conv) => conv.student)
+  studentConversations!: Conversation[];
+
+  @OneToMany(() => Conversation, (conv) => conv.staff)
+  staffConversations!: Conversation[];
 
   @CreateDateColumn()
   startedAt!: Date;

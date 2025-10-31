@@ -5,6 +5,7 @@ import mysql from 'mysql2'
 import cookieParser from 'cookie-parser'
 import passport from 'passport'
 import cors from 'cors'
+import http from "http";
 
 dotenv.config(); // load env
 
@@ -23,6 +24,8 @@ import errorHandlingMiddleware from './middlewares/errorHandling.middleware.js'
 import { limiter } from './middlewares/ratelimit.middleware.js'
 
 import { swaggerUi, swaggerSpec } from "./config/swagger";
+import { setupSocket } from './socket';
+import chatRouter from "./routes/chat.router.js";
 
 const app = express();
 app.use(cookieParser());
@@ -38,6 +41,10 @@ app.use(cors({
 
 app.use(limiter);
 
+// Khởi tạo socket
+const server = http.createServer(app);
+setupSocket(server);
+
 app.use('/api/auth', authRouter);
 app.use("/api/auth", oauthRoutes);
 app.use('/api/users', userRouter);
@@ -47,6 +54,8 @@ app.use('/api/lessons',lessonRouter);
 app.use('/api/pronunciation', pronunciationRouter);
 app.use('/api/roadmaps', roadmapRouter);
 app.use('/api/days', dayRouter);
+app.use("/api/chat", chatRouter);
+
 
 
 // swagger endpoint
@@ -58,7 +67,7 @@ app.use(errorHandlingMiddleware);
 // Kết nối và sync TypeORM
 const PORT = 5000;
 AppDataSource.initialize().then(() => {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log('TypeORM connected & synced');
     console.log(`📑 Swagger docs: http://localhost:${PORT}/api-docs`);
