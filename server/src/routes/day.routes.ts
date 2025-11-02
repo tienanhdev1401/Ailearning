@@ -1,10 +1,12 @@
 import express from "express";
 import DayController from "../controllers/day.controller";
+import ActivityController from "../controllers/activity.controller";
 import validateDto from "../middlewares/validateRequest.middleware";
-import { CreateDayDto } from "../dto/request/CreateDayDTO";
 import { UpdateDayDto } from "../dto/request/UpdateDayDTO";
 import verifyTokenAndRole from "../middlewares/auth.middleware";
+
 import USER_ROLE from "../enums/userRole.enum";
+import { CreateActivityDto } from "../dto/request/CreateActivityDTO";
 
 const router = express.Router();
 
@@ -68,8 +70,8 @@ router.get(
  */
 router.put(
   "/:id",
-  validateDto(UpdateDayDto),
   verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
+  validateDto(UpdateDayDto),
   DayController.updateDay
 );
 
@@ -96,6 +98,13 @@ router.delete(
   "/:id",
   verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
   DayController.deleteDay
+);
+
+
+router.get(
+  "/:dayId/activities",
+  verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
+  ActivityController.getAllActivityByDayId
 );
 
 export default router;

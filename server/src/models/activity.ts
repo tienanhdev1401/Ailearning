@@ -1,8 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn, Unique } from "typeorm";
 import { Day } from "./day";
 import Skill from "../enums/skill.enum";
-import ActivityType from "../enums/activityType.enum";
 import { UserProgress } from "./userProgress";
+import { MiniGame } from "./minigame";
 
 @Entity({ name: "activities" })
 export class Activity {
@@ -12,8 +12,6 @@ export class Activity {
   @Column({ type: "varchar",nullable: false,})
   skill!: Skill;
 
-  @Column({ type: "varchar", nullable: false })
-  type!: ActivityType;
 
   @Column({ name: "point_of_ac", type: "int", nullable: false, default: 0 })
   pointOfAc!: number;
@@ -24,11 +22,11 @@ export class Activity {
   @Column({ name: "content", type: "text", nullable: true })
   content?: string;
 
-  @Column({ name: "resources", type: "json", nullable: true })
-  resources?: Record<string, any>;
-
   @ManyToOne(() => Day, (day) => day.activities, { onDelete: "CASCADE" })
   day!: Day;
+
+  @OneToMany(() => MiniGame, (minigame) => minigame.activity, { cascade: true })
+  minigames!: MiniGame[];
 
   @OneToMany(() => UserProgress, (progress) => progress.activity)
   userProgresses!: UserProgress[];

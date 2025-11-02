@@ -1,13 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import { ActivityService } from "../services/activity.service";
 import { CreateActivityDto } from "../dto/request/CreateActivityDTO";
+import { plainToInstance } from "class-transformer";
+import { HttpStatusCode } from "axios";
+import { UpdateActivityDto } from "../dto/request/UpdateActivityDTO";
+import { UpdateManyActivitiesDto } from "../dto/request/UpdateManyActivitiesDTO";
+
 
 export class ActivityController {
   static async addActivityToDay(req: Request, res: Response, next: NextFunction) {
     try {
-      const dto = CreateActivityDto.fromPlain(req.body);
+      const dto = plainToInstance(CreateActivityDto, req.body);
       const newActivity = await ActivityService.createActivity(dto);
-      res.status(201).json(newActivity);
+      res.status(HttpStatusCode.Created).json(newActivity);
     } catch (err) {
       next(err);
     }
@@ -17,7 +22,7 @@ export class ActivityController {
     try {
       const id = Number(req.params.id);
       const activity = await ActivityService.getById(id);
-      res.status(200).json(activity);
+      res.status(HttpStatusCode.Ok).json(activity);
     } catch (err) {
       next(err);
     }
@@ -27,7 +32,7 @@ export class ActivityController {
     try {
       const dayId = Number(req.params.dayId);
       const list = await ActivityService.getAllActivityByDayId(dayId);
-      res.status(200).json(list);
+      res.status(HttpStatusCode.Ok).json(list);
     } catch (err) {
       next(err);
     }
@@ -36,8 +41,9 @@ export class ActivityController {
   static async updateActivity(req: Request, res: Response, next: NextFunction) {
     try {
       const id = Number(req.params.id);
-      const updated = await ActivityService.updateActivity(id, req.body);
-      res.status(200).json(updated);
+      const updateActivity = plainToInstance(UpdateActivityDto, req.body);
+      const updated = await ActivityService.updateActivity(id, updateActivity);
+      res.status(HttpStatusCode.Ok).json(updated);
     } catch (err) {
       next(err);
     }
@@ -47,9 +53,21 @@ export class ActivityController {
     try {
       const id = Number(req.params.id);
       await ActivityService.deleteActivity(id);
-      res.status(200).json({ message: "Xóa activity thành công" });
+      res.status(HttpStatusCode.Ok).json({ message: "Xóa activity thành công" });
     } catch (err) {
       next(err);
     }
   }
+  static async updateManyActivities(req: Request, res: Response, next: NextFunction) {
+    try {
+      const dto = plainToInstance(UpdateManyActivitiesDto, req.body);
+      const result = await ActivityService.updateManyActivities(dto);
+      res.status(HttpStatusCode.Ok).json(result);
+    }
+    catch (err) {
+      next(err);
+    }
+  }
 }
+
+export default ActivityController;
