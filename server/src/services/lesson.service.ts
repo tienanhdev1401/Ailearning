@@ -1,5 +1,4 @@
 import fs from "fs";
-import SrtParser from "srt-parser-2";
 import { AppDataSource } from "../config/database";
 import { Lesson } from "../models/lesson";
 import { Subtitle } from "../models/subtitle";
@@ -38,6 +37,7 @@ class LessonService {
       await queryRunner.manager.save(lesson);
 
       // 2. Parse SRT
+      const { default: SrtParser } = await import("srt-parser-2"); // <--- điểm khác biệt
       const parser = new SrtParser();
       const srtData = fs.readFileSync(srtPath, "utf-8");
       const srtArray = parser.fromSrt(srtData);

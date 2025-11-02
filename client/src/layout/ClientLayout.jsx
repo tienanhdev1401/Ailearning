@@ -1,5 +1,6 @@
 import React, { useContext, useEffect } from "react";
-import Sidebar from "../client/components/Sidebar";
+import Header from "../client/components/Header";
+import Footer from "../client/components/Footer";
 import styles from "../client/styles/ClientLayout.module.css";
 
 import { HighlightContext } from "../context/HighlightContext";
@@ -17,8 +18,11 @@ const ClientLayout = ({ children }) => {
 
   return (
     <div className={styles.layout}>
-      <Sidebar />
-      {children}
+      <Header />
+      <main className={styles.main}>
+        {children}
+      </main>
+      <Footer />
       <TranslatePopup />
     </div>
   );
