@@ -12,6 +12,9 @@ import Dashboard from "./admin/pages/Dashboard";
 import VideoPraticePage from "./client/pages/VideoPraticePage";
 import SpeakingVideoPraticePage from "./client/pages/SpeakingVideoPraticePage";
 
+import StudentChat from "./client/pages/StudentChat";
+import StaffChat from "./admin/pages/StaffChat";
+
 function App() {
   return (
     <Routes>
@@ -43,6 +46,24 @@ function App() {
             <AdminLayout><Dashboard /></AdminLayout>
           </ProtectedRoute>
         }
+      />
+
+      <Route 
+        path="/student" 
+        element={
+          <ProtectedRoute>
+            <StudentChat />
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route 
+        path="/staff" 
+        element={
+          <ProtectedRoute>
+            <StaffChat />
+          </ProtectedRoute>
+        } 
       />
     </Routes>
   );
