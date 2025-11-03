@@ -6,6 +6,7 @@ import validateDto from "../middlewares/validateRequest.middleware";
 import { CreateActivityDto } from "../dto/request/CreateActivityDTO";
 import { UpdateActivityDto } from "../dto/request/UpdateActivityDTO";
 import { UpdateManyActivitiesDto } from "../dto/request/UpdateManyActivitiesDTO";
+import MiniGameController from "../controllers/minigame.controller";
 
 const router = express.Router();
 
@@ -43,6 +44,9 @@ router.patch(
   "/mutiple-update",
   verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
   validateDto(UpdateManyActivitiesDto),
-  ActivityController.updateManyActivities);
+  ActivityController.updateManyActivities
+);
+
+router.get("/:activityId/minigames", MiniGameController.getMiniGamesByActivity);
 
 export default router;

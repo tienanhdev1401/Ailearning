@@ -14,15 +14,16 @@ import { AppDataSource } from "./config/database";
 import userRouter from './routes/user.routes'
 import authRouter from './routes/auth.routes'
 import oauthRoutes from './routes/oauth.routes'
-import grammarCheckerRouter from './routes/grammarChecker.routes.js'
-import lessonRouter from './routes/lesson.routes.js'
-import pronunciationRouter from './routes/pronunciation.routes.js'
-import roadmapRouter from './routes/roadmap.routes.js'
+import grammarCheckerRouter from './routes/grammarChecker.routes'
+import lessonRouter from './routes/lesson.routes'
+import pronunciationRouter from './routes/pronunciation.routes'
+import roadmapRouter from './routes/roadmap.routes'
 import dayRouter from './routes/day.routes.js'
-import activityRouter from './routes/activity.routes.js'
+import activityRouter from './routes/activity.routes'
+import minigameRouter from './routes/minigame.routes'
 import './config/passport.js'   // chạy file config để đăng ký strategy
-import errorHandlingMiddleware from './middlewares/errorHandling.middleware.js'
-import { limiter } from './middlewares/ratelimit.middleware.js'
+import errorHandlingMiddleware from './middlewares/errorHandling.middleware'
+import { limiter } from './middlewares/ratelimit.middleware'
 
 import { swaggerUi, swaggerSpec } from "./config/swagger";
 import { setupSocket } from './socket';
@@ -56,7 +57,7 @@ app.use('/api/pronunciation', pronunciationRouter);
 app.use('/api/roadmaps', roadmapRouter);
 app.use('/api/days', dayRouter);
 app.use('/api/activities', activityRouter);
-
+app.use('/api/minigames', minigameRouter);
 app.use("/api/chat", chatRouter);
 
 

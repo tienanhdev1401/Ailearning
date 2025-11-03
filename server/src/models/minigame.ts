@@ -1,3 +1,4 @@
+// models/minigame.ts
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, TableInheritance, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { Activity } from "./activity";
 import EType from "../enums/minigameType.enum";
@@ -22,7 +23,15 @@ export class MiniGame {
 
   @CreateDateColumn()
   createdAt!: Date;
-    
+
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  // Constructor 
+  constructor(prompt?: string, type?: EType, resources?: Record<string, any>, activity?: Activity) {
+    if (prompt) this.prompt = prompt;
+    if (type) this.type = type;
+    if (resources) this.resources = resources;
+    if (activity) this.activity = activity;
+  }
 }
