@@ -15,6 +15,13 @@ import SpeakingVideoPraticePage from "./client/pages/SpeakingVideoPraticePage";
 import StudentChat from "./client/pages/StudentChat";
 import StaffChat from "./admin/pages/StaffChat";
 
+import ReasonPage from "./client/pages/muticheckPage/ReasonPage";
+import GoalPage from "./client/pages/muticheckPage/GoalPage";
+import ChooseLevelPage from "./client/pages/muticheckPage/ChooseLevelPage";
+import ChooseTopicPage from "./client/pages/muticheckPage/ChooseTopicPage";
+import KnowLevelPage from "./client/pages/muticheckPage/KnowLevelPage";
+import FindLevelPage from "./client/pages/muticheckPage/FindLevelPage";
+
 function App() {
   return (
     <Routes>
@@ -39,6 +46,15 @@ function App() {
       <Route path="/video" element={<VideoPraticePage />} />
       <Route path="/speak" element={<SpeakingVideoPraticePage />} />
 
+      
+      <Route path="/welcome/reason" element={<ReasonPage />} />
+      <Route path="/welcome/goal" element={<GoalPage />} />
+      <Route path="/welcome/level" element={<ChooseLevelPage />} />
+      <Route path="/welcome/topic" element={<ChooseTopicPage />} />
+      <Route path="/welcome/proficiency" element={<KnowLevelPage />} />
+      <Route path="/welcome/placement" element={<FindLevelPage />} />
+
+      
       <Route
         path="/dashboard"
         element={
