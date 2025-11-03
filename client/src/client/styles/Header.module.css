@@ -1,0 +1,354 @@
+/* Header Container */
+.header {
+  background: linear-gradient(135deg, #14202a 0%, #1a2a3a 100%);
+  border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+[data-theme="light"] .header {
+  background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+  border-bottom: 2px solid rgba(0, 150, 150, 0.2);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+}
+
+.logoIcon {
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  animation: rotate 3s linear infinite;
+}
+
+.logoText {
+  font-size: 24px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #00FFFF, #00FF88);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  letter-spacing: 2px;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Navigation */
+.nav {
+  display: flex;
+  gap: 30px;
+  flex: 1;
+  margin-left: 60px;
+  align-items: center;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e0e6eb;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.navItem:hover {
+  background-color: rgba(0, 255, 255, 0.2);
+  color: #00FFFF;
+  transform: translateY(-2px);
+}
+
+[data-theme="light"] .navItem {
+  color: #333;
+}
+
+[data-theme="light"] .navItem:hover {
+  background-color: rgba(0, 150, 150, 0.15);
+  color: #009999;
+}
+
+.navIcon {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+}
+
+/* User Actions */
+.userActions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.themeToggle {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: rgba(0, 255, 255, 0.1);
+}
+
+.themeToggle:hover {
+  transform: scale(1.1) rotate(20deg);
+  background-color: rgba(0, 255, 255, 0.2);
+}
+
+[data-theme="light"] .themeToggle {
+  background-color: rgba(0, 150, 150, 0.1);
+}
+
+[data-theme="light"] .themeToggle:hover {
+  background-color: rgba(0, 150, 150, 0.2);
+}
+
+.userProfile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background-color: rgba(0, 255, 255, 0.1);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.userProfile:hover {
+  background-color: rgba(0, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+[data-theme="light"] .userProfile {
+  background-color: rgba(0, 150, 150, 0.1);
+}
+
+[data-theme="light"] .userProfile:hover {
+  background-color: rgba(0, 150, 150, 0.15);
+}
+
+.avatar {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #00FFFF, #00FF88);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #14202a;
+  font-weight: bold;
+}
+
+.username {
+  color: #00FFFF;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+[data-theme="light"] .username {
+  color: #009999;
+}
+
+.logoutBtn {
+  background: linear-gradient(135deg, #ff4757, #ff6348);
+  border: none;
+  color: white;
+  font-size: 20px;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+}
+
+.logoutBtn:hover {
+  transform: scale(1.1) rotate(10deg);
+  box-shadow: 0 6px 20px rgba(255, 71, 87, 0.5);
+}
+
+/* Hamburger Menu - Hidden by default */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 20px;
+}
+
+.hamburger span {
+  width: 25px;
+  height: 3px;
+  background-color: #00FFFF;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger.active span:nth-child(1) {
+  transform: rotate(45deg) translate(10px, 10px);
+}
+
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -7px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+  .nav {
+    margin-left: 30px;
+    gap: 20px;
+  }
+
+  .navItem {
+    font-size: 14px;
+    padding: 6px 12px;
+  }
+
+  .navIcon {
+    font-size: 18px;
+  }
+
+  .username {
+    display: none;
+  }
+
+  .avatar {
+    width: 35px;
+    height: 35px;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    height: 60px;
+    padding: 0 15px;
+  }
+
+  .logo {
+    gap: 8px;
+  }
+
+  .logoIcon {
+    font-size: 24px;
+  }
+
+  .logoText {
+    font-size: 20px;
+    letter-spacing: 1px;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+
+  .nav {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #14202a 0%, #1a2a3a 100%);
+    flex-direction: column;
+    gap: 15px;
+    margin: 0;
+    padding: 20px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+    margin-left: 0;
+  }
+
+  .navOpen {
+    max-height: 400px;
+  }
+
+  .navItem {
+    width: 100%;
+    font-size: 16px;
+    padding: 12px 16px;
+  }
+
+  .userActions {
+    gap: 10px;
+  }
+
+  .userProfile {
+    display: none;
+  }
+
+  .logoutBtn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    height: 50px;
+  }
+
+  .logoIcon {
+    font-size: 20px;
+  }
+
+  .logoText {
+    font-size: 18px;
+  }
+
+  .logoutBtn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+}
