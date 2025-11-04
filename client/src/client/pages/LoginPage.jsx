@@ -78,8 +78,8 @@ const LoginPage = () => {
       localStorage.setItem('accessToken', res.data.accessToken);
 
       // Kiểm tra lần đầu xác nhận muticheck sau khi đăng nhập bằng Google
-      await checkFirstConfirm(res.data.accessToken);
-      // if (redirected) return; 
+      const firstConfirm = await checkFirstConfirm(res.data.accessToken, navigate);
+    if (firstConfirm) return;
 
       const decoded = jwtDecode(res.data.accessToken);
       const role = decoded.role;
@@ -112,7 +112,7 @@ const LoginPage = () => {
     // Kiểm tra lần đầu xác nhận muticheck sau khi đăng nhập bằng Google
     if (tokenFromGoogle) {
       localStorage.setItem('accessToken', tokenFromGoogle);
-      checkFirstConfirm(tokenFromGoogle).then((redirected) => {
+      checkFirstConfirm(tokenFromGoogle, navigate).then((redirected) => {
         if (!redirected) {
           const decoded = jwtDecode(tokenFromGoogle);
           const role = decoded.role;
@@ -170,7 +170,7 @@ const LoginPage = () => {
 
   const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
 
-  async function checkFirstConfirm(accessToken) {
+  async function checkFirstConfirm(accessToken,navigate) {
     try {
       
       const res = await api.get('/confirm/check', {
@@ -179,7 +179,6 @@ const LoginPage = () => {
       const firstConfirm = !res.data.completed;
       console.log('First confirm status:', firstConfirm);
       if (firstConfirm) {
-        
         navigate('/welcome/reason');
         return true;
       }

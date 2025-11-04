@@ -1,9 +1,14 @@
-import React, { useState } from "react";
+import React, { useState , useEffect} from "react";
 import { Container, Button, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 export default function TopicPage() {
-  const [selectedTopics, setSelectedTopics] = useState([]);
+  // Lấy danh sách topics đã chọn từ sessionStorage (nếu có)
+  const [selectedTopics, setSelectedTopics] = useState(() => {
+    const saved = sessionStorage.getItem("topics");
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [showMore, setShowMore] = useState(false);
   const navigate = useNavigate();
 
@@ -37,6 +42,11 @@ export default function TopicPage() {
       prev.includes(text) ? prev.filter((t) => t !== text) : [...prev, text]
     );
   };
+
+  // Lưu vào sessionStorage mỗi khi selectedTopics thay đổi
+  useEffect(() => {
+    sessionStorage.setItem("topics", JSON.stringify(selectedTopics));
+  }, [selectedTopics]);
 
   return (
     <Container

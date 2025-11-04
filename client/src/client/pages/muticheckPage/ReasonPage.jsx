@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReasonCard from "../../components/ReasonCard";
 import { Container, ProgressBar, Button, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 export default function ReasonPage() {
-  const [selected, setSelected] = useState("Challenge myself");
-   const navigate = useNavigate();
+  const [selected, setSelected] = useState(
+    sessionStorage.getItem("reason") || "Challenge myself" 
+  );
+  const navigate = useNavigate();
 
   const reasons = [
     { icon: "🤝", text: "Work" },
@@ -16,6 +18,13 @@ export default function ReasonPage() {
     { icon: "💪", text: "Challenge myself" },
     { icon: "💭", text: "Other" },
   ];
+
+  // Lưu vào sessionStorage khi người dùng chọn
+  useEffect(() => {
+    if (selected) {
+      sessionStorage.setItem("reason", selected);
+    }
+  }, [selected]);
 
   return (
     <Container

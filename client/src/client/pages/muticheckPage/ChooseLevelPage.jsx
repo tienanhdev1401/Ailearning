@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../../../api/api";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 const ChooseLevelPage = () => {
-  const [selected, setSelected] = useState(null);
-  const navigate = useNavigate();
-
   const levels = [
     { icon: "🪴", label: "Beginner A1" },
     { icon: "🌿", label: "Elementary A2" },
@@ -15,8 +13,48 @@ const ChooseLevelPage = () => {
     { icon: "🌸", label: "Advanced C1" },
   ];
 
+  // ✅ Lấy lại giá trị level từ sessionStorage nếu có
+  const [selected, setSelected] = useState(() => {
+    const saved = sessionStorage.getItem("level");
+    if (saved) {
+      return levels.findIndex((l) => l.label === saved);
+    }
+    return null;
+  });
+
+  const navigate = useNavigate();
+
+  // ✅ Khi chọn level, lưu tên (label) vào sessionStorage
   const handleSelect = (index) => {
     setSelected(index);
+    sessionStorage.setItem("level", levels[index].label);
+  };
+
+  // ✅ Gửi dữ liệu khi nhấn Finish
+  const handleFinish = async () => {
+    const reason = sessionStorage.getItem("reason");
+    const goal = sessionStorage.getItem("goal");
+    const proficiency = sessionStorage.getItem("proficiency");
+    const level = sessionStorage.getItem("level"); // Lấy từ sessionStorage
+
+    const confirmData = {
+      reason,
+      goal,
+      proficiency,
+      level,
+    };
+
+    try {
+      const response = await api.post("/confirm/", confirmData);
+      console.log("Gửi dữ liệu thành công:", response.data);
+      alert("Cảm ơn bạn đã dành thời gian xác thực!");
+    } catch (error) {
+      console.error("Lỗi khi gửi dữ liệu:", error);
+    }
+
+    // Xóa sessionStorage và quay về trang chủ
+    sessionStorage.clear();
+    navigate("/");
   };
 
   return (
@@ -72,14 +110,14 @@ const ChooseLevelPage = () => {
         ))}
       </div>
 
-      {/* Nút Continue */}
+      {/* Nút Finish */}
       <div className="mt-5">
         <button
-          className="btn btn-primary px-4 py-2 rounded-pill fw-semibold"
+          className="btn btn-primary px-5 py-2 rounded-pill fw-semibold"
           disabled={selected === null}
-          onClick={() => navigate("/")}
+          onClick={handleFinish}
         >
-          Continue
+          Finish
         </button>
       </div>
     </div>
