@@ -1,17 +1,14 @@
-// src/repositories/UserConfirmRepository.ts
 import { AppDataSource } from "../config/database";
 import { UserConfirm } from "../models/userconfirm";
-import { User } from "../models/user";
 
 export const userconfirmRepository = AppDataSource.getRepository(UserConfirm).extend({
 
   async exists(userId: number): Promise<boolean> {
-    const record = await this.createQueryBuilder("user_confirm")
-      .leftJoinAndSelect("user_confirm.user", "user")
-      .where("user.id = :userId", { userId })
-      .getOne();
+    const exists = await this.createQueryBuilder("user_confirm")
+    .where("user_confirm.user_id = :userId", { userId })
+    .getCount();
 
-    return !!record;
+    return exists > 0;
   },
 
 
@@ -24,5 +21,5 @@ export const userconfirmRepository = AppDataSource.getRepository(UserConfirm).ex
     return record ? record.confirmedData : null;
   },
 
-  
+
 });
