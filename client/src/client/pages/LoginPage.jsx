@@ -76,6 +76,11 @@ const LoginPage = () => {
     try {
       const res = await api.post('/auth/login', { email, password });
       localStorage.setItem('accessToken', res.data.accessToken);
+
+      // Kiểm tra lần đầu xác nhận muticheck sau khi đăng nhập bằng Google
+      await checkFirstConfirm(res.data.accessToken);
+      // if (redirected) return; 
+
       const decoded = jwtDecode(res.data.accessToken);
       const role = decoded.role;
 
@@ -92,17 +97,34 @@ const LoginPage = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tokenFromGoogle = params.get('accessToken');
+    // if (tokenFromGoogle) {
+    //   localStorage.setItem('accessToken', tokenFromGoogle);
+    //   const decoded = jwtDecode(tokenFromGoogle);
+    //   const role = decoded.role;
+
+    //   if (role === USER_ROLE.ADMIN || role === USER_ROLE.STAFF) {
+    //     navigate('/dashboard');
+    //   } else {
+    //     navigate('/');
+    //   }
+    // }
+
+    // Kiểm tra lần đầu xác nhận muticheck sau khi đăng nhập bằng Google
     if (tokenFromGoogle) {
       localStorage.setItem('accessToken', tokenFromGoogle);
-      const decoded = jwtDecode(tokenFromGoogle);
-      const role = decoded.role;
-
-      if (role === USER_ROLE.ADMIN || role === USER_ROLE.STAFF) {
-        navigate('/dashboard');
-      } else {
-        navigate('/');
-      }
+      checkFirstConfirm(tokenFromGoogle).then((redirected) => {
+        if (!redirected) {
+          const decoded = jwtDecode(tokenFromGoogle);
+          const role = decoded.role;
+          if (role === USER_ROLE.ADMIN || role === USER_ROLE.STAFF) {
+            navigate('/dashboard');
+          } else {
+            navigate('/');
+          }
+        }
+      });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const signUp = async (e) => {
@@ -147,6 +169,25 @@ const LoginPage = () => {
   };
 
   const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
+
+  async function checkFirstConfirm(accessToken) {
+    try {
+      
+      const res = await api.get('/confirm/check', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      const firstConfirm = !res.data.completed;
+      console.log('First confirm status:', firstConfirm);
+      if (firstConfirm) {
+        
+        navigate('/welcome/reason');
+        return true;
+      }
+    } catch (err) {
+      console.error('Error checking first confirm:', err);
+    }
+    return false;
+  }
 
   return (
     <div className={styles.page}>
