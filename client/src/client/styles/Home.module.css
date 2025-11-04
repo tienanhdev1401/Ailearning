@@ -14,7 +14,7 @@
 /* ============ HERO SECTION ============ */
 .hero {
   background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 255, 136, 0.05));
-  padding: 80px 20px;
+  padding: clamp(20px, 5vw, 110px) clamp(5px, 1vw, 120px);
   border-bottom: 2px solid rgba(0, 255, 255, 0.2);
   min-height: 600px;
   display: flex;
@@ -27,11 +27,11 @@
 }
 
 .heroContent {
-  max-width: 1400px;
+  max-width: 950px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(40px, 6vw, 80px);
   align-items: center;
   width: 100%;
 }
@@ -40,6 +40,7 @@
   display: flex;
   flex-direction: column;
   gap: 25px;
+  max-width: 560px;
 }
 
 .title {
@@ -140,9 +141,10 @@
   min-height: 400px;
 }
 
-.heroEmoji {
-  font-size: 200px;
+.heroIllustration {
+  width: clamp(240px, 28vw, 460px);
   animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 25px 40px rgba(0, 255, 200, 0.15));
 }
 
 @keyframes float {
@@ -224,7 +226,7 @@
 
 /* ============ FEATURES SECTION ============ */
 .features {
-  padding: 80px 20px;
+  padding: 5% 8%;
   background: linear-gradient(135deg, #19212b 0%, #1a2f3f 100%);
 }
 
@@ -531,9 +533,10 @@
   min-height: 400px;
 }
 
-.aiEmoji {
-  font-size: 200px;
+.aiIllustration {
+  width: clamp(260px, 48vw, 460px);
   animation: bounce 2s ease-in-out infinite;
+  filter: drop-shadow(0 30px 50px rgba(0, 255, 200, 0.18));
 }
 
 @keyframes bounce {
@@ -720,9 +723,9 @@
     font-size: 16px;
   }
 
-  .heroEmoji,
-  .aiEmoji {
-    font-size: 150px;
+  .heroIllustration,
+  .aiIllustration {
+    max-width: 360px;
   }
 
   .featureIcon {
@@ -739,8 +742,12 @@
 }
 
 @media (max-width: 768px) {
+  .homepage {
+    padding-top: 60px;
+  }
+
   .hero {
-    padding: 60px 20px;
+    padding: 80px 20px;
     min-height: auto;
   }
 
@@ -772,9 +779,9 @@
     min-height: 300px;
   }
 
-  .heroEmoji,
-  .aiEmoji {
-    font-size: 120px;
+  .heroIllustration,
+  .aiIllustration {
+    max-width: 320px;
   }
 
   .features {
@@ -868,6 +875,10 @@
 }
 
 @media (max-width: 480px) {
+  .homepage {
+    padding-top: 60px;
+  }
+
   .hero {
     padding: 40px 15px;
   }
@@ -894,9 +905,9 @@
     font-size: 14px;
   }
 
-  .heroEmoji,
-  .aiEmoji {
-    font-size: 100px;
+  .heroIllustration,
+  .aiIllustration {
+    max-width: 260px;
   }
 
   .features {

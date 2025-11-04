@@ -71,9 +71,11 @@ const HomePage = () => {
             </div>
           </div>
           <div className={styles.heroImage}>
-            <div className={styles.heroEmoji}>
-              🎓
-            </div>
+            <img
+              src="/assets/img/hero/hero2.png"
+              alt="Học tiếng Anh cùng AelanG"
+              className={styles.heroIllustration}
+            />
           </div>
         </div>
       </section>
@@ -155,7 +157,11 @@ const HomePage = () => {
             </button>
           </div>
           <div className={styles.aiImage}>
-            <div className={styles.aiEmoji}>🤖</div>
+            <img
+              src="/assets/img/hero/hero3.png"
+              alt="Minh họa AI Tutor"
+              className={styles.aiIllustration}
+            />
           </div>
         </div>
       </section>
