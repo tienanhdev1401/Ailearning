@@ -21,6 +21,7 @@ import roadmapRouter from './routes/roadmap.routes'
 import dayRouter from './routes/day.routes.js'
 import activityRouter from './routes/activity.routes'
 import minigameRouter from './routes/minigame.routes'
+import userconfirmRouter from './routes/userconfirm.routes.js'
 import './config/passport.js'   // chạy file config để đăng ký strategy
 import errorHandlingMiddleware from './middlewares/errorHandling.middleware'
 import { limiter } from './middlewares/ratelimit.middleware'
@@ -59,6 +60,7 @@ app.use('/api/days', dayRouter);
 app.use('/api/activities', activityRouter);
 app.use('/api/minigames', minigameRouter);
 app.use("/api/chat", chatRouter);
+app.use('/api/confirm', userconfirmRouter);
 
 
 

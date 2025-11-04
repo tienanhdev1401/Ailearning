@@ -1,10 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn  } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne,CreateDateColumn, UpdateDateColumn  } from "typeorm";
 import USER_ROLE from "../enums/userRole.enum";
 import AUTH_PROVIDER from "../enums/authProvider.enum";
 
 import { RoadmapEnrollment } from "./roadmapEnrollment";
 import { UserProgress } from "./userProgress";
 import { Conversation } from "./conversation";
+import { UserConfirm } from "./userconfirm";
 
 @Entity({ name: "users" })
 export class User {
@@ -56,6 +57,9 @@ export class User {
 
   @OneToMany(() => Conversation, (conv) => conv.staff)
   staffConversations!: Conversation[];
+
+  @OneToOne(() => UserConfirm, (confirm) => confirm.user)
+  confirm!: UserConfirm;
 
   @CreateDateColumn()
   startedAt!: Date;
