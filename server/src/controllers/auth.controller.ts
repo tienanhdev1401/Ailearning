@@ -1,5 +1,6 @@
 import { HttpStatusCode } from "axios";
 import AuthService from "../services/auth.service";
+import OtpService from "../services/otp.service";
 import ApiError from "../utils/ApiError";
 import { Request, Response, NextFunction } from "express";
 
@@ -56,6 +57,37 @@ class AuthController {
     try {
       const user = await AuthService.getUserById(req.user.id);
       res.status(HttpStatusCode.Ok).json(user);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Gửi OTP
+  static async sendVerificationCode(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        throw new ApiError(HttpStatusCode.BadRequest, "Vui lòng cung cấp email");
+      }
+
+      await OtpService.sendOtp(email);
+      res.status(HttpStatusCode.Ok).json({message: "Mã xác thực đã được gửi đến email của bạn"});
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Xác minh OTP
+  static async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email, otp } = req.body;
+      if (!email || !otp) {
+        throw new ApiError(HttpStatusCode.BadRequest, "Vui lòng cung cấp email và mã OTP");
+      }
+
+      OtpService.verifyOtp(email, otp);
+
+      res.status(HttpStatusCode.Ok).json({message: "Xác thực OTP thành công"});
     } catch (error) {
       next(error);
     }
