@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Button } from "react-bootstrap";
 import api from "../../api/api";
 import styles from "../styles/LoginPage.module.css";
@@ -16,11 +16,16 @@ const ForgotPasswordPage = () => {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [otpCountdown, setOtpCountdown] = useState(60);
 
   const navigate = useNavigate();
+
+  const clearForm = () => {
+    setOtp(Array(6).fill(""));
+    setOtpCountdown(60);
+  };
 
   // Gửi OTP
   const handleSendOtp = async (e) => {
@@ -32,13 +37,14 @@ const ForgotPasswordPage = () => {
     }
 
     try {
-      setIsSendingOtp(true); // bật loading
+      setIsSendingOtp(true);
       await api.post("/auth/send-verification-code", { email });
       setShowOtpModal(true);
+      clearForm();
     } catch (err) {
       alert(err.response?.data?.message || "❌ Không thể gửi OTP.");
     } finally {
-      setIsSendingOtp(false); // tắt loading
+      setIsSendingOtp(false);
     }
   };
 
@@ -64,7 +70,7 @@ const ForgotPasswordPage = () => {
     }
 
     try {
-      setIsVerifyingOtp(true); // bật loading
+      setIsVerifyingOtp(true);
       await api.post("/auth/reset-password", {
         email,
         otp: code,
@@ -76,9 +82,27 @@ const ForgotPasswordPage = () => {
     } catch (err) {
       alert(err.response?.data?.message || "❌ OTP không hợp lệ hoặc đã hết hạn.");
     } finally {
-      setIsVerifyingOtp(false); // tắt loading
+      setIsVerifyingOtp(false);
     }
   };
+
+  // -------- OTP COUNTDOWN --------
+  useEffect(() => {
+    if (!showOtpModal) return;
+
+    setOtpCountdown(60); // reset 60s
+    const timer = setInterval(() => {
+      setOtpCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [showOtpModal]);
 
   return (
     <div className={styles.page}>
@@ -106,8 +130,6 @@ const ForgotPasswordPage = () => {
         <div className={styles.rightPane}>
           <h2 className="text-center mb-4">Đặt lại mật khẩu</h2>
           <form className={styles.form} onSubmit={handleSendOtp}>
-            
-
             <label className={styles.fieldLabel} htmlFor="email">
               Email
             </label>
@@ -202,6 +224,7 @@ const ForgotPasswordPage = () => {
           <p>
             Nhập 6 chữ số OTP đã được gửi tới email: <b>{email}</b>
           </p>
+          <p>Thời gian còn lại: <b>{otpCountdown}s</b></p>
           <div className="d-flex justify-content-center gap-2">
             {otp.map((digit, index) => (
               <input
@@ -219,6 +242,7 @@ const ForgotPasswordPage = () => {
                   fontSize: "20px",
                   borderRadius: "10px",
                 }}
+                disabled={otpCountdown === 0}
               />
             ))}
           </div>
@@ -227,7 +251,7 @@ const ForgotPasswordPage = () => {
           <Button variant="secondary" onClick={() => setShowOtpModal(false)}>
             Hủy
           </Button>
-          <Button variant="primary" onClick={handleVerifyOtp} disabled={isVerifyingOtp}>
+          <Button variant="primary" onClick={handleVerifyOtp} disabled={isVerifyingOtp || otpCountdown === 0}>
             {isVerifyingOtp && (
               <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
             )}

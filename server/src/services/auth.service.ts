@@ -6,6 +6,7 @@ import { HttpStatusCode } from "axios";
 import ApiError from "../utils/ApiError";
 import dotenv from "dotenv";
 import { User } from "../models/user";
+import OtpService from "./otp.service";
 dotenv.config();
 
 const ACCESS_SECRET = process.env.ACCESS_SECRET as string;
@@ -46,7 +47,10 @@ class AuthService {
   }
 
   // Register
-  static async register(name: string, email: string, password: string): Promise<User> {
+  static async register(name: string, email: string, password: string, otp: string): Promise<User> {
+    // Verify OTP
+    await OtpService.verifyOtp(email, otp);
+
     const existingUser = await userRepository.findOne({ where: { email } });
     if (existingUser) {
       throw new ApiError(HttpStatusCode.BadRequest, "Email đã tồn tại");
