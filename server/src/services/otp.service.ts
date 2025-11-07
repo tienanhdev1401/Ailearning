@@ -41,7 +41,7 @@ export class OtpService {
   }
 
   // Xác minh OTP
-  static verifyOtp(email: string, otp: string): boolean {
+  static async verifyOtp(email: string, otp: string): Promise<boolean> {
     const record = otpStore.get(email);
 
     if (!record) {

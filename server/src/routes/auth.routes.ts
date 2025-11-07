@@ -137,4 +137,7 @@ router.post("/send-verification-code",otpLimiter, AuthController.sendVerificatio
 // Xác minh OTP
 router.post("/verify-otp", AuthController.verifyOtp);
 
+// Đặt lại mật khẩu
+router.post("/reset-password", AuthController.resetPassword);
+
 export default router;

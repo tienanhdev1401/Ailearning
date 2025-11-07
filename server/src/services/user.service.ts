@@ -6,6 +6,7 @@ import AUTH_PROVIDER from "../enums/authProvider.enum";
 import USER_ROLE from "../enums/userRole.enum";
 import { CreateUserDto } from "../dto/request/CreateUserDTO";
 import { UpdateUserDto } from "../dto/request/UpdateUserDTO";
+import OtpService from "./otp.service";
 class UserService {
   // Lấy danh sách tất cả người dùng
   static async getAllUsers(): Promise<User[]> {
@@ -76,6 +77,23 @@ class UserService {
 
     user.password = newPassword; // giữ nguyên logic
     return await userRepository.save(user);
+  }
+
+
+  static async resetPassword(email: string, otp: string, newPassword: string): Promise<void> {
+    if (!email || !otp || !newPassword) {
+      throw new ApiError(HttpStatusCode.BadRequest, "Vui lòng nhập đầy đủ thông tin");
+    }
+
+    // Xác minh OTP (tự động xóa sau khi đúng)
+    await OtpService.verifyOtp(email, otp);
+    // Tìm người dùng
+    const user = await this.findUserByEmail(email);
+    if (!user) {
+      throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy người dùng");
+    }
+    user.password = newPassword;
+    await userRepository.save(user);
   }
 }
 
