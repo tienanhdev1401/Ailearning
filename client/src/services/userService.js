@@ -2,7 +2,7 @@ import api from '../api/api';
 const userService = {
     sendVerificationCode: async (email) => {
         try {
-        const response = await api.post("/users/send-verification-code", { email });
+        const response = await api.post("/auth/send-verification-code", { email });
 
         // Kiểm tra status code thành công (2xx)
         if (response.status >= 200 && response.status < 300) {
@@ -24,7 +24,7 @@ const userService = {
     
     resetPassword: async ({ email, otp, newPassword }) => {
         try {
-        const response = await api.post("/users/reset-password", {
+        const response = await api.post("/auth/reset-password", {
             email,
             otp,
             newPassword

@@ -5,7 +5,7 @@ import HomePage from "./client/pages/HomePage";
 import GrammarCheckerPage from "./client/pages/GrammarCheckerPage";
 import ClientLayout from "./layout/ClientLayout";
 import AdminLayout from "./layout/AdminLayout";
-import ForgetPassword from "./client/pages/ForgetPasswordPage";
+import ForgotPasswordPage from "./client/pages/ForgotPasswordPage";
 import ProtectedRoute from "./routers/ProtectedRoute";
 
 import Dashboard from "./admin/pages/Dashboard";
@@ -42,7 +42,8 @@ function App() {
         }
       />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/forget-password" element={<ForgetPassword />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
       <Route path="/video" element={<VideoPraticePage />} />
       <Route path="/speak" element={<SpeakingVideoPraticePage />} />
 

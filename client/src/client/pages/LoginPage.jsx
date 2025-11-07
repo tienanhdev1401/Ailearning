@@ -329,7 +329,7 @@ const LoginPage = () => {
                   </label>
                   <span
                     className={styles.link}
-                    onClick={() => navigate('/forget-password')}
+                    onClick={() => navigate('/forgot-password')}
                   >
                     Quên mật khẩu?
                   </span>
