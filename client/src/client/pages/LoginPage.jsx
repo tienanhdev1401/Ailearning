@@ -83,6 +83,11 @@ const LoginPage = () => {
     try {
       const res = await api.post('/auth/login', { email, password });
       localStorage.setItem('accessToken', res.data.accessToken);
+
+      // Kiểm tra lần đầu xác nhận muticheck 
+      const firstConfirm = await checkFirstConfirm(res.data.accessToken, navigate);
+      if (firstConfirm) return;
+
       const decoded = jwtDecode(res.data.accessToken);
       const role = decoded.role;
       if (role === USER_ROLE.ADMIN || role === USER_ROLE.STAFF) navigate('/dashboard');
@@ -91,6 +96,27 @@ const LoginPage = () => {
       alert('Login failed');
     }
   };
+
+  // -------- GOOGLE LOGIN --------
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tokenFromGoogle = params.get('accessToken');
+    if (tokenFromGoogle) {
+      localStorage.setItem('accessToken', tokenFromGoogle);
+      checkFirstConfirm(tokenFromGoogle, navigate).then((redirected) => {
+        if (!redirected) {
+          const decoded = jwtDecode(tokenFromGoogle);
+          const role = decoded.role;
+          if (role === USER_ROLE.ADMIN || role === USER_ROLE.STAFF) {
+            navigate('/dashboard');
+          } else {
+            navigate('/');
+          }
+        }
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]);
 
   // -------- SIGN UP --------
   const signUp = async (e) => {
@@ -161,6 +187,24 @@ const LoginPage = () => {
 
     return () => clearInterval(timer);
   }, [showOtpModal]);
+
+   async function checkFirstConfirm(accessToken,navigate) {
+    try {
+      const res = await api.get('/confirm/check', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      const firstConfirm = !res.data.completed;
+      console.log('First confirm status:', firstConfirm);
+      if (firstConfirm) {
+        navigate('/welcome/reason');
+        return true;
+      }
+    }
+    catch (error) {
+      return false;
+    }
+    
+  }
 
   return (
     <div className={styles.page}>
@@ -233,6 +277,17 @@ const LoginPage = () => {
               </form>
             )}
           </div>
+          <div className={styles.googleArea}>
+            <span className={styles.dividerText}>Hoặc</span>
+            <a
+              href="http://localhost:5000/api/auth/google"
+              className={styles.googleButton}
+            >
+              <span className={styles.googleIcon}>G</span>
+              <span>Đăng nhập với Google</span>
+            </a>
+          </div>
+          
         </div>
       </div>
 
