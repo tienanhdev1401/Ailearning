@@ -23,7 +23,9 @@ class DayController {
   static async getAllDaysByRoadmapId(req: Request, res: Response, next: NextFunction) {
     try {
       const roadmapId = Number(req.params.roadmapId);
-      const days = await DayService.getAllDaysByRoadmapId(roadmapId);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const days = await DayService.getAllDaysByRoadmapId(roadmapId, page, limit);
       res.status(HttpStatusCode.Ok).json(days);
     } catch (error) {
       next(error);

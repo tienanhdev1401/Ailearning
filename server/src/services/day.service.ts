@@ -39,18 +39,24 @@ export class DayService {
   }
 
   // Lấy danh sách tất cả ngày thuộc 1 roadmap
-  static async getAllDaysByRoadmapId(roadmapId: number): Promise<Day[]> {
+  static async getAllDaysByRoadmapId(
+    roadmapId: number,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{ data: Day[]; total: number; page: number; limit: number }> {
     const roadmap = await this.roadmapRepository.findOne({ where: { id: roadmapId } });
 
     if (!roadmap) {
       throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy roadmap");
     }
 
-    return await this.dayRepository.find({
-      where: { roadmap: { id: roadmapId } },
-      relations: ["activities"],
+    const [data, total] = await this.dayRepository.findAndCount({
+    where: { roadmap: { id: roadmapId } },
       order: { dayNumber: "ASC" },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+    return { data, total, page, limit };
   }
 
   // Lấy chi tiết 1 ngày theo ID
