@@ -10,7 +10,10 @@ class RoadmapController {
   // 🔹 Lấy danh sách tất cả Roadmap
   static async getAllRoadmaps(req: Request, res: Response, next: NextFunction) {
     try {
-      const roadmaps = await RoadmapService.getAllRoadmaps();
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const roadmaps = await RoadmapService.getAllRoadmaps(page, limit);
       res.status(HttpStatusCode.Ok).json(roadmaps);
     } catch (error) {
       next(error);

@@ -6,10 +6,17 @@ import { CreateRoadmapDto } from "../dto/request/CreateRoadMapDTO";
 import { UpdateRoadmapDto } from "../dto/request/UpdateRoadMapDTO";
 
 export class RoadmapService {
-  static async getAllRoadmaps(): Promise<Roadmap[]> {
-    return await roadmapRepository.find({
-      relations: ["days"],
+  static async getAllRoadmaps(
+    page: number = 1,
+    limit: number = 10
+  ): 
+  Promise<{ data: Roadmap[]; total: number; page: number; limit: number }> {
+    const [data, total] = await roadmapRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { id: "ASC" }, // sắp xếp theo id
     });
+    return { data, total, page, limit };
   }
 
   static async getRoadmapById(id: number): Promise<Roadmap> {

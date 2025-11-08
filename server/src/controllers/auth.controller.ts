@@ -27,7 +27,7 @@ class AuthController {
   // Đăng ký người dùng
   static async register(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name, email, password,otp } = req.body;
+      const { name, email, password, otp } = req.body;
 
       const newUser = await AuthService.register(name, email, password, otp);
       res.status(HttpStatusCode.Created).json(newUser);
