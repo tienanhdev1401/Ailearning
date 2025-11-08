@@ -43,20 +43,30 @@ export class ActivityService {
   }
 
   // Lấy danh sách activity theo dayId
-  static async getAllActivityByDayId(dayId: number): Promise<Activity[]> {
+  static async getAllActivityByDayId(
+    dayId: number,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{  data:Activity[], total:number, page:number, limit:number}> {
     const day = await this.dayRepository.findOne({ where: { id: dayId } });
-    if (!day) throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy ngày");
+    if (!day) 
+      throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy ngày");
 
-    return await this.activityRepository.find({
-      where: { day: { id: dayId } },
+    const [data, total] = await this.activityRepository.findAndCount({
+      where: { day: { id: dayId } }, 
       order: { order: "ASC" },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    return { data, total, page, limit };
   }
 
   // Lấy chi tiết activity
   static async getById(id: number): Promise<Activity> {
     const activity = await this.activityRepository.findOne({
-      where: { id }
+      where: { id },
+      relations: ["minigames"],
     });
     if (!activity) throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy activity");
     return activity;

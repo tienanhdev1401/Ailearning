@@ -31,7 +31,9 @@ export class ActivityController {
   static async getAllActivityByDayId(req: Request, res: Response, next: NextFunction) {
     try {
       const dayId = Number(req.params.dayId);
-      const list = await ActivityService.getAllActivityByDayId(dayId);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const list = await ActivityService.getAllActivityByDayId(dayId, page, limit);
       res.status(HttpStatusCode.Ok).json(list);
     } catch (err) {
       next(err);
