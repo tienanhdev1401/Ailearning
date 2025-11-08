@@ -34,7 +34,7 @@ const router = express.Router();
  */
 router.get(
   "/",
-  verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
+  verifyTokenAndRole(),
   RoadmapController.getAllRoadmaps
 );
 
@@ -61,7 +61,7 @@ router.get(
  */
 router.get(
   "/:id",
-  verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
+  verifyTokenAndRole(),
   RoadmapController.getRoadmapById
 );
 
@@ -205,7 +205,7 @@ router.post(
  */
 router.get(
   "/:roadmapId/days",
-  verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
+  verifyTokenAndRole(),
   DayController.getAllDaysByRoadmapId
 );
 

@@ -33,7 +33,7 @@ class AuthService {
     return jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       ACCESS_SECRET,
-      { expiresIn: "3m" }
+      { expiresIn: "3h" }
     );
   }
 
@@ -42,7 +42,7 @@ class AuthService {
     return jwt.sign(
       { id: user.id, role: user.role },
       REFRESH_SECRET,
-      { expiresIn: "10m" }
+      { expiresIn: "1d" }
     );
   }
 

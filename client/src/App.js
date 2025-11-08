@@ -22,6 +22,9 @@ import ChooseTopicPage from "./client/pages/muticheckPage/ChooseTopicPage";
 import KnowLevelPage from "./client/pages/muticheckPage/KnowLevelPage";
 import FindLevelPage from "./client/pages/muticheckPage/FindLevelPage";
 
+import RoadmapListPage from "./client/pages/RoadMapListPage";
+import RoadMapPage from "./client/pages/RoadMapPage";
+
 function App() {
   return (
     <Routes>
@@ -54,6 +57,18 @@ function App() {
       <Route path="/welcome/topic" element={<ChooseTopicPage />} />
       <Route path="/welcome/proficiency" element={<KnowLevelPage />} />
       <Route path="/welcome/placement" element={<FindLevelPage />} />
+
+
+      <Route path="/roadmaps" element={
+        <ProtectedRoute>
+          <ClientLayout><RoadmapListPage /></ClientLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/roadmaps/:id/days" element={
+        <ProtectedRoute>
+          <ClientLayout><RoadMapPage /></ClientLayout>
+        </ProtectedRoute>
+      } />
 
       
       <Route
