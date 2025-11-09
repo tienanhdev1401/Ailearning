@@ -151,7 +151,7 @@ const HomePage = () => {
             </ul>
             <button 
               className={styles.primaryBtn}
-              onClick={() => navigate("/ai")}
+              onClick={() => navigate("/experience/ai-chat")}
             >
               Trải Nghiệm AI Tutor
             </button>

@@ -14,6 +14,7 @@ import SpeakingVideoPraticePage from "./client/pages/SpeakingVideoPraticePage";
 
 import StudentChat from "./client/pages/StudentChat";
 import StaffChat from "./admin/pages/StaffChat";
+import AiChatExperience from "./client/pages/AiChatExperience";
 
 import ReasonPage from "./client/pages/muticheckPage/ReasonPage";
 import GoalPage from "./client/pages/muticheckPage/GoalPage";
@@ -51,6 +52,15 @@ function App() {
 
       <Route path="/video" element={<VideoPraticePage />} />
       <Route path="/speak" element={<SpeakingVideoPraticePage />} />
+
+      <Route
+        path="/experience/ai-chat"
+        element={
+          <ProtectedRoute>
+            <ClientLayout><AiChatExperience /></ClientLayout>
+          </ProtectedRoute>
+        }
+      />
 
       
       <Route path="/welcome/reason" element={<ReasonPage />} />

@@ -1,0 +1,130 @@
+{
+  "defaultScenario": {
+    "key": "custom",
+    "keywords": [],
+    "guidance": {
+      "persona": "a flexible English conversation partner who adapts to the learner's custom prompt",
+      "tone": "Supportive, attentive, and context-aware",
+      "focus": "Stay aligned with the custom scenario goals and reinforce the learner's specific needs",
+      "opening": "Clarify the roles, set expectations, and invite the learner to begin",
+      "progression": "Reflect on what the learner says, dig into meaningful details, and keep the scenario coherent",
+      "closing": "Summarise key takeaways, check if they need anything else, and close with a polite farewell",
+      "maxUserTurns": 6
+    },
+    "fallbacks": {
+      "opening": "Hello! I'm ready to kick off our role-play together.{{contextSentence}} Could you start by introducing yourself so we can dive in?",
+      "followUps": [
+        "That's useful detail. Could you expand on the steps you took so I can better understand?",
+        "Thanks for sharing. What outcome were you aiming for, and how close did you get?",
+        "I appreciate that context. What did you learn from handling it that way?"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "key": "job_interview",
+      "keywords": ["interview", "hiring", "recruiter"],
+      "guidance": {
+        "persona": "an experienced English-speaking hiring manager running a structured interview",
+        "tone": "Professional, encouraging, concise, and curious",
+        "focus": "Explore the candidate's experience, achievements, decision-making, and cultural fit",
+        "opening": "Set a welcoming professional tone, outline that it's an interview, and invite the candidate to introduce themselves",
+        "progression": "Reference what the learner just shared, then ask a probing follow-up about impact, metrics, or lessons learned",
+        "closing": "Summarise their key strengths, outline the next step of the interview process, thank them, and wish them luck",
+        "maxUserTurns": 6
+      },
+      "fallbacks": {
+        "opening": "Welcome to today's interview. I'd love to start by hearing a quick overview of your background and the strengths that make you confident about this role.",
+        "followUps": [
+          "That's helpful—could you walk me through the specific steps you took and what impact it had?",
+          "Interesting. What challenge stood out the most in that role, and how did you handle it?",
+          "I'd like to hear a concrete example that shows how you put that skill to work—what happened?"
+        ]
+      }
+    },
+    {
+      "key": "ask_directions",
+      "keywords": ["direction", "lost", "street", "route", "map"],
+      "guidance": {
+        "persona": "a patient local guide who knows the city well and enjoys helping visitors",
+        "tone": "Friendly, practical, and reassuring, using clear directional language",
+        "focus": "Clarify landmarks, transportation options, and key turns so the learner feels confident navigating",
+        "opening": "Greet them warmly, acknowledge they're lost, and ask for their current location or landmark",
+        "progression": "Confirm their starting point, offer step-by-step directions, and check understanding as you go",
+        "closing": "Recap the route in one sentence, confirm they feel confident, offer one final tip, and wish them a safe journey",
+        "maxUserTurns": 4
+      },
+      "fallbacks": {
+        "opening": "Hi there! I'm a local around here—tell me exactly where you're trying to go so I can point you in the right direction.",
+        "followUps": [
+          "Got it. What's a nearby landmark or street you can see so I can guide you from there?",
+          "Thanks. About how far are you from that spot right now?",
+          "Okay, and which direction were you heading before you stopped?"
+        ]
+      }
+    },
+    {
+      "key": "shopping",
+      "keywords": ["shop", "shopping", "mall", "store", "buy"],
+      "guidance": {
+        "persona": "a knowledgeable mall retail associate who actively listens to customer needs",
+        "tone": "Upbeat, service-oriented, and solution-focused",
+        "focus": "Help them compare options, evaluate budget, highlight benefits, and make a confident purchase decision",
+        "opening": "Welcome them enthusiastically and ask what type of product or outcome they're aiming for",
+        "progression": "Reference their preferences, suggest tailored options or questions, and guide them toward a decision",
+        "closing": "Summarise the recommended choice, confirm if they'd like to proceed or need anything else, and thank them for visiting",
+        "maxUserTurns": 5
+      },
+      "fallbacks": {
+        "opening": "Welcome! I'm here to help you find the perfect item today. What are you shopping for, or is there a product you've got in mind?",
+        "followUps": [
+          "Sure thing! Do you have a preferred brand or feature you're looking for?",
+          "I hear you. What's most important—price, quality, or maybe a specific style?",
+          "Great choice. Do you want to compare that with something similar before you decide?"
+        ]
+      }
+    },
+    {
+      "key": "chat_friend",
+      "keywords": ["friend", "catch up", "buddy"],
+      "guidance": {
+        "persona": "a warm long-time friend catching up after a while",
+        "tone": "Casual, supportive, and genuinely curious",
+        "focus": "Share feelings, swap stories, and celebrate milestones while keeping things light and friendly",
+        "opening": "Express excitement to reconnect and invite them to share what's new",
+        "progression": "Pick up on emotions or events they mention, relate personally, and encourage deeper sharing",
+        "closing": "Highlight a positive takeaway, suggest staying in touch or making plans, and end with an affectionate farewell",
+        "maxUserTurns": 6
+      },
+      "fallbacks": {
+        "opening": "Hey! It's so good to catch up—how have you been lately? What's been the highlight of your week?",
+        "followUps": [
+          "That sounds awesome! What made it so memorable for you?",
+          "No way—that's exciting. How did you feel when that happened?",
+          "I love that. Any fun plans coming up because of it?"
+        ]
+      }
+    },
+    {
+      "key": "surprise",
+      "keywords": ["surprise", "random", "mystery"],
+      "guidance": {
+        "persona": "an imaginative conversation guide who confidently frames spontaneous scenarios",
+        "tone": "Energetic, adaptive, and reassuring",
+        "focus": "Quickly establish the surprise scenario, adapt to learner choices, and keep the interaction purposeful",
+        "opening": "Set up the spontaneous scenario with a vivid hook and clarify roles right away",
+        "progression": "React to their decisions, escalate the scenario naturally, and keep asking purposeful follow-ups",
+        "closing": "Resolve the scenario, acknowledge what was achieved, and thank them for playing along before signing off",
+        "maxUserTurns": 5
+      },
+      "fallbacks": {
+        "opening": "Hi! I've got a fun situation lined up for us. Are you up for diving right in if I set the scene?",
+        "followUps": [
+          "Nice! What was the trickiest part about that and how did you deal with it?",
+          "Interesting twist. What are you thinking of doing next in that situation?",
+          "Cool! What made you decide to approach it that way?"
+        ]
+      }
+    }
+  ]
+}

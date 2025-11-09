@@ -6,6 +6,8 @@ import { RoadmapEnrollment } from "./roadmapEnrollment";
 import { UserProgress } from "./userProgress";
 import { Conversation } from "./conversation";
 import { UserConfirm } from "./userconfirm";
+import { AiScenario } from "./aiScenario";
+import { AiConversation } from "./aiConversation";
 
 @Entity({ name: "users" })
 export class User {
@@ -60,6 +62,12 @@ export class User {
 
   @OneToOne(() => UserConfirm, (confirm) => confirm.user)
   confirm!: UserConfirm;
+
+  @OneToMany(() => AiScenario, (scenario) => scenario.createdBy)
+  customScenarios!: AiScenario[];
+
+  @OneToMany(() => AiConversation, (conversation) => conversation.user)
+  aiConversations!: AiConversation[];
 
   @CreateDateColumn()
   startedAt!: Date;
