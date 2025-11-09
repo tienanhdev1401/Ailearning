@@ -6,7 +6,7 @@ import ApiError from "../utils/ApiError";
 import { HttpStatusCode } from "axios";
 import { CreateMiniGameDto } from "../dto/request/CreateMiniGameDTO";
 import { UpdateMiniGameDto } from "../dto/request/UpdateMiniGameDTO";
-import EType from "../enums/minigameType.enum";
+import MiniGameType from "../enums/minigameType.enum";
 import { minigameRepository } from "../repositories/minigame.repository";
 import { activityRepository } from "../repositories/activity.repostitory";
 
@@ -17,8 +17,8 @@ export class MiniGameService {
     if (!activity) throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy activity");
 
     switch (dto.type) {
-      case EType.MATCH_IMAGE_WORD:
-        return new MatchImageWordMiniGame(dto.prompt, dto.resources as any, activity);
+      case MiniGameType.MATCH_IMAGE_WORD:
+        return new MatchImageWordMiniGame(dto.prompt, dto.resources as any, activity, dto.type);
 
       default:
         throw new ApiError(HttpStatusCode.BadRequest, `Loại minigame không hợp lệ: ${dto.type}`);

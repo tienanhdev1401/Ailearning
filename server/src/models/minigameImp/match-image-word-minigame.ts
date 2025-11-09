@@ -16,7 +16,7 @@ export class MatchImageWordMiniGame extends MiniGame {
   @Column({ type: "json" })
   resources!: MatchImageWordResources;
 
-  constructor(prompt?: string, resources?: MatchImageWordResources, activity?: Activity) {
-    super(prompt, resources, activity); 
+  constructor(prompt?: string, resources?: MatchImageWordResources, activity?: Activity, type?: MiniGameType) {
+    super(prompt, resources, activity, MiniGameType.MATCH_IMAGE_WORD);
   }
 }

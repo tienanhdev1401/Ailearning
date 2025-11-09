@@ -1,13 +1,16 @@
 // models/minigame.ts
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, TableInheritance, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { Activity } from "./activity";
-import EType from "../enums/minigameType.enum";
+import MiniGameType from "../enums/minigameType.enum";
 
 @Entity({ name: "minigames" })
 @TableInheritance({ column: { type: "varchar", name: "type" } })
 export class MiniGame {
   @PrimaryGeneratedColumn({ name: "minigame_id" })
   id!: number;
+
+  @Column({ type: "varchar", nullable: false })
+  type!: MiniGameType;
 
   @Column({ type: "text", nullable: false })
   prompt!: string;
@@ -25,9 +28,10 @@ export class MiniGame {
   updatedAt!: Date;
 
   // Constructor 
-  constructor(prompt?: string, resources?: Record<string, any>, activity?: Activity) {
+  constructor(prompt?: string, resources?: Record<string, any>, activity?: Activity, type?: MiniGameType) {
     if (prompt) this.prompt = prompt;
     if (resources) this.resources = resources;
     if (activity) this.activity = activity;
+    if (type) this.type = type;
   }
 }
