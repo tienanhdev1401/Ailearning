@@ -16,7 +16,7 @@ router.post("/",
 );
 
 router.get("/:id", 
-  verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
+  verifyTokenAndRole(),
   MiniGameController.getMiniGameById
 );
 
@@ -26,6 +26,8 @@ router.put("/:id",
   MiniGameController.updateMiniGame
 );
 
-router.delete("/:id", MiniGameController.deleteMiniGame);
+router.delete("/:id", 
+  verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
+  MiniGameController.deleteMiniGame);
 
 export default router;

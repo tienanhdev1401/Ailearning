@@ -9,9 +9,6 @@ export class MiniGame {
   @PrimaryGeneratedColumn({ name: "minigame_id" })
   id!: number;
 
-  @Column({ type: "varchar", nullable: false })
-  type!: EType;
-
   @Column({ type: "text", nullable: false })
   prompt!: string;
 
@@ -28,9 +25,8 @@ export class MiniGame {
   updatedAt!: Date;
 
   // Constructor 
-  constructor(prompt?: string, type?: EType, resources?: Record<string, any>, activity?: Activity) {
+  constructor(prompt?: string, resources?: Record<string, any>, activity?: Activity) {
     if (prompt) this.prompt = prompt;
-    if (type) this.type = type;
     if (resources) this.resources = resources;
     if (activity) this.activity = activity;
   }

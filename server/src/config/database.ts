@@ -13,7 +13,10 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME,
   synchronize: true,
   logging: false,
-  entities: [__dirname + "/../models/*.{ts,js}"],
+  entities: [
+    __dirname + "/../models/*.{ts,js}",
+    __dirname + "/../models/minigameImp/*.{ts,js}",
+  ],
   migrations: [],
   subscribers: [],
 });

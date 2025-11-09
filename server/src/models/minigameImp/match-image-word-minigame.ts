@@ -17,6 +17,6 @@ export class MatchImageWordMiniGame extends MiniGame {
   resources!: MatchImageWordResources;
 
   constructor(prompt?: string, resources?: MatchImageWordResources, activity?: Activity) {
-    super(prompt, MiniGameType.MATCH_IMAGE_WORD, resources, activity);
+    super(prompt, resources, activity); 
   }
 }

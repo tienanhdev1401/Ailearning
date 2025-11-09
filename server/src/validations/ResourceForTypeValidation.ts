@@ -1,14 +1,16 @@
 // validations/ResourceForTypeValidation.ts
 import { ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from "class-validator";
+import { plainToInstance } from "class-transformer";
 import { MatchImageWordResources } from "../dto/request/MinigameResourceDTO/MatchImageWordResources";
 import EType from "../enums/minigameType.enum";
 
-// Map type → resource class
+// 🔹 Map type → resource class
 export const resourceClassMap: Record<EType, any> = {
   [EType.MATCH_IMAGE_WORD]: MatchImageWordResources,
+  // thêm các type khác ở đây
 };
 
-// Lấy class resource theo type, throw lỗi nếu không có
+// 🔹 Lấy class resource theo type, throw lỗi nếu không có
 export const getResourceType = (type: EType): any => {
   if (!(type in resourceClassMap)) {
     throw new Error(`Không có resource class cho type ${type}`);
@@ -16,21 +18,26 @@ export const getResourceType = (type: EType): any => {
   return resourceClassMap[type as EType];
 };
 
-// Custom validator kiểm tra existence của class resource cho type
+// 🔹 Validator kiểm tra resources tương ứng với type
 @ValidatorConstraint({ name: "ResourceForType", async: false })
 export class ResourceForTypeValidator implements ValidatorConstraintInterface {
   validate(value: any, args: ValidationArguments) {
     const dto = args.object as any;
     if (!dto?.type) return false;
 
-    if (!(dto.type in resourceClassMap)) return false; // kiểm tra runtime
-    const ResourceClass = resourceClassMap[dto.type as EType];
-    return !!ResourceClass;
+    // Lấy class resource tương ứng
+    const ResourceClass = getResourceType(dto.type);
+    if (!ResourceClass) return false;
+
+    // Nếu value là object plain, convert sang instance để validate
+    const instance = plainToInstance(ResourceClass, value);
+
+    // Kiểm tra instance có phải class resource không
+    return instance instanceof ResourceClass;
   }
 
   defaultMessage(args: ValidationArguments) {
     const dto = args.object as any;
-    return `Không có resource class tương ứng cho type ${dto?.type}`;
+    return `Resource không hợp lệ cho type "${dto?.type}"`;
   }
 }
-

@@ -1,17 +1,19 @@
-import { IsEnum, IsString, IsOptional, Validate, ValidateNested, IsInt } from "class-validator";
+// dto/request/CreateMiniGameDTO.ts
+import { IsEnum, IsString, IsOptional, Validate, ValidateNested, IsInt, IsNotEmpty } from "class-validator";
 import { Type } from "class-transformer";
-import EType from "../../enums/minigameType.enum";
+import MiniGameType from "../../enums/minigameType.enum";
 import { ResourceForTypeValidator, getResourceType } from "../../validations/ResourceForTypeValidation";
 
 export class CreateMiniGameDto {
-  @IsEnum(EType)
-  type!: EType;
+  @IsNotEmpty({ message: 'type không được để trống' })
+  @IsEnum(MiniGameType, { message: `type phải là một trong: ${Object.values(MiniGameType).join(', ')}` })
+  type!: MiniGameType;
 
   @IsString()
   prompt!: string;
 
   @IsOptional()
-  @Validate(ResourceForTypeValidator) // check có class resource tương ứng
+  @Validate(ResourceForTypeValidator) // check existence + type resource
   @ValidateNested()
   @Type((options) => {
     const dto = options?.object as CreateMiniGameDto;
