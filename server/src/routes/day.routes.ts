@@ -103,7 +103,6 @@ router.delete(
 
 router.get(
   "/:dayId/activities",
-  verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
   ActivityController.getAllActivityByDayId
 );
 

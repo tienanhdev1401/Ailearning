@@ -25,6 +25,8 @@ import FindLevelPage from "./client/pages/muticheckPage/FindLevelPage";
 import RoadmapListPage from "./client/pages/RoadMapListPage";
 import RoadMapPage from "./client/pages/RoadMapPage";
 
+import DayDetailPage from "./client/pages/DayDetailPage";
+
 function App() {
   return (
     <Routes>
@@ -67,6 +69,12 @@ function App() {
       <Route path="/roadmaps/:id/days" element={
         <ProtectedRoute>
           <ClientLayout><RoadMapPage /></ClientLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/days/:dayId" element={
+        <ProtectedRoute>
+          <DayDetailPage />
         </ProtectedRoute>
       } />
 
