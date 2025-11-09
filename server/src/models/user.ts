@@ -5,6 +5,8 @@ import AUTH_PROVIDER from "../enums/authProvider.enum";
 import { RoadmapEnrollment } from "./roadmapEnrollment";
 import { UserProgress } from "./userProgress";
 import { Conversation } from "./conversation";
+import { AiScenario } from "./aiScenario";
+import { AiConversation } from "./aiConversation";
 
 @Entity({ name: "users" })
 export class User {
@@ -56,6 +58,12 @@ export class User {
 
   @OneToMany(() => Conversation, (conv) => conv.staff)
   staffConversations!: Conversation[];
+
+  @OneToMany(() => AiScenario, (scenario) => scenario.createdBy)
+  customScenarios!: AiScenario[];
+
+  @OneToMany(() => AiConversation, (conversation) => conversation.user)
+  aiConversations!: AiConversation[];
 
   @CreateDateColumn()
   startedAt!: Date;
