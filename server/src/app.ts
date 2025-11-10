@@ -29,6 +29,9 @@ import { limiter } from './middlewares/ratelimit.middleware'
 import { swaggerUi, swaggerSpec } from "./config/swagger";
 import { setupSocket } from './socket';
 import chatRouter from "./routes/chat.router.js";
+import aiChatRouter from "./routes/aiChat.routes";
+import { ensureAiChatFolders } from "./services/ai-chat/audioStorage.service";
+import { seedAiScenarios } from "./seeds/aiScenarios.seed";
 
 const app = express();
 app.use(cookieParser());
@@ -47,6 +50,9 @@ app.use(limiter);
 // Khởi tạo socket
 const server = http.createServer(app);
 setupSocket(server);
+ensureAiChatFolders().catch((error) =>
+  console.error("Failed to prepare AI chat folders", error)
+);
 
 app.use('/api/auth', authRouter);
 app.use("/api/auth", oauthRoutes);
@@ -60,6 +66,7 @@ app.use('/api/days', dayRouter);
 app.use('/api/activities', activityRouter);
 app.use('/api/minigames', minigameRouter);
 app.use("/api/chat", chatRouter);
+app.use("/api/ai-chat", aiChatRouter);
 app.use('/api/confirm', userconfirmRouter);
 
 
@@ -73,6 +80,9 @@ app.use(errorHandlingMiddleware);
 // Kết nối và sync TypeORM
 const PORT = 5000;
 AppDataSource.initialize().then(() => {
+  seedAiScenarios().catch((error) =>
+    console.error("Failed to seed AI chat scenarios", error)
+  );
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log('TypeORM connected & synced');

@@ -1,10 +1,15 @@
-import { Server } from "socket.io";
+import { Namespace, Server } from "socket.io";
 import { AppDataSource } from "./config/database";
 import { Server as HttpServer } from "http";
 import { User } from "./models/user";
 import { Conversation } from "./models/conversation";
 import { Message } from "./models/message";
 import USER_ROLE from "./enums/userRole.enum";
+
+let ioInstance: Server | null = null;
+let aiChatNamespace: Namespace | null = null;
+
+const aiRoomName = (conversationId: number) => `ai-session-${conversationId}`;
 
 export function setupSocket(server: HttpServer) {
   const io = new Server(server, {
@@ -14,6 +19,8 @@ export function setupSocket(server: HttpServer) {
       credentials: true,
     },
   });
+
+  ioInstance = io;
 
   // Lưu socketId theo userId
   const userSockets = new Map<number, string>();
@@ -140,4 +147,31 @@ export function setupSocket(server: HttpServer) {
       }
     });
   });
+
+  aiChatNamespace = io.of("/ai-chat");
+  aiChatNamespace.on("connection", (socket) => {
+    console.log("🤖 AI chat socket connected:", socket.id);
+
+    socket.on("join_session", ({ conversationId }) => {
+      if (!conversationId) return;
+      socket.join(aiRoomName(conversationId));
+      console.log(`🔗 Socket ${socket.id} joined AI session ${conversationId}`);
+    });
+
+    socket.on("leave_session", ({ conversationId }) => {
+      if (!conversationId) return;
+      socket.leave(aiRoomName(conversationId));
+    });
+
+    socket.on("disconnect", () => {
+      console.log("❌ AI chat socket disconnected:", socket.id);
+    });
+  });
+}
+
+export function emitAiChatEvent(conversationId: number, event: string, payload: unknown) {
+  if (!aiChatNamespace) {
+    return;
+  }
+  aiChatNamespace.to(aiRoomName(conversationId)).emit(event, payload);
 }
