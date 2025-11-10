@@ -4,6 +4,7 @@ import api from '../../api/api';
 import styles from '../styles/LoginPage.module.css';
 import { Modal, Button } from 'react-bootstrap';
 import USER_ROLE from '../../enums/userRole.enum';
+import { showErrorAlert } from '../components/AlertErrorModel';
 import { jwtDecode } from 'jwt-decode';
 
 const EYE_OPEN_ICON = '/assets/img/icon/eye-close-up-svgrepo-com.svg';
@@ -92,8 +93,8 @@ const LoginPage = () => {
       const role = decoded.role;
       if (role === USER_ROLE.ADMIN || role === USER_ROLE.STAFF) navigate('/dashboard');
       else navigate('/');
-    } catch {
-      alert('Login failed');
+    } catch (err) {
+      showErrorAlert(err);
     }
   };
 

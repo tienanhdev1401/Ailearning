@@ -7,6 +7,8 @@ import ApiError from "../utils/ApiError";
 import dotenv from "dotenv";
 import { User } from "../models/user";
 import OtpService from "./otp.service";
+import { hashPassword, comparePassword } from "../utils/hashPassword";
+
 dotenv.config();
 
 const ACCESS_SECRET = process.env.ACCESS_SECRET as string;
@@ -17,8 +19,20 @@ class AuthService {
   static async login(email: string, password: string): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await userRepository.findOne({ where: { email } });
 
-    if (!user || user.password !== password) {
-      // Nếu dùng bcrypt, thay dòng trên bằng bcrypt.compare
+    if (!user) {
+      throw new ApiError(HttpStatusCode.Unauthorized, "Sai tài khoản hoặc mật khẩu");
+    }
+
+    if (user.authProvider !== AUTH_PROVIDER.LOCAL || !user.password) {
+      throw new ApiError(
+        HttpStatusCode.BadRequest,
+        "Tài khoản này được đăng nhập bằng Google, không thể đăng nhập bằng mật khẩu"
+      );
+    }
+
+    // So sánh mật khẩu đã hash
+    const isMatch = await comparePassword(password, user.password);
+    if (!isMatch) {
       throw new ApiError(HttpStatusCode.Unauthorized, "Sai tài khoản hoặc mật khẩu");
     }
 
@@ -56,10 +70,13 @@ class AuthService {
       throw new ApiError(HttpStatusCode.BadRequest, "Email đã tồn tại");
     }
 
+    // Hash mật khẩu trước khi lưu
+    const hashedPassword = await hashPassword(password);
+
     const newUser = userRepository.create({
-      name,
-      email,
-      password,
+      name: name,
+      email: email,
+      password: hashedPassword,
       role: USER_ROLE.USER,
       authProvider: AUTH_PROVIDER.LOCAL,
     });

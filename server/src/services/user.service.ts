@@ -7,6 +7,7 @@ import USER_ROLE from "../enums/userRole.enum";
 import { CreateUserDto } from "../dto/request/CreateUserDTO";
 import { UpdateUserDto } from "../dto/request/UpdateUserDTO";
 import OtpService from "./otp.service";
+import { hashPassword, comparePassword } from "../utils/hashPassword";
 class UserService {
   // Lấy danh sách tất cả người dùng
   static async getAllUsers(): Promise<User[]> {
@@ -22,11 +23,14 @@ class UserService {
       throw new ApiError(HttpStatusCode.BadRequest, "Email đã tồn tại");
     }
 
+    // Hash mật khẩu trước khi lưu
+    const hashedPassword = await hashPassword(createUserDto.password);
+
     // Tạo user mới
     const newUser = userRepository.create({
       name: createUserDto.name,
       email: createUserDto.email,
-      password: createUserDto.password, 
+      password: hashedPassword,
       role: createUserDto.role,
       authProvider: AUTH_PROVIDER.LOCAL,
     });
@@ -92,7 +96,10 @@ class UserService {
     if (!user) {
       throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy người dùng");
     }
-    user.password = newPassword;
+    // Hash mật khẩu trước khi lưu
+    const hashedPassword = await hashPassword(newPassword);
+    user.password = hashedPassword;
+    
     await userRepository.save(user);
   }
 }
