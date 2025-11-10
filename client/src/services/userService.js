@@ -21,6 +21,18 @@ const userService = {
         }
     },
 
+    getCurrentUser: async () => {
+        try {
+        const response = await api.get("/auth/me");
+        return response.data;
+        } catch (error) {
+        const errorMessage = error.response?.data?.error
+            || error.response?.data?.message
+            || 'Không thể lấy thông tin người dùng';
+        throw new Error(errorMessage);
+        }
+    },
+
     
     resetPassword: async ({ email, otp, newPassword }) => {
         try {
