@@ -64,6 +64,22 @@ class RoadmapController {
       next(error);
     }
   }
+
+  // Kiểm tra coi tiến trình ngày học trong roadmap của người học
+  static async getRoadmapDayStatuses(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = Number(req.params.userId);
+      const roadmapId = Number(req.params.roadmapId);
+
+      if (isNaN(userId) || isNaN(roadmapId)) {
+        throw new ApiError(HttpStatusCode.BadRequest,"userId hoặc roadmapId không hợp lệ" );
+      }
+      const result = await RoadmapService.getUserRoadmapDayStatuses(userId, roadmapId);
+      return res.status(HttpStatusCode.Ok).json(result);
+    } catch (error) {
+      next(error)
+    }
+  }
 }
 
 export default RoadmapController;

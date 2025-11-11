@@ -5,6 +5,7 @@ import USER_ROLE from "../enums/userRole.enum";
 import validateDto from "../middlewares/validateRequest.middleware";
 import { CreateUserDto } from "../dto/request/CreateUserDTO";
 import { UpdateUserDto } from "../dto/request/UpdateUserDTO";
+import RoadmapController from "../controllers/roadmap.controller";
 
 const router = express.Router();
 
@@ -189,5 +190,11 @@ router.post("/send-verification-code", UserController.sendVerificationCode);
  *         description: Mật khẩu đã được thay đổi
  */
 router.post("/reset-password", UserController.resetPassword);
+
+// Kiểm tra coi tiến trình ngày học trong roadmap của người học
+router.get(
+  "/:userId/roadmaps/:roadmapId/days",
+  RoadmapController.getRoadmapDayStatuses
+);
 
 export default router;
