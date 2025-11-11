@@ -48,7 +48,6 @@ const Header = () => {
         { label: 'AI Tutor', icon: '🤖', path: '/experience/ai-chat' },
         { label: 'Ngữ Pháp', icon: '📝', path: '/grammar' },
         { label: 'Lộ Trình', icon: '🗺️', path: '/roadmaps' },
-        { label: 'Hồ Sơ', icon: '🧑‍🎓', path: '/profile' },
     ];
 
     return (
