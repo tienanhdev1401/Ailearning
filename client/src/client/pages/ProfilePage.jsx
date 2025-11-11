@@ -1,12 +1,34 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "../styles/ProfilePage.module.css";
 import userService from "../../services/userService";
 import LoadingSpinner from "../../component/LoadingSpinner";
+import { useAuth } from "../../context/AuthContext";
+import Cropper from "react-easy-crop";
+import { getCroppedImage } from "../../utils/imageCropper";
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    phone: "",
+    birthday: "",
+    gender: "",
+  });
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isCropping, setIsCropping] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [pendingAvatarUrl, setPendingAvatarUrl] = useState("");
+  const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
+  const { logout } = useAuth();
 
   useEffect(() => {
     let isMounted = true;
@@ -33,6 +55,41 @@ const ProfilePage = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!profile) return;
+
+    setEditForm({
+      name: profile.name || "",
+      phone: profile.phone || "",
+      birthday: profile.birthday ? new Date(profile.birthday).toISOString().slice(0, 10) : "",
+      gender: profile.gender || "",
+    });
+
+    setAvatarPreview(profile.avatarUrl || "");
+  }, [profile]);
+
+  useEffect(() => {
+    if (!formSuccess) return;
+    const timer = setTimeout(() => setFormSuccess(""), 3000);
+    return () => clearTimeout(timer);
+  }, [formSuccess]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreview && avatarPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+    };
+  }, [avatarPreview]);
+
+  useEffect(() => {
+    return () => {
+      if (pendingAvatarUrl && pendingAvatarUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(pendingAvatarUrl);
+      }
+    };
+  }, [pendingAvatarUrl]);
+
   const displayName = useMemo(
     () => profile?.name?.trim() || "Học viên AelanG",
     [profile]
@@ -57,16 +114,46 @@ const ProfilePage = () => {
     return `${segments[0].charAt(0)}${segments[segments.length - 1].charAt(0)}`.toUpperCase();
   }, [displayName]);
 
+  const genderLabels = {
+    MALE: "Nam",
+    FEMALE: "Nữ",
+    OTHER: "Khác",
+  };
+
+  const statusLabels = {
+    VERIFIED: "Đã xác thực",
+    UNVERIFIED: "Chưa xác thực",
+    PENDING: "Đang chờ duyệt",
+    SUSPENDED: "Tạm khoá",
+  };
+
+  const formattedBirthday = useMemo(() => {
+    if (!profile?.birthday) return "Chưa cập nhật";
+    try {
+      return new Intl.DateTimeFormat("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }).format(new Date(profile.birthday));
+    } catch (err) {
+      console.error("Không thể định dạng ngày sinh", err);
+      return "Chưa cập nhật";
+    }
+  }, [profile?.birthday]);
+
+  const genderLabel = profile?.gender ? genderLabels[profile.gender] : "";
+  const statusLabel = statusLabels[profile?.status] || "Chưa cập nhật";
+
   const personalInfo = useMemo(
     () => [
       { label: "Email", value: displayEmail },
-      { label: "Số điện thoại", value: profile?.phone ?? "0123 456 789" },
-      { label: "Ngày sinh", value: profile?.birthday ?? "20/10/1998" },
-      { label: "Giới tính", value: profile?.gender ?? "Nam" },
-      { label: "Trạng thái tài khoản", value: profile?.status ?? "Đang hoạt động" },
+      { label: "Số điện thoại", value: profile?.phone || "Chưa cập nhật" },
+      { label: "Ngày sinh", value: formattedBirthday },
+  { label: "Giới tính", value: genderLabel },
+      { label: "Trạng thái tài khoản", value: statusLabel },
       { label: "Địa chỉ", value: profile?.address ?? "TP. Hồ Chí Minh, Việt Nam" },
     ],
-    [displayEmail, profile]
+    [displayEmail, formattedBirthday, genderLabel, statusLabel, profile]
   );
 
   const quickStats = useMemo(
@@ -111,6 +198,208 @@ const ProfilePage = () => {
     []
   );
 
+  const heroAvatarUrl = (isEditing && avatarPreview) || profile?.avatarUrl || "";
+
+  const handleCropComplete = useCallback((_, croppedArea) => {
+    setCroppedAreaPixels(croppedArea);
+  }, []);
+
+  const handleCropCancel = useCallback(() => {
+    if (pendingAvatarUrl && pendingAvatarUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(pendingAvatarUrl);
+    }
+    setPendingAvatarUrl("");
+    setPendingAvatarFile(null);
+    setCroppedAreaPixels(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setIsCropping(false);
+  }, [pendingAvatarUrl]);
+
+  const handleCropConfirm = useCallback(async () => {
+    if (!pendingAvatarUrl || !croppedAreaPixels) {
+      setIsCropping(false);
+      return;
+    }
+
+    try {
+      const mimeType = pendingAvatarFile?.type || "image/jpeg";
+      const fileName = pendingAvatarFile?.name || "avatar.jpg";
+      const { file, url } = await getCroppedImage(
+        pendingAvatarUrl,
+        croppedAreaPixels,
+        fileName,
+        mimeType
+      );
+
+      if (avatarPreview && avatarPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+
+      if (pendingAvatarUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(pendingAvatarUrl);
+      }
+
+      setAvatarPreview(url);
+      setAvatarFile(file);
+      setPendingAvatarUrl("");
+      setPendingAvatarFile(null);
+      setCroppedAreaPixels(null);
+      setIsCropping(false);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setFormError("");
+    } catch (err) {
+      console.error("Không thể cắt ảnh", err);
+      setFormError("Không thể cắt ảnh. Vui lòng thử lại.");
+    }
+  }, [
+    pendingAvatarUrl,
+    croppedAreaPixels,
+    pendingAvatarFile,
+    avatarPreview,
+  ]);
+
+  const handleOpenEdit = () => {
+    if (!profile) return;
+    setFormError("");
+    setFormSuccess("");
+    setAvatarFile(null);
+    if (pendingAvatarUrl && pendingAvatarUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(pendingAvatarUrl);
+    }
+    setPendingAvatarUrl("");
+    setPendingAvatarFile(null);
+    setCroppedAreaPixels(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setIsCropping(false);
+    setAvatarPreview(profile.avatarUrl || "");
+    setEditForm({
+      name: profile.name || "",
+      phone: profile.phone || "",
+      birthday: profile.birthday ? new Date(profile.birthday).toISOString().slice(0, 10) : "",
+      gender: profile.gender || "",
+    });
+    setIsEditing(true);
+  };
+
+  const handleCloseEdit = () => {
+    if (avatarPreview && avatarPreview.startsWith("blob:")) {
+      URL.revokeObjectURL(avatarPreview);
+    }
+    if (pendingAvatarUrl && pendingAvatarUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(pendingAvatarUrl);
+    }
+    setAvatarPreview(profile?.avatarUrl || "");
+    setAvatarFile(null);
+    setPendingAvatarUrl("");
+    setPendingAvatarFile(null);
+    setCroppedAreaPixels(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setIsCropping(false);
+    setFormError("");
+    setIsEditing(false);
+  };
+
+  const handleInputChange = (field) => (event) => {
+    const value = event.target.value;
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handlePhoneChange = (event) => {
+    const value = event.target.value;
+    if (!/^[0-9+()\s-]*$/u.test(value)) {
+      return;
+    }
+    setEditForm((prev) => ({ ...prev, phone: value }));
+  };
+
+  const handleAvatarChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setFormError("Vui lòng chọn định dạng ảnh hợp lệ (JPG, PNG, GIF, WEBP)");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError("Ảnh đại diện không được vượt quá 5MB");
+      return;
+    }
+
+    if (pendingAvatarUrl && pendingAvatarUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(pendingAvatarUrl);
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setPendingAvatarUrl(previewUrl);
+    setPendingAvatarFile(file);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
+    setIsCropping(true);
+    setFormError("");
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.error("Logout thất bại", err);
+    }
+  };
+
+  const handleSaveProfile = async (event) => {
+    event.preventDefault();
+    if (!profile) return;
+
+    const trimmedName = editForm.name.trim();
+    if (!trimmedName) {
+      setFormError("Họ tên không được để trống");
+      return;
+    }
+
+    setIsSaving(true);
+    setFormError("");
+
+    try {
+      let avatarUrl = profile.avatarUrl || null;
+      if (avatarFile) {
+        const { url } = await userService.uploadAvatar(avatarFile, `users/${profile.id}`);
+        avatarUrl = url;
+      } else if (avatarPreview && !avatarPreview.startsWith("blob:")) {
+        avatarUrl = avatarPreview;
+      }
+
+      const payload = {
+        name: trimmedName,
+        avatarUrl,
+        phone: editForm.phone?.trim() ? editForm.phone.trim() : null,
+        birthday: editForm.birthday || null,
+        gender: editForm.gender || null,
+      };
+
+      const updatedUser = await userService.updateProfile(payload);
+      setProfile(updatedUser);
+      setFormSuccess("Cập nhật hồ sơ thành công");
+
+      if (avatarPreview && avatarPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+
+      setAvatarFile(null);
+      setAvatarPreview(updatedUser.avatarUrl || "");
+      setIsEditing(false);
+    } catch (err) {
+      setFormError(err.message || "Không thể cập nhật hồ sơ");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className={styles.loadingState}>
@@ -132,21 +421,40 @@ const ProfilePage = () => {
 
   return (
     <div className={styles.container}>
+      {formSuccess && <div className={styles.toastSuccess}>{formSuccess}</div>}
       <section className={styles.heroCard}>
         <div className={styles.heroContent}>
           <div className={styles.avatarWrapper}>
-            <div className={styles.avatar}>{initials}</div>
+            <div
+              className={styles.avatar}
+              style={
+                heroAvatarUrl
+                  ? { backgroundImage: `url(${heroAvatarUrl})` }
+                  : undefined
+              }
+            >
+              {!heroAvatarUrl && initials}
+            </div>
           </div>
-          <div className={styles.identity}>
-            <h1>{displayName}</h1>
-            <p className={styles.role}>TOEIC Learner</p>
-            <div className={styles.metaRow}>
-              <span>📧 {displayEmail}</span>
-              <span>📅 Tham gia {joinedDate}</span>
+          <div className={styles.heroDetails}>
+            <div className={styles.identity}>
+              <h1>{displayName}</h1>
+              <div className={styles.metaRow}>
+                <span>📧 {displayEmail}</span>
+                <span>📅 Tham gia {joinedDate}</span>
+                <span>📋 Trạng thái {statusLabel}</span>
+              </div>
             </div>
             <div className={styles.heroActions}>
-              <button className={styles.primaryBtn}>Tiếp tục học ngay</button>
-              <button className={styles.secondaryBtn}>Cập nhật mục tiêu</button>
+              <div className={styles.heroActionGroup}>
+                <button className={styles.primaryBtn}>Tiếp tục học ngay</button>
+                <button className={styles.secondaryBtn} onClick={handleOpenEdit}>
+                  Chỉnh sửa hồ sơ
+                </button>
+              </div>
+              <button className={styles.logoutBtn} onClick={handleLogout}>
+                Đăng xuất
+              </button>
             </div>
           </div>
         </div>
@@ -251,6 +559,144 @@ const ProfilePage = () => {
           </article>
         </main>
       </div>
+
+          {isEditing && (
+            <div className={styles.editOverlay}>
+              <div className={styles.editDialog} role="dialog" aria-modal="true">
+                <div className={styles.editHeader}>
+                  <h2>Chỉnh sửa hồ sơ</h2>
+                  <button
+                    type="button"
+                    className={styles.closeBtn}
+                    onClick={handleCloseEdit}
+                    aria-label="Đóng hộp thoại chỉnh sửa"
+                  >
+                    ×
+                  </button>
+                </div>
+                <form className={styles.editForm} onSubmit={handleSaveProfile}>
+                  {formError && <div className={styles.formError}>{formError}</div>}
+
+                  <label className={styles.field}>
+                    <span>Họ và tên</span>
+                    <input
+                      type="text"
+                      value={editForm.name}
+                      onChange={handleInputChange("name")}
+                      placeholder="Nhập họ và tên"
+                      maxLength={120}
+                    />
+                  </label>
+
+                  <label className={styles.field}>
+                    <span>Ảnh đại diện</span>
+                    <div className={styles.avatarInputRow}>
+                      <div
+                        className={styles.avatarPreview}
+                        style={
+                          avatarPreview
+                            ? { backgroundImage: `url(${avatarPreview})` }
+                            : undefined
+                        }
+                      >
+                        {!avatarPreview && initials}
+                      </div>
+                      <label className={styles.uploadBtn}>
+                        Chọn ảnh
+                        <input type="file" accept="image/*" onChange={handleAvatarChange} />
+                      </label>
+                    </div>
+                    <span className={styles.fieldHint}>Hỗ trợ JPG, PNG, GIF, WEBP (tối đa 5MB)</span>
+                  </label>
+
+                  <label className={styles.field}>
+                    <span>Số điện thoại</span>
+                    <input
+                      type="text"
+                      value={editForm.phone}
+                      onChange={handlePhoneChange}
+                      placeholder="Ví dụ: 0901234567"
+                      maxLength={20}
+                    />
+                  </label>
+
+                  <label className={styles.field}>
+                    <span>Ngày sinh</span>
+                    <input
+                      type="date"
+                      value={editForm.birthday}
+                      onChange={handleInputChange("birthday")}
+                    />
+                  </label>
+
+                  <label className={styles.field}>
+                    <span>Giới tính</span>
+                    <select value={editForm.gender} onChange={handleInputChange("gender")}>
+                      <option value="">Chọn giới tính</option>
+                      <option value="MALE">Nam</option>
+                      <option value="FEMALE">Nữ</option>
+                      <option value="OTHER">Khác</option>
+                    </select>
+                  </label>
+
+                  <div className={styles.formActions}>
+                    <button
+                      type="button"
+                      className={styles.cancelBtn}
+                      onClick={handleCloseEdit}
+                    >
+                      Hủy
+                    </button>
+                    <button type="submit" className={styles.saveBtn} disabled={isSaving}>
+                      {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {isCropping && pendingAvatarUrl && (
+            <div className={styles.cropOverlay}>
+              <div className={styles.cropDialog} role="dialog" aria-modal="true">
+                <div className={styles.cropArea}>
+                  <Cropper
+                    image={pendingAvatarUrl}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={1}
+                    cropShape="round"
+                    showGrid={false}
+                    objectFit="contain"
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={handleCropComplete}
+                  />
+                </div>
+                <div className={styles.cropControls}>
+                  <label htmlFor="avatarZoom">Thu phóng</label>
+                  <input
+                    id="avatarZoom"
+                    className={styles.zoomRange}
+                    type="range"
+                    min={1}
+                    max={3}
+                    step={0.1}
+                    value={zoom}
+                    onChange={(event) => setZoom(Number(event.target.value))}
+                  />
+                  <div className={styles.cropActions}>
+                    <button type="button" className={styles.cancelBtn} onClick={handleCropCancel}>
+                      Hủy
+                    </button>
+                    <button type="button" className={styles.saveBtn} onClick={handleCropConfirm}>
+                      Áp dụng
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
     </div>
   );
 };

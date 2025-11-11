@@ -33,6 +33,41 @@ const userService = {
         }
     },
 
+    updateProfile: async (payload) => {
+        try {
+        const response = await api.patch("/auth/me", payload);
+        return response.data;
+        } catch (error) {
+        const errorMessage = error.response?.data?.error
+            || error.response?.data?.message
+            || 'Không thể cập nhật hồ sơ';
+        throw new Error(errorMessage);
+        }
+    },
+
+    uploadAvatar: async (file, folder) => {
+        const formData = new FormData();
+        formData.append('avatar', file);
+        if (folder) {
+            formData.append('folder', folder);
+        }
+
+        try {
+            const response = await api.post('/uploads/avatar', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            return response.data;
+        } catch (error) {
+            const errorMessage = error.response?.data?.error
+                || error.response?.data?.message
+                || 'Không thể tải ảnh lên';
+            throw new Error(errorMessage);
+        }
+    },
+
     
     resetPassword: async ({ email, otp, newPassword }) => {
         try {

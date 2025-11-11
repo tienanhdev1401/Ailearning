@@ -4,6 +4,7 @@ import verifyTokenAndRole from "../middlewares/auth.middleware";
 import validateDto from "../middlewares/validateRequest.middleware";
 import { RegisterDto } from "../dto/request/RegisterDTO";
 import { LoginDto } from "../dto/request/LoginDTO";
+import { UpdateProfileDto } from "../dto/request/UpdateProfileDTO";
 import { loginLimiter, otpLimiter } from "../middlewares/ratelimit.middleware";
 
 const router = express.Router();
@@ -130,6 +131,9 @@ router.post("/logout", AuthController.logout);
 
 // Lấy thông tin người dùng đang đăng nhập
 router.get("/me", verifyTokenAndRole(), AuthController.getMe);
+
+// Cập nhật thông tin người dùng đang đăng nhập
+router.patch("/me", verifyTokenAndRole(), validateDto(UpdateProfileDto), AuthController.updateMe);
 
 // Gửi mã xác thực (OTP)
 router.post("/send-verification-code",otpLimiter, AuthController.sendVerificationCode);
