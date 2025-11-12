@@ -15,4 +15,10 @@ router.put("/:id/status", RoadmapEnrollmentController.updateStatus);
 // Xóa đăng ký roadmap
 router.delete("/:id", RoadmapEnrollmentController.deleteEnrollment);
 
+// Kiểm tra user đã enroll roadmap này chưa
+router.get(
+  "/user/:userId/roadmap/:roadmapId",
+  RoadmapEnrollmentController.checkEnroll
+);
+
 export default router;

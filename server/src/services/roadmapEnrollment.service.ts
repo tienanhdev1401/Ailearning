@@ -76,4 +76,24 @@ export class RoadmapEnrollmentService {
     await roadmapEnrollementRepository.remove(enrollment);
     return { message: "Xóa đăng ký thành công" };
   }
+
+
+  static async checkEnroll(userId: number, roadmapId: number) {
+    const enrollment = await roadmapEnrollementRepository.findOne({
+      where: {
+        user: { id: userId },      
+        roadmap: { id: roadmapId } 
+      },
+      relations: ["roadmap"], 
+    });
+
+    if (!enrollment) {
+      return { enrolled: false };
+    }
+
+    return {
+      enrolled: enrollment.status === "active",
+      roadmap_enrollement: enrollment,
+    };
+  }
 }
