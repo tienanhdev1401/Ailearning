@@ -202,7 +202,7 @@ export class RoadmapService {
     // ✅ Duyệt qua từng day để tính status
     const dayStatuses = days.map((day, index) => {
       const activities = day.activities || [];
-      let status: "locked" | "not_started" | "in_progress" | "completed" = "locked";
+      let status: "locked" | "not_started" | "in_progress" | "completed";
 
       if (activities.length === 0) {
         status = "not_started";
