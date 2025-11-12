@@ -6,6 +6,7 @@ import validateDto from "../middlewares/validateRequest.middleware";
 import { CreateUserDto } from "../dto/request/CreateUserDTO";
 import { UpdateUserDto } from "../dto/request/UpdateUserDTO";
 import RoadmapController from "../controllers/roadmap.controller";
+import { UserProgressController } from "../controllers/userProgress.controller";
 
 const router = express.Router();
 
@@ -196,5 +197,11 @@ router.get(
   "/:userId/roadmaps/:roadmapId/days",
   RoadmapController.getRoadmapDayStatuses
 );
+
+// Lưu tiến trình activity (rời page hoặc Next)
+router.put("/:userId/activities/:activityId", UserProgressController.updateProgress);
+
+// Lấy tất cả progress trong day
+router.get("/:userId/days/:dayId/progress", UserProgressController.getProgressByDay);
 
 export default router;
