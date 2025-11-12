@@ -33,6 +33,10 @@ import aiChatRouter from "./routes/aiChat.routes";
 import { ensureAiChatFolders } from "./services/ai-chat/audioStorage.service";
 import { seedAiScenarios } from "./seeds/aiScenarios.seed";
 
+import roadmapEnrollementRoutes from './routes/roamapEnrollement.routes'
+
+
+
 const app = express();
 app.use(cookieParser());
 
@@ -68,6 +72,7 @@ app.use('/api/minigames', minigameRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/ai-chat", aiChatRouter);
 app.use('/api/confirm', userconfirmRouter);
+app.use('/api/roadmap_enrollments',roadmapEnrollementRoutes)
 
 
 

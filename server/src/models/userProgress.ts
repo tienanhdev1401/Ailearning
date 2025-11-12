@@ -20,7 +20,7 @@ export class UserProgress {
   timeSpent?: number;
 
   @Column({ name: "completed_at", type: "datetime", nullable: true })
-  completedAt?: Date;
+  completedAt!: Date | null;
   
   @CreateDateColumn()
   startedAt!: Date;
