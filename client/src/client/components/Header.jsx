@@ -1,19 +1,53 @@
-import React, { useState, useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/Header.module.css';
 import { ThemeContext } from '../../context/ThemeContext';
+import userService from '../../services/userService';
 
 const Header = () => {
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { isDarkMode, toggleTheme } = useContext(ThemeContext);
+    const [userName, setUserName] = useState('Người Dùng');
+    const [avatarText, setAvatarText] = useState('👤');
+
+    const computeInitials = (value) => {
+        if (!value) return '👤';
+        const parts = value.trim().split(' ').filter(Boolean);
+        if (parts.length === 0) return '👤';
+        if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+        return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+    };
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadUser = async () => {
+            try {
+                const data = await userService.getCurrentUser();
+                if (!isMounted) return;
+                const name = data?.name || 'Người Dùng';
+                setUserName(name);
+                setAvatarText(computeInitials(name));
+            } catch (error) {
+                if (!isMounted) return;
+                setUserName('Người Dùng');
+                setAvatarText('👤');
+            }
+        };
+
+        loadUser();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const menuItems = [
-        { label: 'Học Tập', icon: '📚', path: '/study' },
-        { label: 'AI Tutor', icon: '🤖', path: '/ai' },
-        { label: 'Bảng Xếp Hạng', icon: '🏆', path: '/leaderboard' },
-        { label: 'Nhiệm Vụ', icon: '✓', path: '/tasks' },
-        { label: 'Cửa Hàng', icon: '🛍️', path: '/shop' },
+        { label: 'Trang Chủ', icon: '🏠', path: '/' },
+        { label: 'AI Tutor', icon: '🤖', path: '/experience/ai-chat' },
+        { label: 'Ngữ Pháp', icon: '📝', path: '/grammar' },
+        { label: 'Lộ Trình', icon: '🗺️', path: '/roadmaps' },
     ];
 
     return (
@@ -54,9 +88,16 @@ const Header = () => {
 
                 {/* User Actions */}
                 <div className={styles.userActions}>
-                    <div className={styles.userProfile}>
-                        <div className={styles.avatar}>👤</div>
-                        <span className={styles.username}>Người Dùng</span>
+                    <div
+                        className={styles.userProfile}
+                        onClick={() => {
+                            navigate('/profile');
+                            setIsMenuOpen(false);
+                        }}
+                        title="Xem hồ sơ học tập"
+                    >
+                        <div className={styles.avatar}>{avatarText}</div>
+                        <span className={styles.username}>{userName}</span>
                     </div>
                     <button
                         className={styles.themeToggle}

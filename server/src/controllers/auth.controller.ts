@@ -1,9 +1,10 @@
 import { HttpStatusCode } from "axios";
 import AuthService from "../services/auth.service";
 import OtpService from "../services/otp.service";
-import UserService from "../services/user.service";
 import ApiError from "../utils/ApiError";
 import { Request, Response, NextFunction } from "express";
+import { UpdateProfileDto } from "../dto/request/UpdateProfileDTO";
+import UserService from "../services/user.service";
 
 class AuthController {
   static async login(req: Request, res: Response, next: NextFunction) {
@@ -58,6 +59,23 @@ class AuthController {
     try {
       const user = await AuthService.getUserById(req.user.id);
       res.status(HttpStatusCode.Ok).json(user);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateMe(req: Request, res: Response, next: NextFunction) {
+    try {
+      const requestWithUser = req as Request & { user?: { id: number } };
+
+      if (!requestWithUser.user?.id) {
+        throw new ApiError(HttpStatusCode.Unauthorized, "Không xác định được người dùng");
+      }
+
+      const payload = req.body as UpdateProfileDto;
+      const updatedUser = await UserService.updateProfile(requestWithUser.user.id, payload);
+
+      res.status(HttpStatusCode.Ok).json(updatedUser);
     } catch (error) {
       next(error);
     }

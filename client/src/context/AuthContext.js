@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect,useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api"; 
 
@@ -7,6 +7,13 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [accessToken, setAccessToken] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("accessToken");
+    if (storedToken) {
+      setAccessToken(storedToken);
+    }
+  }, []);
 
    // Auto refresh token mỗi 10 phút
   useEffect(() => {
@@ -29,8 +36,27 @@ export const AuthProvider = ({ children }) => {
   return () => clearInterval(interval);
 }, [accessToken, navigate]);
 
+  useEffect(() => {
+    if (accessToken) {
+      localStorage.setItem("accessToken", accessToken);
+    } else {
+      localStorage.removeItem("accessToken");
+    }
+  }, [accessToken]);
+
+  const logout = useCallback(async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (err) {
+      console.error("Không thể gọi API logout", err);
+    } finally {
+      setAccessToken(null);
+      navigate("/login", { replace: true });
+    }
+  }, [navigate]);
+
   return (
-    <AuthContext.Provider value={{ accessToken, setAccessToken }}>
+    <AuthContext.Provider value={{ accessToken, setAccessToken, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -126,7 +126,9 @@ class AuthService {
       throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy người dùng");
     }
 
-    return user;
+    const sanitizedUser = { ...user } as User;
+    sanitizedUser.password = null;
+    return sanitizedUser;
   }
 }
 
