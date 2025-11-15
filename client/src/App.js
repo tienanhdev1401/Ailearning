@@ -28,6 +28,8 @@ import RoadMapPage from "./client/pages/RoadMapPage";
 
 import DayDetailPage from "./client/pages/DayDetailPage";
 
+import LessonTopicPage from "./client/pages/LessonTopicPage";
+
 function App() {
   return (
     <Routes>
@@ -52,6 +54,16 @@ function App() {
 
       <Route path="/video" element={<VideoPraticePage />} />
       <Route path="/speak" element={<SpeakingVideoPraticePage />} />
+
+
+      <Route
+        path="/topics"
+        element={
+          <ProtectedRoute>
+            <ClientLayout><LessonTopicPage /></ClientLayout>
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/experience/ai-chat"

@@ -6,7 +6,7 @@ import api from '../../api/api';
 const RoadMapPage = () => {
   const { id } = useParams(); // roadmapId
   const navigate = useNavigate();
-  const userId = 1; // TODO: thay bằng userId thực tế từ auth
+  const userId = 2; // TODO: thay bằng userId thực tế từ auth
   const [roadmap, setRoadmap] = useState(null);
   const [days, setDays] = useState([]);
   const [loading, setLoading] = useState(true);
