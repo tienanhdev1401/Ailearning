@@ -1,0 +1,27 @@
+:root {
+  --roadmap-bg: #19212b;
+  --roadmap-gradient: linear-gradient(135deg, #19212b 0%, #1a2f3f 55%, #0f1923 100%);
+  --roadmap-surface: rgba(18, 32, 46, 0.9);
+  --roadmap-text: #e0f2ff;
+  --roadmap-muted: #96a8bb;
+  --roadmap-path: rgba(0, 255, 204, 0.45);
+  --roadmap-node-complete: linear-gradient(135deg, #00ffff, #00ff88);
+  --roadmap-node-progress: linear-gradient(135deg, #facc15, #f472b6);
+  --roadmap-node-locked: rgba(23, 31, 43, 0.85);
+  --roadmap-node-outline: rgba(255, 255, 255, 0.18);
+  --roadmap-reward: #facc15;
+}
+
+[data-theme="light"] {
+  --roadmap-bg: #f5f7fb;
+  --roadmap-gradient: linear-gradient(135deg, #f1f5f9 0%, #ffffff 65%, #e6f7ff 100%);
+  --roadmap-surface: rgba(255, 255, 255, 0.97);
+  --roadmap-text: #0f172a;
+  --roadmap-muted: #5b6777;
+  --roadmap-path: rgba(0, 153, 153, 0.35);
+  --roadmap-node-complete: linear-gradient(135deg, #00c4b4, #00a39b);
+  --roadmap-node-progress: linear-gradient(135deg, #f7b731, #f472b6);
+  --roadmap-node-locked: #dae2ee;
+  --roadmap-node-outline: rgba(15, 23, 42, 0.08);
+  --roadmap-reward: #eab308;
+}

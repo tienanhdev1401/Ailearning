@@ -1,0 +1,230 @@
+:root {
+    --roadmap-list-bg: radial-gradient(circle at 10% 20%, rgba(34, 197, 94, 0.12), transparent 45%),
+        radial-gradient(circle at 80% 0%, rgba(6, 182, 212, 0.18), transparent 55%),
+        #050b16;
+    --roadmap-list-text: #f8fafc;
+    --roadmap-list-muted: rgba(226, 232, 240, 0.82);
+    --roadmap-list-card-bg: rgba(15, 23, 42, 0.65);
+    --roadmap-list-card-border: rgba(148, 163, 184, 0.25);
+    --roadmap-list-accent: #34d399;
+    --roadmap-list-hero-bg: radial-gradient(circle at 20% 20%, rgba(74, 222, 128, 0.18), transparent 60%),
+        radial-gradient(circle at 80% 0%, rgba(56, 189, 248, 0.2), transparent 55%),
+        rgba(15, 23, 42, 0.9);
+    --roadmap-list-eyebrow: rgba(226, 232, 240, 0.75);
+}
+
+[data-theme="light"] .page {
+    --roadmap-list-bg: linear-gradient(135deg, #e8ebf0, #ffffff);
+    --roadmap-list-text: #0f172a;
+    --roadmap-list-muted: rgba(71, 85, 105, 0.85);
+    --roadmap-list-card-bg: rgba(255, 255, 255, 0.92);
+    --roadmap-list-card-border: rgba(15, 23, 42, 0.08);
+    --roadmap-list-accent: #0ea5e9;
+    --roadmap-list-hero-bg: radial-gradient(circle at 20% 20%, rgba(9, 230, 90, 0.18), transparent 80%),
+        radial-gradient(circle at 80% 0%, rgba(184, 196, 201, 0.2), transparent 55%),
+        rgba(221, 225, 235, 0.9);
+    --roadmap-list-eyebrow: rgba(235, 236, 236, 0.9);
+}
+
+.page {
+    min-height: 100vh;
+    padding: clamp(32px, 4vw, 64px) clamp(20px, 6vw, 96px) 80px;
+    background: var(--roadmap-list-bg, #050b16);
+    color: var(--roadmap-list-text, #f8fafc);
+    font-family: 'Poppins', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.hero {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: clamp(24px, 4vw, 48px);
+        padding: clamp(24px, 4vw, 48px);
+        border-radius: 40px;
+        background: var(--roadmap-list-hero-bg,
+            radial-gradient(circle at 20% 20%, rgba(74, 222, 128, 0.18), transparent 60%),
+            radial-gradient(circle at 80% 0%, rgba(56, 189, 248, 0.2), transparent 55%),
+            rgba(15, 23, 42, 0.85));
+    box-shadow: 0 35px 80px rgba(0, 0, 0, 0.45);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    mix-blend-mode: screen;
+}
+
+.heroEyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.6em;
+    font-size: 0.75rem;
+    margin-bottom: 12px;
+    color: var(--roadmap-list-eyebrow, rgba(226, 232, 240, 0.75));
+}
+
+.heroTitle {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    margin: 0 0 12px;
+    font-weight: 700;
+}
+
+.heroSubtitle {
+    margin: 0;
+    max-width: 56ch;
+    color: var(--roadmap-list-muted, rgba(226, 232, 240, 0.85));
+    line-height: 1.6;
+}
+
+.heroStats {
+    display: grid;
+    gap: 16px;
+}
+
+.statCard {
+    padding: 20px;
+    border-radius: 20px;
+    background: var(--roadmap-list-card-bg, rgba(15, 23, 42, 0.45));
+    border: 1px solid var(--roadmap-list-card-border, rgba(148, 163, 184, 0.15));
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.statValue {
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.statLabel {
+    font-size: 0.95rem;
+    color: var(--roadmap-list-muted, rgba(226, 232, 240, 0.7));
+}
+
+.gridSection {
+    margin-top: clamp(32px, 5vw, 64px);
+}
+
+.cardGrid,
+.skeletonGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+}
+
+.card {
+    position: relative;
+    padding: 28px;
+    border-radius: 28px;
+    border: 1px solid var(--roadmap-list-card-border, rgba(148, 163, 184, 0.2));
+    background: var(--roadmap-list-card-bg, rgba(15, 23, 42, 0.65));
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    text-decoration: none;
+}
+
+.card:hover,
+.card:focus-visible {
+    transform: translateY(-6px);
+    border-color: var(--roadmap-list-accent, rgba(34, 197, 94, 0.6));
+    box-shadow: 0 25px 45px rgba(6, 182, 212, 0.35);
+}
+
+.card:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.6);
+}
+
+.cardBody {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+}
+
+.cardEyebrow {
+    font-size: 0.75rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--roadmap-list-muted, rgba(226, 232, 240, 0.6));
+}
+
+.cardTitle {
+    margin: 0;
+    font-size: 1.35rem;
+}
+
+.cardDescription {
+    margin: 0;
+    color: var(--roadmap-list-muted, rgba(226, 232, 240, 0.85));
+    line-height: 1.5;
+}
+
+.cardMeta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--roadmap-list-muted, rgba(226, 232, 240, 0.7));
+}
+
+.cardActions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: var(--roadmap-list-accent, #34d399);
+}
+
+.skeletonCard {
+    height: 220px;
+    border-radius: 28px;
+    background: linear-gradient(120deg, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.8));
+    position: relative;
+    overflow: hidden;
+}
+
+.skeletonCard::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.2) 35%, transparent 70%);
+    animation: shimmer 1.8s infinite;
+}
+
+.emptyState {
+    padding: 64px 24px;
+    border-radius: 28px;
+    border: 1px dashed rgba(226, 232, 240, 0.3);
+    text-align: center;
+    color: var(--roadmap-list-muted, rgba(226, 232, 240, 0.8));
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+@media (max-width: 768px) {
+    .page {
+        padding: 24px 16px 48px;
+    }
+
+    .cardMeta {
+        flex-direction: column;
+        gap: 6px;
+    }
+}

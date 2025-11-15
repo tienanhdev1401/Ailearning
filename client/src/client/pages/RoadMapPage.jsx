@@ -1,34 +1,125 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import api from '../../api/api';
+import styles from '../styles/RoadmapPage.module.css';
+import '../styles/roadmapTokens.css';
+import RoadmapMap from '../components/roadmap/RoadmapMap';
+
+const classNames = (...parts) => parts.filter(Boolean).join(' ');
+
+const ActivityDrawer = ({ day, activities, loading, onClose }) => {
+  if (!day) return null;
+
+  return (
+    <div className={styles.drawerOverlay} onClick={onClose}>
+      <div className={styles.drawer} onClick={(e) => e.stopPropagation()}>
+        <header className={styles.drawerHeader}>
+          <h3 className={styles.drawerTitle}>Day {day.dayNumber} · Activities</h3>
+          <button className={styles.closeBtn} onClick={onClose} aria-label="close drawer">
+            ×
+          </button>
+        </header>
+        {loading && <p className={styles.nodeDescription}>Đang tải hoạt động...</p>}
+        {!loading && (
+          <div className={styles.activityList}>
+            {activities.length === 0 && <p className={styles.nodeDescription}>Ngày này chưa có hoạt động.</p>}
+            {activities.map((activity) => (
+              <article key={activity.id} className={styles.activityCard}>
+                <h4 className={styles.nodeTitle}>{activity.name || activity.title}</h4>
+                {activity.description && <p className={styles.nodeDescription}>{activity.description}</p>}
+                <div className={styles.activityMeta}>
+                  {activity.type && <span>Loại: {activity.type}</span>}
+                  {activity.duration && <span>⏱ {activity.duration} phút</span>}
+                  {activity.xp && <span>⚡ {activity.xp} XP</span>}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const PAGE_LIMIT = 15;
 
 const RoadMapPage = () => {
   const { id } = useParams(); // roadmapId
-  const navigate = useNavigate();
   const userId = 1; // TODO: thay bằng userId thực tế từ auth
   const [roadmap, setRoadmap] = useState(null);
   const [days, setDays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [enrolled, setEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
+  const [selectedDayId, setSelectedDayId] = useState(null);
+  const [activitiesCache, setActivitiesCache] = useState({});
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalDays, setTotalDays] = useState(0);
+  const [hasMorePages, setHasMorePages] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const fetchEnrollmentStatus = useCallback(async () => {
+    try {
+      return await api.get(`/users/${userId}/roadmaps/${id}/enrollment`);
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        console.warn('Không tìm thấy route enrollment mới, fallback sang route cũ.');
+        return await api.get(`/roadmap_enrollments/user/${userId}/roadmap/${id}`);
+      }
+      throw error;
+    }
+  }, [id, userId]);
+
+  const fetchUserDayStatuses = useCallback(
+    async ({ page: pageToLoad = 1, append = false, fallbackDays = [] } = {}) => {
+      try {
+        const daysRes = await api.get(`/users/${userId}/roadmaps/${id}/days`, {
+          params: { page: pageToLoad, limit: PAGE_LIMIT },
+        });
+        const payload = daysRes.data || {};
+        const incoming = Array.isArray(payload.data) ? payload.data : [];
+        setDays((prev) => (append ? [...prev, ...incoming] : incoming));
+        const total = typeof payload.total === 'number' ? payload.total : incoming.length;
+        setTotalDays(total);
+        setCurrentPage(pageToLoad);
+        setHasMorePages(pageToLoad * PAGE_LIMIT < total);
+      } catch (dayError) {
+        const status = dayError?.response?.status;
+        if (status === 404 || status === 403) {
+          console.warn('Không tìm thấy tiến trình hoặc chưa có quyền, fallback sang dữ liệu sẵn có.');
+          setDays(fallbackDays);
+          setTotalDays(fallbackDays.length);
+          setCurrentPage(1);
+          setHasMorePages(false);
+        } else {
+          throw dayError;
+        }
+      }
+    },
+    [id, userId]
+  );
 
   useEffect(() => {
     const fetchRoadmap = async () => {
       try {
-        // 1️⃣ Kiểm tra enroll
-        const checkRes = await api.get(`/roadmap_enrollments/user/${userId}/roadmap/${id}`);
+        const checkRes = await fetchEnrollmentStatus();
         if (checkRes.data.enrolled) {
           setEnrolled(true);
           setRoadmap(checkRes.data.roadmap_enrollement.roadmap);
-          // fetch ngày đã enroll
-          const daysRes = await api.get(`/users/${userId}/roadmaps/${id}/days`);
-          setDays(daysRes.data.data);
+          await fetchUserDayStatuses({
+            page: 1,
+            append: false,
+            fallbackDays: checkRes.data.roadmap_enrollement?.roadmap?.days || [],
+          });
         } else {
-          // chưa enroll → fetch roadmap để preview
           const roadmapRes = await api.get(`/roadmaps/${id}`);
           setRoadmap(roadmapRes.data);
-          setDays(roadmapRes.data.days || []);
+          const fallback = roadmapRes.data.days || [];
+          setDays(fallback);
+          setTotalDays(fallback.length);
+          setCurrentPage(1);
+          setHasMorePages(false);
         }
       } catch (error) {
         console.error(error);
@@ -38,7 +129,7 @@ const RoadMapPage = () => {
     };
 
     fetchRoadmap();
-  }, [id, userId]);
+  }, [fetchEnrollmentStatus, fetchUserDayStatuses, id]);
 
   const handleEnroll = async () => {
     setEnrolling(true);
@@ -48,9 +139,11 @@ const RoadMapPage = () => {
         roadmapId: Number(id),
       });
       setEnrolled(true);
-      // fetch ngày sau khi enroll
-      const daysRes = await api.get(`/users/${userId}/roadmaps/${id}/days`);
-      setDays(daysRes.data.data);
+      setDays([]);
+      setCurrentPage(1);
+      setHasMorePages(false);
+      setTotalDays(0);
+      await fetchUserDayStatuses({ page: 1, append: false, fallbackDays: roadmap?.days || [] });
     } catch (error) {
       console.error(error);
     } finally {
@@ -58,80 +151,209 @@ const RoadMapPage = () => {
     }
   };
 
-  const getStatusClass = (status) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-success text-white'; // xanh lá
-      case 'in_progress':
-        return 'bg-warning text-dark'; // vàng
-      case 'not_started':
-        return 'bg-primary text-white'; // xanh biển
-      case 'locked':
-      default:
-        return 'bg-secondary text-white bg-opacity-25'; // xám
+  const handleLoadMoreDays = useCallback(async () => {
+    if (!hasMorePages || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      await fetchUserDayStatuses({ page: currentPage + 1, append: true });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingMore(false);
     }
-  };
+  }, [currentPage, fetchUserDayStatuses, hasMorePages, loadingMore]);
 
+  const handleNodeClick = useCallback(
+    async (day) => {
+      if (!enrolled || !day) return;
+      setSelectedDayId(day.id);
+      if (activitiesCache[day.id]) return;
+      try {
+        setActivityLoading(true);
+        const res = await api.get(`/days/${day.id}/activities`);
+        setActivitiesCache((prev) => ({ ...prev, [day.id]: res.data?.data || [] }));
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setActivityLoading(false);
+      }
+    },
+    [activitiesCache, enrolled]
+  );
+
+  const selectedDay = useMemo(() => days.find((d) => d.id === selectedDayId) || null, [days, selectedDayId]);
+  const drawerActivities = selectedDayId ? activitiesCache[selectedDayId] || [] : [];
+
+  const sourceDays = useMemo(() => (days.length ? days : roadmap?.days || []), [days, roadmap]);
+
+  const { totalCount, completedCount, inProgressCount } = useMemo(() => {
+    const total = totalDays || sourceDays.length;
+    let completed = 0;
+    let inProgress = 0;
+    sourceDays.forEach((day) => {
+      if (day.status === 'completed') completed += 1;
+      else if (day.status === 'in_progress') inProgress += 1;
+    });
+    return { totalCount: total, completedCount: completed, inProgressCount: inProgress };
+  }, [sourceDays, totalDays]);
+
+  const stats = useMemo(
+    () => [
+      { label: 'Tổng ngày', value: totalCount },
+      { label: 'Hoàn thành', value: completedCount },
+      { label: 'Đang học', value: inProgressCount },
+    ],
+    [completedCount, inProgressCount, totalCount]
+  );
+
+  const progressPercent = useMemo(() => {
+    if (!totalCount) return 0;
+    return Math.round((completedCount / totalCount) * 100);
+  }, [completedCount, totalCount]);
+
+  const mapNodes = useMemo(() => {
+    if (!sourceDays.length) return [];
+    const previewMode = !enrolled;
+    const normalized = sourceDays.map((day, index) => {
+      const position = day.dayNumber || index + 1;
+      let normalizedStatus;
+      if (previewMode) {
+        normalizedStatus = index === 0 ? 'available' : 'locked';
+      } else if (day.status === 'completed') {
+        normalizedStatus = 'completed';
+      } else if (day.status === 'in_progress') {
+        normalizedStatus = 'available';
+      } else {
+        const prevUnlocked = index === 0 || sourceDays[index - 1]?.status === 'completed';
+        normalizedStatus = prevUnlocked ? 'available' : 'locked';
+      }
+      return {
+        day: position,
+        metaId: day.id,
+        title: day.title || day.name || day.description || `Day ${position}`,
+        status: normalizedStatus,
+      };
+    });
+
+    if (hasMorePages) {
+      normalized.push({
+        day: normalized.length + 1,
+        title: 'Tải thêm',
+        status: 'available',
+        isLoadMore: true,
+        loadingMore,
+      });
+    }
+
+    return normalized;
+  }, [enrolled, hasMorePages, loadingMore, sourceDays]);
+
+  const nextUnlock = useMemo(() => {
+    if (!sourceDays.length) return null;
+    if (!enrolled) return sourceDays[0];
+    return sourceDays.find((day) => day.status !== 'completed') || sourceDays[sourceDays.length - 1];
+  }, [enrolled, sourceDays]);
+
+  const handleMapSelect = useCallback(
+    (node) => {
+      if (!node) return;
+      if (node.isLoadMore) {
+        handleLoadMoreDays();
+        return;
+      }
+      if (!enrolled) return;
+      const targetDay =
+        days.find((day) => day.id === node.metaId) ||
+        days.find((day) => (day.dayNumber || day.day) === node.day);
+      if (targetDay) {
+        handleNodeClick(targetDay);
+      }
+    },
+    [days, enrolled, handleLoadMoreDays, handleNodeClick]
+  );
+
+  
   if (loading) return <div className="text-center mt-5">Loading...</div>;
   if (!roadmap) return <div className="text-center mt-5">Không tìm thấy roadmap</div>;
 
   return (
-    <div className="bg-warning bg-opacity-25 min-vh-100 py-4">
-      <div className="container" style={{ maxWidth: '900px' }}>
-        {/* Header */}
-        <div className="position-relative mb-4">
-          <div className="bg-warning rounded-4 p-4 shadow-lg">
-            <h1 className="text-center fw-bold text-dark mb-0 fs-2">{roadmap.levelName}</h1>
-          </div>
-        </div>
-
-        {/* Roadmap Info */}
-        <div className="bg-white rounded-4 p-4 shadow my-4">
-          <p className="text-secondary mb-0">{roadmap.description}</p>
-        </div>
-
-        {/* Nút Bắt đầu học (Preview UI) */}
-        {!enrolled && (
-          <div className="mb-4 text-center">
-            <button
-              className="btn btn-warning fw-bold px-5 py-3 rounded-pill"
-              onClick={handleEnroll}
-              disabled={enrolling}
-            >
-              {enrolling ? 'Đang enroll...' : 'Bắt đầu học'}
-            </button>
-          </div>
-        )}
-
-        {/* Danh sách ngày */}
-        {days.map((day) => (
-          <div
-            key={day.id}
-            className={`rounded-4 p-4 mb-3 shadow d-flex align-items-center ${
-              enrolled ? getStatusClass(day.status) : 'bg-light'
-            }`}
-            style={{ cursor: enrolled && day.status !== 'locked' ? 'pointer' : 'not-allowed' }}
-            onClick={() => {
-              if (enrolled && day.status !== 'locked') {
-                navigate(`/days/${day.id}`); 
-              }
-            }}
-          >
-            <div
-              className={`rounded-circle d-flex align-items-center justify-content-center border border-4 shadow-sm ${
-                enrolled ? '' : 'bg-secondary bg-opacity-25 border-secondary'
-              }`}
-              style={{ width: '80px', height: '80px', fontSize: '2rem' }}
-            >
-              {day.dayNumber}
-            </div>
-            <div className="flex-grow-1 ms-3">
-              <h2 className="fs-5 fw-bold mb-1 text-dark">Day {day.dayNumber}</h2>
-              <p className="mb-0 text-dark">{day.description}</p>
+    <div className={styles.page}>
+      <div className={classNames(styles.assetPlaceholder, styles.assetFloating, styles.assetA)}>A</div>
+      <div className={classNames(styles.assetPlaceholder, styles.assetFloating, styles.assetB)}>B</div>
+      <section className={styles.shell}>
+        <header className={styles.header}>
+          <div className={styles.headerIntro}>
+            <h1 className={styles.headerTitle}>{roadmap.levelName + ' Roadmap' || 'Roadmap'}</h1>
+            <p className={styles.headerDescription}>{roadmap.description || ''}</p>
+            <div className={styles.ctaRow}>
+              {!enrolled && (
+                <button className={styles.ctaPrimary} onClick={handleEnroll} disabled={enrolling}>
+                  {enrolling ? 'Đang ghi danh...' : 'Bắt đầu ngay'}
+                </button>
+              )}
+              {enrolled && (
+                <button className={styles.ctaPrimary} type="button">
+                  Tiếp tục học
+                </button>
+              )}
+              <button className={styles.ctaGhost} type="button">
+                Xem bảng thưởng
+              </button>
             </div>
           </div>
-        ))}
-      </div>
+          <div className={styles.statGrid}>
+            {stats.map((stat) => (
+              <article key={stat.label} className={styles.statCard}>
+                <span className={styles.statLabel}>{stat.label}</span>
+                <strong className={styles.statValue}>{stat.value}</strong>
+              </article>
+            ))}
+          </div>
+        </header>
+
+        <section className={styles.mapStage}>
+          <div className={styles.mapColumn}>
+            <div className={styles.mapHeading}>
+              <div>
+                <p className={styles.mapLabel}>sẽ để gì đó ở đây</p>
+                <h2 className={styles.mapTitle}>sẽ để gì đó ở đây</h2>
+              </div>
+              <span className={styles.mapHint}>sẽ để gì đó ở đây như thành tiến trình hay gì đó</span>
+            </div>
+            <RoadmapMap
+              nodes={mapNodes}
+              onSelect={handleMapSelect}
+              onLoadMore={handleLoadMoreDays}
+            />
+          </div>
+          <aside className={styles.sidePanel}>
+            <article className={classNames(styles.panelCard, styles.rewardCard)}>
+              <span className={styles.assetBadge}>C</span>
+              <p className={styles.panelEyebrow}>Phần thưởng sắp tới</p>
+              <h3 className={styles.panelTitle}>Day {nextUnlock?.dayNumber || '--'}</h3>
+              <p className={styles.panelHint}>
+                Đặt ảnh reward (asset C) để minh họa phần thưởng khi hoàn thành mốc này.
+              </p>
+            </article>
+            <article className={styles.panelCard}>
+              <span className={styles.panelEyebrow}>Tiến độ</span>
+              <div className={styles.progressSummary}>
+                <span className={styles.progressValue}>{progressPercent}%</span>
+                <span className={styles.progressLabel}>Hoàn thành</span>
+              </div>
+              <p className={styles.panelHint}>
+                Có thể đặt asset "D" ở đây (ví dụ energizer, nhân vật) để tăng độ sống động.
+              </p>
+            </article>
+          </aside>
+        </section>
+      </section>
+      <ActivityDrawer
+        day={selectedDay}
+        activities={drawerActivities}
+        loading={activityLoading}
+        onClose={() => setSelectedDayId(null)}
+      />
     </div>
   );
 };
