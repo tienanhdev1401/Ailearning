@@ -27,13 +27,36 @@ class LessonController {
   }
 
   static async getAllLessons(req: Request, res: Response, next: NextFunction) {
-    try {
-      const lessons = await LessonService.getAllLessons();
-      res.status(HttpStatusCode.Ok).json(lessons);
-    } catch (error) {
-      next(error);
-    }
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    const search = (req.query.search as string) || undefined;
+    const topic_type = (req.query.topic_type as string) || undefined;
+    const level = (req.query.level as string) || undefined;
+
+    const sort = (req.query.sort as string) as
+      | "latest"
+      | "oldest"
+      | "views"
+      | "least_views"
+      | "longest"
+      | "shortest" || "latest";
+
+    const lessons = await LessonService.getAllLessons(
+      page,
+      limit,
+      search,
+      topic_type,
+      level,
+      sort
+    );
+
+    return res.status(HttpStatusCode.Ok).json(lessons);
+  } catch (error) {
+    next(error);
   }
+}
 
   static async getLatestLessonsPerType(req: Request, res: Response, next: NextFunction) {
     try {

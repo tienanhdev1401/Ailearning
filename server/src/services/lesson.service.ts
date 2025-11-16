@@ -6,6 +6,7 @@ import ApiError from "../utils/ApiError";
 import { HttpStatusCode } from "axios";
 import { CreateLessonDto } from "../dto/request/CreateLessonDto";
 import { parseTimeToSeconds,secondsToMinuteSecond  } from "../utils/time";
+import { LessonLevel } from "../enums/lessonLevel.enum";
 
 interface CreateLessonInput extends CreateLessonDto {
   srtPath: string;
@@ -97,21 +98,67 @@ class LessonService {
 
   static async getAllLessons(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
+    search?: string,
+    topic_type?: string,
+    level?: string,
+    sort: "latest" | "oldest" | "views" | "least_views" | "longest" | "shortest" = "latest"
   ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
     const lessonRepo = AppDataSource.getRepository(Lesson);
     const subtitleRepo = AppDataSource.getRepository(Subtitle);
 
-    // Lấy tổng số lesson
-    const [lessons, total] = await lessonRepo.findAndCount({
-      select: ["id", "title", "thumbnail_url", "topic_type"],
-      order: { id: "ASC" },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    let qb = lessonRepo.createQueryBuilder("lesson");
 
-    // Lazy load duration từ subtitles
-    const data = await Promise.all(
+    qb = qb.select([
+      "lesson.id",
+      "lesson.title",
+      "lesson.thumbnail_url",
+      "lesson.topic_type",
+      "lesson.level",
+      "lesson.views",
+      "lesson.updatedAt",
+    ]);
+
+    // Filters
+    if (topic_type) {
+      qb = qb.andWhere("lesson.topic_type = :topic_type", { topic_type });
+    }
+
+    if (search) {
+      qb = qb.andWhere("lesson.title LIKE :search", { search: `%${search}%` });
+    }
+
+    if (level) {
+      qb = qb.andWhere("lesson.level = :level", { level });
+    }
+
+    // Sorting — except longest/shortest (because they require duration)
+    if (sort !== "longest" && sort !== "shortest") {
+      switch (sort) {
+        case "views":
+          qb = qb.orderBy("lesson.views", "DESC");
+          break;
+
+        case "least_views":
+          qb = qb.orderBy("lesson.views", "ASC");
+          break;
+
+        case "oldest":
+          qb = qb.orderBy("lesson.updatedAt", "ASC");
+          break;
+
+        default:
+          qb = qb.orderBy("lesson.updatedAt", "DESC"); // latest
+          break;
+      }
+    }
+
+    qb = qb.skip((page - 1) * limit).take(limit);
+
+    const [lessons, total] = await qb.getManyAndCount();
+
+    // Load subtitles để tính duration
+    let data = await Promise.all(
       lessons.map(async (lesson) => {
         const subs = await subtitleRepo.find({
           where: { lesson: { id: lesson.id } },
@@ -130,10 +177,20 @@ class LessonService {
           title: lesson.title,
           thumbnail_url: lesson.thumbnail_url,
           topic_type: lesson.topic_type,
-          duration: secondsToMinuteSecond(duration),
+          level: lesson.level,
+          views: lesson.views,
+          duration,
+          durationText: secondsToMinuteSecond(duration),
         };
       })
     );
+
+    // Sorting with duration
+    if (sort === "longest") {
+      data.sort((a, b) => b.duration - a.duration);
+    } else if (sort === "shortest") {
+      data.sort((a, b) => a.duration - b.duration);
+    }
 
     return { data, total, page, limit };
   }
@@ -157,7 +214,7 @@ class LessonService {
       // Lấy 4 lesson mới nhất của mỗi topic  
       const lessons = await lessonRepo.find({
         where: { topic_type: topic },
-        select: ["id", "title", "thumbnail_url", "topic_type"],
+        select: ["id", "title", "thumbnail_url", "topic_type", "views", "level"],
         order: { id: "DESC" }, // mới nhất
         take: 4,               // lấy đúng 4 cái
       });
@@ -182,6 +239,8 @@ class LessonService {
             title: lesson.title,
             thumbnail_url: lesson.thumbnail_url,
             topic_type: lesson.topic_type,
+            views: lesson.views,
+            level: lesson.level,
             duration: secondsToMinuteSecond(duration),
           };
         })

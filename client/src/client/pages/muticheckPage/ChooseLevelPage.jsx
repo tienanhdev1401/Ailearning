@@ -11,6 +11,7 @@ const ChooseLevelPage = () => {
     { icon: "🌱", label: "Intermediate B1" },
     { icon: "🌳", label: "Upper Intermediate B2" },
     { icon: "🌸", label: "Advanced C1" },
+    { icon: "🌟", label: "Proficient C2" }
   ];
 
   // ✅ Lấy lại giá trị level từ sessionStorage nếu có

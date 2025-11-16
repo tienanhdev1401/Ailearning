@@ -29,6 +29,7 @@ import RoadMapPage from "./client/pages/RoadMapPage";
 import DayDetailPage from "./client/pages/DayDetailPage";
 
 import LessonTopicPage from "./client/pages/LessonTopicPage";
+import TopicDetailPage from "./client/pages/LessonTopicDetailPage";
 
 function App() {
   return (
@@ -64,6 +65,15 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/topics/:topic"
+        element={
+          <ProtectedRoute>
+            <ClientLayout><TopicDetailPage/></ClientLayout>
+          </ProtectedRoute>
+        }
+      />
+
 
       <Route
         path="/experience/ai-chat"
