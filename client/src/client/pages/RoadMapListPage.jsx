@@ -6,12 +6,13 @@ import styles from '../styles/RoadmapListPage.module.css';
 const RoadmapListPage = () => {
   const [roadmaps, setRoadmaps] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('Tất cả');
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRoadmaps = async () => {
       try {
-        const res = await api.get("/roadmaps?page=1&limit=10");
+        const res = await api.get('/roadmaps?page=1&limit=20');
         setRoadmaps(res.data.data);
       } catch (error) {
         console.error(error);
@@ -22,99 +23,86 @@ const RoadmapListPage = () => {
     fetchRoadmaps();
   }, []);
 
-  const stats = useMemo(() => {
-    if (!roadmaps.length) {
-      return [
-        { label: 'Tổng lộ trình', value: '—' },
-        { label: 'Tổng số ngày', value: '—' },
-        { label: 'Cấp độ nổi bật', value: '—' },
-      ];
-    }
-
-    const totalDays = roadmaps.reduce(
-      (sum, roadmap) => sum + (roadmap.days?.length || roadmap.totalDays || 0),
-      0
-    );
-    const uniqueLevels = new Set(roadmaps.map((roadmap) => roadmap.levelName || 'Roadmap')).size;
-
-    return [
-      { label: 'Tổng lộ trình', value: roadmaps.length },
-      { label: 'Tổng số ngày', value: totalDays || 'Linh hoạt' },
-      { label: 'Cấp độ nổi bật', value: uniqueLevels },
-    ];
+  const categories = useMemo(() => {
+    const collected = roadmaps
+      .map((roadmap) => roadmap.levelName?.trim())
+      .filter(Boolean);
+    return ['Tất cả', ...Array.from(new Set(collected))];
   }, [roadmaps]);
+
+  const filteredRoadmaps = useMemo(() => {
+    if (activeFilter === 'Tất cả') {
+      return roadmaps;
+    }
+    return roadmaps.filter((roadmap) => roadmap.levelName?.trim() === activeFilter);
+  }, [roadmaps, activeFilter]);
 
   const renderMeta = (roadmap) => {
     const lessons = roadmap.days?.length || roadmap.totalDays || roadmap.lessonsCount || 0;
-    const dayLabel = lessons ? `${lessons} ngày học` : 'Lộ trình linh hoạt';
+    const dayLabel = lessons ? `${lessons} ngày` : 'Linh hoạt';
     const updated = roadmap.updatedAt
       ? new Date(roadmap.updatedAt).toLocaleDateString('vi-VN')
-      : 'Mới cập nhật';
+      : 'Mới';
     return { dayLabel, updated };
   };
 
   return (
     <div className={styles.page}>
-      <section className={styles.hero}>
+      <section className={styles.header}>
         <div>
-          <p className={styles.heroEyebrow}>Lộ trình học tập</p>
-          <h1 className={styles.heroTitle}>Chọn roadmap phù hợp với mục tiêu của bạn</h1>
-          <p className={styles.heroSubtitle}>
-            Mỗi lộ trình được thiết kế theo phong cách “gamified learning”, giúp bạn tiến bộ từng ngày với sự
-            hướng dẫn rõ ràng.
-          </p>
-        </div>
-        <div className={styles.heroStats}>
-          {stats.map((stat) => (
-            <article key={stat.label} className={styles.statCard}>
-              <span className={styles.statValue}>{stat.value}</span>
-              <span className={styles.statLabel}>{stat.label}</span>
-            </article>
-          ))}
+          <h1 className={styles.title}>Chọn lộ trình phù hợp với bạn</h1>
+          <p className={styles.subtitle}>Mỗi lộ trình được thiết kế để giúp bạn luyện tập mỗi ngày.</p>
         </div>
       </section>
 
-      <section className={styles.gridSection}>
+      <section className={styles.categories}>
+        {categories.map((category) => (
+          <button
+            key={category}
+            type="button"
+            className={`${styles.categoryTab} ${activeFilter === category ? styles.categoryTabActive : ''}`}
+            onClick={() => setActiveFilter(category)}
+          >
+            {category}
+          </button>
+        ))}
+      </section>
+
+      <section className={styles.grid}>
         {loading ? (
           <div className={styles.skeletonGrid}>
-            {Array.from({ length: 3 }).map((_, index) => (
+            {Array.from({ length: 6 }).map((_, index) => (
               <div key={`skeleton-${index}`} className={styles.skeletonCard} />
             ))}
           </div>
-        ) : roadmaps.length === 0 ? (
-          <div className={styles.emptyState}>
-            <p>Chưa có lộ trình nào. Quay lại sau nhé!</p>
+        ) : filteredRoadmaps.length === 0 ? (
+          <div className={styles.empty}>
+            <p>Không có lộ trình nào. Thử lựa chọn khác nhé!</p>
           </div>
         ) : (
-          <div className={styles.cardGrid}>
-            {roadmaps.map((roadmap) => {
-              const { dayLabel, updated } = renderMeta(roadmap);
-              return (
-                <button
-                  key={roadmap.id}
-                  type="button"
-                  className={styles.card}
-                  onClick={() => navigate(`/roadmaps/${roadmap.id}/days`)}
-                >
-                  <div className={styles.cardBody}>
-                    <p className={styles.cardEyebrow}>Lộ trình</p>
-                    <h2 className={styles.cardTitle}>{roadmap.levelName || 'Roadmap mới'}</h2>
-                    <p className={styles.cardDescription}>
-                      {roadmap.description || 'Nội dung đang được cập nhật, nhưng bạn có thể bắt đầu khám phá ngay.'}
-                    </p>
-                  </div>
-                  <div className={styles.cardMeta}>
-                    <span>{dayLabel}</span>
-                    <span>{updated}</span>
-                  </div>
-                  <div className={styles.cardActions}>
-                    <span>Khám phá</span>
-                    <span aria-hidden="true">→</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+          filteredRoadmaps.map((roadmap) => {
+            const { dayLabel } = renderMeta(roadmap);
+            return (
+              <button
+                key={roadmap.id}
+                type="button"
+                className={styles.card}
+                onClick={() => navigate(`/roadmaps/${roadmap.id}/days`)}
+              >
+                <div className={styles.cardHeader}>
+                  <h2 className={styles.cardTitle}>{roadmap.displayName || roadmap.title || 'Roadmap'}</h2>
+                  <p className={styles.cardLevel}>{roadmap.levelName || 'Lộ trình'}</p>
+                </div>
+                <p className={styles.cardDescription}>
+                  {roadmap.description || 'Lộ trình học tập được thiết kế cân bằng giữa lý thuyết và thực hành.'}
+                </p>
+                <div className={styles.cardFooter}>
+                  <span className={styles.cardMeta}>{dayLabel}</span>
+                  <span className={styles.cardArrow}>→</span>
+                </div>
+              </button>
+            );
+          })
         )}
       </section>
     </div>
