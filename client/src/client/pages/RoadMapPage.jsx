@@ -248,17 +248,51 @@ const RoadMapPage = () => {
     error: null,
     startTime: Date.now(),
   });
+  const [publicRoadmapCache, setPublicRoadmapCache] = useState(null);
+  const [interactionNotice, setInteractionNotice] = useState('');
+  const noticeTimerRef = useRef(null);
 
   const hydratePublicRoadmap = useCallback(async () => {
+    if (publicRoadmapCache) {
+      setRoadmap(publicRoadmapCache);
+      const cachedDays = publicRoadmapCache?.days || [];
+      const firstCached = cachedDays.slice(0, PAGE_LIMIT);
+      setDays(firstCached);
+      setTotalDays(cachedDays.length);
+      setCurrentPage(1);
+      setHasMorePages(cachedDays.length > PAGE_LIMIT);
+      return;
+    }
     const roadmapRes = await api.get(`/roadmaps/${id}`);
     setRoadmap(roadmapRes.data);
+    setPublicRoadmapCache(roadmapRes.data);
     const fallback = roadmapRes.data?.days || [];
     const firstPage = fallback.slice(0, PAGE_LIMIT);
     setDays(firstPage);
     setTotalDays(fallback.length);
     setCurrentPage(1);
     setHasMorePages(fallback.length > PAGE_LIMIT);
+  }, [id, publicRoadmapCache]);
+
+  const showNotice = useCallback((message) => {
+    if (noticeTimerRef.current) {
+      clearTimeout(noticeTimerRef.current);
+    }
+    setInteractionNotice(message);
+    noticeTimerRef.current = setTimeout(() => {
+      setInteractionNotice('');
+    }, 4000);
+  }, []);
+
+  useEffect(() => {
+    setPublicRoadmapCache(null);
   }, [id]);
+
+  useEffect(() => () => {
+    if (noticeTimerRef.current) {
+      clearTimeout(noticeTimerRef.current);
+    }
+  }, []);
 
   const fetchEnrollmentStatus = useCallback(
     async (resolvedUserId) => {
@@ -329,7 +363,14 @@ const RoadMapPage = () => {
         if (checkRes?.data?.enrolled) {
           setEnrolled(true);
           setRoadmap(checkRes.data.roadmap_enrollement.roadmap);
-          await fetchUserDayStatuses(userId, { page: 1, append: false });
+          try {
+            await fetchUserDayStatuses(userId, { page: 1, append: false });
+          } catch (error) {
+            console.error('Không thể tải tiến trình, fallback sang chế độ preview', error);
+            setEnrolled(false);
+            await hydratePublicRoadmap();
+            showNotice('Không tải được tiến trình, đang hiển thị chế độ xem trước.');
+          }
         } else {
           setEnrolled(false);
           await hydratePublicRoadmap();
@@ -338,6 +379,7 @@ const RoadMapPage = () => {
         console.error(error);
         setEnrolled(false);
         await hydratePublicRoadmap();
+        showNotice('Không thể xác minh đăng ký, đang hiển thị chế độ xem trước.');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -355,6 +397,7 @@ const RoadMapPage = () => {
     hydratePublicRoadmap,
     fetchEnrollmentStatus,
     fetchUserDayStatuses,
+    showNotice,
   ]);
 
   const handleEnroll = async () => {
@@ -383,14 +426,19 @@ const RoadMapPage = () => {
       await fetchUserDayStatuses(userId, { page: currentPage + 1, append: true });
     } catch (error) {
       console.error(error);
+      showNotice('Không thể tải thêm ngày học.');
     } finally {
       setLoadingMore(false);
     }
-  }, [currentPage, fetchUserDayStatuses, hasMorePages, loadingMore, userId]);
+  }, [currentPage, fetchUserDayStatuses, hasMorePages, loadingMore, showNotice, userId]);
 
   const handleNodeClick = useCallback(
     async (day) => {
-      if (!day || !enrolled || !userId) return;
+      if (!day || !userId) return;
+      if (!enrolled) {
+        showNotice('Bạn cần ghi danh để mở hoạt động trong ngày.');
+        return;
+      }
       setSelectedDayId(day.id);
       if (activitiesCache[day.id]) return;
       try {
@@ -399,11 +447,12 @@ const RoadMapPage = () => {
         setActivitiesCache((prev) => ({ ...prev, [day.id]: res.data?.data || [] }));
       } catch (error) {
         console.error(error);
+        showNotice('Không thể tải danh sách hoạt động.');
       } finally {
         setActivityLoading(false);
       }
     },
-    [activitiesCache, enrolled, userId]
+    [activitiesCache, enrolled, showNotice, userId]
   );
 
   const handleLogActivity = useCallback(
@@ -419,9 +468,10 @@ const RoadMapPage = () => {
         }
       } catch (error) {
         console.error('Không ghi được hoạt động', error);
+        showNotice('Không ghi được tiến trình hoạt động.');
       }
     },
-    [refreshCurrentPageDays, userId]
+    [refreshCurrentPageDays, showNotice, userId]
   );
 
   const loadMiniGamesFor = useCallback((dayId, activitiesList, activityIndex) => {
@@ -593,6 +643,10 @@ const RoadMapPage = () => {
         handleLoadMoreDays();
         return;
       }
+      if (!enrolled) {
+        showNotice('Ghi danh để mở khóa hành trình học.');
+        return;
+      }
       const targetDay =
         sourceDays.find((day) => day.id === node.metaId) ||
         sourceDays.find((day) => (day.dayNumber || day.day) === node.day);
@@ -600,7 +654,7 @@ const RoadMapPage = () => {
         handleNodeClick(targetDay);
       }
     },
-    [handleLoadMoreDays, handleNodeClick, sourceDays]
+    [enrolled, handleLoadMoreDays, handleNodeClick, showNotice, sourceDays]
   );
 
   
@@ -651,6 +705,9 @@ const RoadMapPage = () => {
               </div>
               <span className={styles.mapHint}>sẽ để gì đó ở đây như thành tiến trình hay gì đó</span>
             </div>
+            {interactionNotice && (
+              <div className={styles.noticeBanner}>{interactionNotice}</div>
+            )}
             {miniGameView.activity ? (
               <div className={styles.mapColumnHub}>
                 <header className={styles.miniGameHubHeader}>
