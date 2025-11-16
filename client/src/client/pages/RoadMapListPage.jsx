@@ -48,24 +48,41 @@ const RoadmapListPage = () => {
 
   return (
     <div className={styles.page}>
-      <section className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Chọn lộ trình phù hợp với bạn</h1>
-          <p className={styles.subtitle}>Mỗi lộ trình được thiết kế để giúp bạn luyện tập mỗi ngày.</p>
+      <section className={styles.hero}>
+        <div className={styles.heroContent}>
+          <h1 className={styles.heroTitle}>Chọn lộ trình phù hợp với bạn</h1>
+          <p className={styles.heroSubtitle}>Mỗi lộ trình được thiết kế để giúp bạn luyện tập mỗi ngày và đạt được mục tiêu học tập của bạn.</p>
+        </div>
+        <div className={styles.statsContainer}>
+          <div className={styles.statCard}>
+            <div className={styles.statNumber}>{roadmaps.length}</div>
+            <div className={styles.statLabel}>Lộ trình</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statNumber}>{Math.floor(roadmaps.length * 2.5)}</div>
+            <div className={styles.statLabel}>Bài học</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statNumber}>100%</div>
+            <div className={styles.statLabel}>Miễn phí</div>
+          </div>
         </div>
       </section>
 
-      <section className={styles.categories}>
-        {categories.map((category) => (
-          <button
-            key={category}
-            type="button"
-            className={`${styles.categoryTab} ${activeFilter === category ? styles.categoryTabActive : ''}`}
-            onClick={() => setActiveFilter(category)}
-          >
-            {category}
-          </button>
-        ))}
+      <section className={styles.filterSection}>
+        <h2 className={styles.filterTitle}>Lọc theo cấp độ</h2>
+        <div className={styles.categories}>
+          {categories.map((category) => (
+            <button
+              key={category}
+              type="button"
+              className={`${styles.categoryTab} ${activeFilter === category ? styles.categoryTabActive : ''}`}
+              onClick={() => setActiveFilter(category)}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
       </section>
 
       <section className={styles.grid}>
@@ -89,6 +106,7 @@ const RoadmapListPage = () => {
                 className={styles.card}
                 onClick={() => navigate(`/roadmaps/${roadmap.id}/days`)}
               >
+                {roadmap.isNew && <span className={styles.badgeNew}>Mới</span>}
                 <div className={styles.cardHeader}>
                   <h2 className={styles.cardTitle}>{roadmap.displayName || roadmap.title || 'Roadmap'}</h2>
                   <p className={styles.cardLevel}>{roadmap.levelName || 'Lộ trình'}</p>
