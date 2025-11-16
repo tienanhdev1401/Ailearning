@@ -25,6 +25,7 @@ import userconfirmRouter from './routes/userconfirm.routes.js'
 import './config/passport.js'   // chạy file config để đăng ký strategy
 import errorHandlingMiddleware from './middlewares/errorHandling.middleware'
 import { limiter } from './middlewares/ratelimit.middleware'
+import uploadRouter from './routes/upload.routes'
 
 import { swaggerUi, swaggerSpec } from "./config/swagger";
 import { setupSocket } from './socket';
@@ -72,6 +73,7 @@ app.use('/api/minigames', minigameRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/ai-chat", aiChatRouter);
 app.use('/api/confirm', userconfirmRouter);
+app.use('/api/uploads', uploadRouter);
 app.use('/api/roadmap_enrollments',roadmapEnrollementRoutes)
 
 

@@ -27,6 +27,7 @@ import RoadmapListPage from "./client/pages/RoadMapListPage";
 import RoadMapPage from "./client/pages/RoadMapPage";
 
 import DayDetailPage from "./client/pages/DayDetailPage";
+import ProfilePage from "./client/pages/ProfilePage";
 
 import LessonTopicPage from "./client/pages/LessonTopicPage";
 import TopicDetailPage from "./client/pages/LessonTopicDetailPage";
@@ -91,6 +92,16 @@ function App() {
       <Route path="/welcome/topic" element={<ChooseTopicPage />} />
       <Route path="/welcome/proficiency" element={<KnowLevelPage />} />
       <Route path="/welcome/placement" element={<FindLevelPage />} />
+
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ClientLayout><ProfilePage /></ClientLayout>
+          </ProtectedRoute>
+        }
+      />
 
 
       <Route path="/roadmaps" element={
