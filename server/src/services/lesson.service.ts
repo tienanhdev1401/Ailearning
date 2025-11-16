@@ -30,7 +30,8 @@ class LessonService {
           title: dto.title, 
           video_url: dto.video_url, 
           thumbnail_url : dto.thumbnail_url,
-          topic_type: dto.topicType
+          topic_type: dto.topic_type,
+          level: dto.level,
         });
       await queryRunner.manager.save(lesson);
 

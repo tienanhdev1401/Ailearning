@@ -99,13 +99,32 @@ const LessonTopiCPage = () => {
                         🎧 {lesson.views || 0}
                       </span>
                     </div>
-                    <div className="card-body">
+                    <div className="card-body d-flex flex-column" style={{ minHeight: "100px" }}>
                       <h6
-                        className="card-title mb-3"
+                        className="card-title mb-2"
                         style={{ fontSize: "16px", fontWeight: 550, color: "#1a1a2e" }}
                       >
                         {lesson.title}
                       </h6>
+
+                      {/* BADGES dưới đáy */}
+                      <div className="mt-auto d-flex gap-3 flex-wrap">
+                        <span
+                          className="badge rounded-pill bg-light text-dark d-flex align-items-center gap-1"
+                          style={{ padding: "4px 10px", fontSize: "16px", fontWeight: 500 }}
+                        >
+                          Dictation
+                          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: "-1px" }}><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path></svg>
+                        </span>
+
+                        <span
+                          className="badge rounded-pill bg-light text-dark d-flex align-items-center gap-1"
+                          style={{ padding: "4px 10px", fontSize: "16px", fontWeight: 500 }}
+                        >
+                          Shadowing
+                          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: "-1px" }}><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path></svg>
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>

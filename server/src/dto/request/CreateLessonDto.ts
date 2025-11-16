@@ -2,6 +2,7 @@ import { IsString, IsNotEmpty, IsUrl, ValidateNested, IsEnum } from "class-valid
 import { Type } from "class-transformer";
 import { IsSrtFile } from "../../validations/IsSrtFile";
 import { TopicLessonType } from "../../enums/topicLessonType";
+import { LessonLevel } from "../../enums/lessonLevel.enum";
 
 /**
  * @swagger
@@ -64,7 +65,11 @@ export class CreateLessonDto {
 
   @IsEnum(TopicLessonType, { message: "Topic Type không hợp lệ" })
   @IsNotEmpty({ message: "Topic Type không được để trống" })
-  topicType!: TopicLessonType;
+  topic_type!: TopicLessonType;
+
+  @IsEnum(LessonLevel, { message: "Level không hợp lệ" })
+  @IsNotEmpty({ message: "Level không được để trống" })
+  level!: LessonLevel;
 
 
   @ValidateNested()
