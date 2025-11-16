@@ -54,17 +54,27 @@ export class UserProgressService {
       where: { user: { id: userId }, activity: { id: activityId } },
     });
 
+    const normalizedTimeSpent = Number.isFinite(timeSpent) ? Math.max(0, timeSpent) : 0;
+
     if (!progress) {
       progress = userProgressRepository.create({
         user,
         activity,
-        timeSpent,
+        timeSpent: normalizedTimeSpent,
         isCompleted,
         completedAt: isCompleted ? new Date() : null,
       });
     } else {
-      progress.timeSpent = timeSpent;
-      progress.isCompleted = isCompleted;
+      // Cộng dồn thời gian thay vì ghi đè để không mất dữ liệu của những lần học trước
+      progress.timeSpent = (progress.timeSpent || 0) + normalizedTimeSpent;
+
+      // Nếu user đã hoàn thành activity thì không cho phép revert về trạng thái chưa hoàn thành
+      if (isCompleted && !progress.isCompleted) {
+        progress.isCompleted = true;
+      } else if (!progress.isCompleted) {
+        progress.isCompleted = false;
+      }
+
       if (isCompleted && !progress.completedAt) {
         progress.completedAt = new Date();
       }
