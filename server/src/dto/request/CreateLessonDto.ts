@@ -1,6 +1,7 @@
-import { IsString, IsNotEmpty, IsUrl, ValidateNested } from "class-validator";
+import { IsString, IsNotEmpty, IsUrl, ValidateNested, IsEnum } from "class-validator";
 import { Type } from "class-transformer";
 import { IsSrtFile } from "../../validations/IsSrtFile";
+import { TopicLessonType } from "../../enums/topicLessonType";
 
 /**
  * @swagger
@@ -60,6 +61,11 @@ export class CreateLessonDto {
   @IsUrl({}, { message: "Thumbnail URL không hợp lệ" })
   @IsNotEmpty({ message: "Thumbnail URL không được để trống" })
   thumbnail_url!: string;
+
+  @IsEnum(TopicLessonType, { message: "Topic Type không hợp lệ" })
+  @IsNotEmpty({ message: "Topic Type không được để trống" })
+  topicType!: TopicLessonType;
+
 
   @ValidateNested()
   @Type(() => SrtFileDto)

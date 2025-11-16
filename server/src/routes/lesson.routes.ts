@@ -67,6 +67,24 @@ router.get("/", LessonController.getAllLessons);
 
 /**
  * @swagger
+ * /api/lessons/latest-per-type:
+ *   get:
+ *     summary: Lấy 4 bài học mới nhất cho mỗi topic_type
+ *     tags: [Lessons]
+ *     description: API trả về danh sách mỗi topic_type kèm theo 4 bài học mới nhất của loại đó.
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách thành công
+ *       500:
+ *         description: Lỗi server
+ */
+router.get("/latest-per-type", LessonController.getLatestLessonsPerType);
+
+export default router;
+
+
+/**
+ * @swagger
  * /api/lessons/{id}:
  *   get:
  *     summary: Lấy lesson theo id 
@@ -114,4 +132,5 @@ router.get("/:id", LessonController.getLessonById);
 // DELETE /lessons/:id -> lấy lesson theo id
 router.delete("/:id", LessonController.deleteLesson);
 
-export default router;
+
+

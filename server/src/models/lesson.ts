@@ -1,26 +1,30 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { Subtitle } from "./subtitle";
+import { TopicLessonType } from "../enums/topicLessonType"; 
 
 @Entity({ name: "lessons" })
 export class Lesson {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column()
+  @Column({ type: "nvarchar", length: 255, nullable: false })
   title!: string;
 
-  @Column()
+  @Column({ type: "varchar", length: 500, nullable: false })
   video_url!: string;
 
-  @Column()
+  @Column({ type: "varchar", length: 500, nullable: false })
   thumbnail_url!: string;
+
+  @Column({ type: "nvarchar", length: 100, nullable: false })
+  topic_type!: TopicLessonType;
 
   @OneToMany(() => Subtitle, (subtitle) => subtitle.lesson, { cascade: true })
   subtitles!: Subtitle[];
 
   @CreateDateColumn()
   startedAt!: Date;
-    
+
   @UpdateDateColumn()
   updatedAt!: Date;
 }

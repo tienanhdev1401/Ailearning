@@ -168,7 +168,7 @@ const LessonTopiCPage = () => {
                     </span>
 
                     <div className="position-absolute bottom-0 start-0 m-2 d-flex gap-2">
-                      <span className="badge bg-danger">{clip.source}</span>
+                      <span className="badge bg-danger">Youtube</span>
                       <span className="badge bg-dark">{clip.duration}</span>
                     </div>
 
