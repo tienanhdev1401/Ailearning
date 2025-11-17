@@ -70,11 +70,13 @@ class RoadmapController {
     try {
       const userId = Number(req.params.userId);
       const roadmapId = Number(req.params.roadmapId);
+      const page = parseInt(req.query.page as string, 10) || 1;
+      const limit = parseInt(req.query.limit as string, 10) || 10;
 
       if (isNaN(userId) || isNaN(roadmapId)) {
         throw new ApiError(HttpStatusCode.BadRequest,"userId hoặc roadmapId không hợp lệ" );
       }
-      const result = await RoadmapService.getUserRoadmapDayStatuses(userId, roadmapId);
+      const result = await RoadmapService.getUserRoadmapDayStatuses(userId, roadmapId, page, limit);
       return res.status(HttpStatusCode.Ok).json(result);
     } catch (error) {
       next(error)

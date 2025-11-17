@@ -7,6 +7,7 @@ import { CreateUserDto } from "../dto/request/CreateUserDTO";
 import { UpdateUserDto } from "../dto/request/UpdateUserDTO";
 import RoadmapController from "../controllers/roadmap.controller";
 import { UserProgressController } from "../controllers/userProgress.controller";
+import { RoadmapEnrollmentController } from "../controllers/roadmapEnrollment.controller";
 
 const router = express.Router();
 
@@ -196,6 +197,12 @@ router.post("/reset-password", UserController.resetPassword);
 router.get(
   "/:userId/roadmaps/:roadmapId/days",
   RoadmapController.getRoadmapDayStatuses
+);
+
+// Kiểm tra user đã enroll roadmap chưa (phục vụ client)
+router.get(
+  "/:userId/roadmaps/:roadmapId/enrollment",
+  RoadmapEnrollmentController.checkEnroll
 );
 
 // Lưu tiến trình activity (rời page hoặc Next)
