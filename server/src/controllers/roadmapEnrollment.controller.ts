@@ -47,13 +47,13 @@ export class RoadmapEnrollmentController {
       res.status(error.statusCode || 500).json({ message: error.message });
     }
   }
-  static async checkEnroll(req: Request, res: Response) {
+  static async checkEnroll(req: Request, res: Response, next: NextFunction) {
     try {
       const { userId, roadmapId } = req.params;
       const result = await RoadmapEnrollmentService.checkEnroll(Number(userId), Number(roadmapId));
       res.status(200).json(result);
-    } catch (error: any) {
-      res.status(500).json({ message: "Internal server error" });
+    } catch (error) {
+      next(error);
     }
   }
 }

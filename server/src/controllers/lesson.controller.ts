@@ -2,11 +2,13 @@ import { HttpStatusCode } from "axios";
 import LessonService from "../services/lesson.service";
 import ApiError from "../utils/ApiError";
 import { Request, Response, NextFunction } from "express";
+import { CreateLessonDto } from "../dto/request/CreateLessonDto";
+import { plainToInstance } from "class-transformer";
 
 class LessonController {
   static async createLesson(req: Request & { file?: any }, res: Response, next: NextFunction) {
     try {
-      const { title, video_url, thumbnail_url } = req.body;
+      const createLessonDto = plainToInstance(CreateLessonDto, req.body);
       const file = req.file;
 
       if (!file) {
@@ -14,9 +16,7 @@ class LessonController {
       }
 
       const result = await LessonService.createLesson({
-        title,
-        video_url,
-        thumbnail_url,
+        ...createLessonDto,
         srtPath: file.path,
       });
 
@@ -27,13 +27,46 @@ class LessonController {
   }
 
   static async getAllLessons(req: Request, res: Response, next: NextFunction) {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    const search = (req.query.search as string) || undefined;
+    const topic_type = (req.query.topic_type as string) || undefined;
+    const level = (req.query.level as string) || undefined;
+
+    const sort = (req.query.sort as string) as
+      | "latest"
+      | "oldest"
+      | "views"
+      | "least_views"
+      | "longest"
+      | "shortest" || "latest";
+
+    const lessons = await LessonService.getAllLessons(
+      page,
+      limit,
+      search,
+      topic_type,
+      level,
+      sort
+    );
+
+    return res.status(HttpStatusCode.Ok).json(lessons);
+  } catch (error) {
+    next(error);
+  }
+}
+
+  static async getLatestLessonsPerType(req: Request, res: Response, next: NextFunction) {
     try {
-      const lessons = await LessonService.getAllLessons();
+      const lessons = await LessonService.getLatestLessonsPerType();
       res.status(HttpStatusCode.Ok).json(lessons);
     } catch (error) {
       next(error);
     }
   }
+
 
   static async getLessonById(req: Request, res: Response, next: NextFunction) {
     try {
