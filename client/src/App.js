@@ -53,9 +53,24 @@ function App() {
       />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      
+      <Route
+        path="/video/:lessonId"
+        element={
+          <ProtectedRoute>
+            <ClientLayout><VideoPraticePage /></ClientLayout>
+          </ProtectedRoute>
+        }
+      />
 
-      <Route path="/video" element={<VideoPraticePage />} />
-      <Route path="/speak" element={<SpeakingVideoPraticePage />} />
+      <Route
+        path="/speak/:lessonId"
+        element={
+          <ProtectedRoute>
+            <ClientLayout><SpeakingVideoPraticePage /></ClientLayout>
+          </ProtectedRoute>
+        }
+      />
 
 
       <Route

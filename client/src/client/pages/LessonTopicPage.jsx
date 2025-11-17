@@ -3,10 +3,12 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import api from "../../api/api";
 import { useNavigate } from "react-router-dom";
 import lessonTopicEnum from "../../enums/lessonTopic.enum";
+import DictationShadowingPopUpModal from "../components/DictationShadowingPopUpModal";
 
 const LessonTopiCPage = () => {
   const [topicsData, setTopicsData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [selectedLesson, setSelectedLesson] = useState(null);
   const navigate = useNavigate();
 
   // Lấy danh sách slug (key) và tên thật
@@ -80,7 +82,10 @@ const LessonTopiCPage = () => {
             <div className="row g-3">
               {lessons.map((lesson) => (
                 <div key={lesson.id} className="col-12 col-md-6 col-lg-3">
-                  <div className="card h-100 shadow-sm position-relative">
+                  <div className="card h-100 shadow-sm position-relative"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => setSelectedLesson(lesson)}
+                  >
                     <div className="position-relative">
                       <img
                         src={lesson.thumbnail_url}
@@ -133,6 +138,12 @@ const LessonTopiCPage = () => {
           </div>
         ))}
       </div>
+
+      {/* POPUP COMPONENT */}
+      <DictationShadowingPopUpModal
+        lesson={selectedLesson}
+        onClose={() => setSelectedLesson(null)}
+      />
     </div>
   );
 };
