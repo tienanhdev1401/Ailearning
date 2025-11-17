@@ -29,6 +29,9 @@ import RoadMapPage from "./client/pages/RoadMapPage";
 import DayDetailPage from "./client/pages/DayDetailPage";
 import ProfilePage from "./client/pages/ProfilePage";
 
+import LessonTopicPage from "./client/pages/LessonTopicPage";
+import TopicDetailPage from "./client/pages/LessonTopicDetailPage";
+
 function App() {
   return (
     <Routes>
@@ -50,9 +53,43 @@ function App() {
       />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      
+      <Route
+        path="/video/:lessonId"
+        element={
+          <ProtectedRoute>
+            <ClientLayout><VideoPraticePage /></ClientLayout>
+          </ProtectedRoute>
+        }
+      />
 
-      <Route path="/video" element={<VideoPraticePage />} />
-      <Route path="/speak" element={<SpeakingVideoPraticePage />} />
+      <Route
+        path="/speak/:lessonId"
+        element={
+          <ProtectedRoute>
+            <ClientLayout><SpeakingVideoPraticePage /></ClientLayout>
+          </ProtectedRoute>
+        }
+      />
+
+
+      <Route
+        path="/topics"
+        element={
+          <ProtectedRoute>
+            <ClientLayout><LessonTopicPage /></ClientLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/topics/:topic"
+        element={
+          <ProtectedRoute>
+            <ClientLayout><TopicDetailPage/></ClientLayout>
+          </ProtectedRoute>
+        }
+      />
+
 
       <Route
         path="/experience/ai-chat"

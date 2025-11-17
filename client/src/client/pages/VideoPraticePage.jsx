@@ -2,11 +2,14 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import api from '../../api/api';
-
+import { useParams } from "react-router-dom";
 import successSound from "../sounds/success.mp3";
 
 
 export default function VideoPraticePage() {
+  // Lay lessonId từ URL param
+  const { lessonId } = useParams();
+
   const [lesson, setLesson] = useState(null);
   const [words, setWords] = useState([]);
   const [revealed, setRevealed] = useState([]);
@@ -164,7 +167,7 @@ export default function VideoPraticePage() {
         setLoading(true);
 
         // Fetch lesson with subtitles from database
-        const lessonRes = await api.get('/lessons/1');
+        const lessonRes = await api.get(`/lessons/${lessonId}`);
         const lessonData = lessonRes.data.lesson;
 
         // Convert database subtitles to the format expected by current UI
@@ -199,7 +202,7 @@ export default function VideoPraticePage() {
       }
     }
     fetchLessonData();
-  }, []);
+  }, [lessonId]);
 
   useEffect(() => {
   if (lesson && lesson.subtitles.length > 0) {
