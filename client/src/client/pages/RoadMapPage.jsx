@@ -9,8 +9,72 @@ import useCurrentUser from '../hooks/useCurrentUser';
 
 const classNames = (...parts) => parts.filter(Boolean).join(' ');
 
-const ActivityDrawer = ({ day, activities, loading, onClose, onLogActivity, onLaunchMiniGame }) => {
-  const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
+const deriveActivityMeta = (activities = []) => {
+  const total = activities.length;
+  const completedCount = activities.filter((activity) => activity?.isCompleted).length;
+  const progressPercent = total ? Math.round((completedCount / total) * 100) : 0;
+  const firstActionableIndex = activities.findIndex(
+    (activity) => activity?.isUnlocked && !activity?.isCompleted
+  );
+  const initialIndex = firstActionableIndex >= 0 ? firstActionableIndex : Math.max(total - 1, 0);
+  return { completedCount, progressPercent, initialIndex };
+};
+
+const decorateActivitiesWithProgress = (activities = [], progressList = []) => {
+  const progressMap = new Map();
+  progressList.forEach((progress) => {
+    const activityId = progress?.activity?.id || progress?.activityId;
+    if (activityId) {
+      progressMap.set(activityId, progress);
+    }
+  });
+
+  let allPreviousCompleted = true;
+  const list = activities.map((activity, index) => {
+    const progress = progressMap.get(activity.id);
+    const isCompleted = Boolean(progress?.isCompleted);
+    const isInProgress = Boolean(progress && !progress.isCompleted && progress.timeSpent > 0);
+    const isUnlocked = isCompleted ? true : allPreviousCompleted;
+    const status = isCompleted
+      ? 'completed'
+      : isUnlocked
+      ? (isInProgress ? 'in_progress' : 'available')
+      : 'locked';
+
+    if (!isCompleted) {
+      allPreviousCompleted = false;
+    }
+
+    return {
+      ...activity,
+      isCompleted,
+      isInProgress,
+      isUnlocked,
+      status,
+      progressMeta: progress || null,
+      timeSpent: progress?.timeSpent || 0,
+      completedAt: progress?.completedAt || null,
+    };
+  });
+
+  return {
+    list,
+    ...deriveActivityMeta(list),
+  };
+};
+
+const ActivityDrawer = ({
+  day,
+  activities,
+  loading,
+  onClose,
+  onLogActivity,
+  onLaunchMiniGame,
+  initialIndex = 0,
+  progressPercentOverride,
+  completedCountOverride,
+}) => {
+  const [currentActivityIndex, setCurrentActivityIndex] = useState(initialIndex);
   const [stage, setStage] = useState('content');
   const [miniGames, setMiniGames] = useState([]);
   const [miniGameIndex, setMiniGameIndex] = useState(-1);
@@ -22,25 +86,38 @@ const ActivityDrawer = ({ day, activities, loading, onClose, onLogActivity, onLa
       const timeSpent = Math.max(5, Math.round((Date.now() - timerRef.current) / 1000));
       timerRef.current = Date.now();
       try {
-        await onLogActivity(activityId, timeSpent, isCompleted);
+        await onLogActivity({
+          activityId,
+          dayId: day?.id || null,
+          timeSpent,
+          isCompleted,
+        });
       } catch (error) {
         console.error('Không thể ghi hoạt động', error);
       }
     },
-    [onLogActivity]
+    [day?.id, onLogActivity]
   );
 
   useEffect(() => {
     if (!day) return;
-    setCurrentActivityIndex(0);
+    setCurrentActivityIndex(initialIndex);
     setStage('content');
     timerRef.current = Date.now();
-  }, [day, activities.length]);
+  }, [day, activities.length, initialIndex]);
 
   const currentActivity = activities[currentActivityIndex] || null;
   const isLastActivity = currentActivityIndex === activities.length - 1;
-  const completedActivities = Math.min(currentActivityIndex, activities.length);
-  const progressPercent = activities.length ? Math.round((completedActivities / activities.length) * 100) : 0;
+  const completedActivities =
+    typeof completedCountOverride === 'number'
+      ? completedCountOverride
+      : activities.filter((activity) => activity?.isCompleted).length;
+  const progressPercent =
+    typeof progressPercentOverride === 'number'
+      ? progressPercentOverride
+      : activities.length
+      ? Math.round((completedActivities / activities.length) * 100)
+      : 0;
   const nextActivityTitle = currentActivity?.title || currentActivity?.name || 'Hoạt động tiếp theo';
 
   const completeActivity = useCallback(async () => {
@@ -66,7 +143,7 @@ const ActivityDrawer = ({ day, activities, loading, onClose, onLogActivity, onLa
   }, [completeActivity, miniGameIndex, miniGames.length]);
 
   const handleAdvance = async () => {
-    if (!currentActivity) return;
+    if (!currentActivity || (!currentActivity.isUnlocked && !currentActivity.isCompleted)) return;
     if (stage === 'content') {
       setStage('minigame');
       timerRef.current = Date.now();
@@ -116,22 +193,29 @@ const ActivityDrawer = ({ day, activities, loading, onClose, onLogActivity, onLa
     }
   }, [fetchMiniGames, stage]);
 
-  const activityStatus = (index) => {
-    if (index < currentActivityIndex) return 'completed';
+  const activityStatus = (activity, index) => {
+    if (activity?.isCompleted) return 'completed';
+    if (!activity?.isUnlocked) return 'locked';
     if (index === currentActivityIndex) return stage === 'minigame' ? 'playing' : 'ready';
-    return 'locked';
+    if (activity?.isInProgress) return 'ready';
+    return 'ready';
   };
 
-  const statusLabel = (index) => {
-    const status = activityStatus(index);
+  const statusLabel = (activity, index) => {
+    const status = activityStatus(activity, index);
     if (status === 'completed') return 'Đã hoàn thành';
-    if (status === 'playing') return 'Đang làm riêng';
-    if (status === 'ready') return 'Sắp làm';
+    if (status === 'playing') return 'Đang chơi';
+    if (status === 'ready') {
+      if (activity?.isInProgress) return 'Đang dở';
+      return 'Sẵn sàng';
+    }
     return 'Khóa';
   };
 
   const handleSelectActivity = (index) => {
-    if (index > currentActivityIndex) return;
+    const target = activities[index];
+    if (!target) return;
+    if (!target.isUnlocked && !target.isCompleted) return;
     setCurrentActivityIndex(index);
     if (index === currentActivityIndex) return;
     setStage('content');
@@ -144,7 +228,7 @@ const ActivityDrawer = ({ day, activities, loading, onClose, onLogActivity, onLa
         <header className={styles.popupHeader}>
           <div>
             <p className={styles.popupTag}>Day {day?.dayNumber || '--'} · {activities.length} nhiệm vụ</p>
-            <h3 className={styles.popupTitle}>Game hóa hành trình học tập</h3>
+            <h3 className={styles.popupTitle}>{day?.description || '--'}</h3>
             <p className={styles.popupSubtitle}>Hoàn thành từng hoạt động, ghi điểm mini game và mở thưởng cuối ngày theo thứ tự.</p>
           </div>
           <button className={styles.closeBtn} onClick={handleClose} aria-label="Đóng popup">
@@ -164,7 +248,6 @@ const ActivityDrawer = ({ day, activities, loading, onClose, onLogActivity, onLa
                   Đã hoàn thành <strong>{completedActivities}</strong> / {activities.length} nhiệm vụ.
                 </p>
                 <p className={styles.summaryHint}>Tiếp theo: {nextActivityTitle}</p>
-                <p className={styles.summaryHint}>Tích điểm sáng tạo để mở kho quà uuu hết nào!</p>
               </div>
             </section>
 
@@ -180,7 +263,7 @@ const ActivityDrawer = ({ day, activities, loading, onClose, onLogActivity, onLa
                     type="button"
                     className={classNames(
                       styles.activityItem,
-                      styles[`activityStatus_${activityStatus(index)}`]
+                      styles[`activityStatus_${activityStatus(activity, index)}`]
                     )}
                     onClick={() => handleSelectActivity(index)}
                   >
@@ -190,8 +273,8 @@ const ActivityDrawer = ({ day, activities, loading, onClose, onLogActivity, onLa
                         {activity.type || 'Nội dung'} · {activity.duration || '—'} phút
                       </p>
                     </div>
-                    <span className={styles.activityStatusBadge} data-status={activityStatus(index)}>
-                      {statusLabel(index)}
+                    <span className={styles.activityStatusBadge} data-status={activityStatus(activity, index)}>
+                      {statusLabel(activity, index)}
                     </span>
                   </button>
                 ))}
@@ -202,7 +285,7 @@ const ActivityDrawer = ({ day, activities, loading, onClose, onLogActivity, onLa
             <div className={styles.popupActions}>
               <button className={styles.primaryBtn} type="button" onClick={handleAdvance}>
                 {stage === 'content'
-                  ? 'Làm bài mini game'
+                  ? 'Bắt đầu ngay'
                   : stage === 'minigame'
                   ? 'Hoàn thành mini game'
                   : 'Hoàn thành ngày'}
@@ -432,6 +515,50 @@ const RoadMapPage = () => {
     }
   }, [currentPage, fetchUserDayStatuses, hasMorePages, loadingMore, showNotice, userId]);
 
+  const fetchActivitiesWithProgress = useCallback(
+    async (dayId) => {
+      if (!dayId || !userId) return null;
+      const [activitiesRes, progressRes] = await Promise.all([
+        api.get(`/days/${dayId}/activities`),
+        api.get(`/users/${userId}/days/${dayId}/progress`),
+      ]);
+      const activitiesPayloadRaw = activitiesRes.data;
+      const activitiesPayload = Array.isArray(activitiesPayloadRaw?.data)
+        ? activitiesPayloadRaw.data
+        : Array.isArray(activitiesPayloadRaw)
+        ? activitiesPayloadRaw
+        : [];
+      const progressPayload = Array.isArray(progressRes.data) ? progressRes.data : [];
+      return decorateActivitiesWithProgress(activitiesPayload, progressPayload);
+    },
+    [userId]
+  );
+
+  const refreshActivitiesForDay = useCallback(
+    async (dayId, { silent = false } = {}) => {
+      if (!dayId || !userId) return;
+      if (!silent) setActivityLoading(true);
+      try {
+        const decorated = await fetchActivitiesWithProgress(dayId);
+        if (decorated) {
+          setActivitiesCache((prev) => ({
+            ...prev,
+            [dayId]: {
+              ...decorated,
+              lastFetched: Date.now(),
+            },
+          }));
+        }
+      } catch (error) {
+        console.error(error);
+        showNotice('Không thể tải danh sách hoạt động.');
+      } finally {
+        if (!silent) setActivityLoading(false);
+      }
+    },
+    [fetchActivitiesWithProgress, showNotice, userId]
+  );
+
   const handleNodeClick = useCallback(
     async (day) => {
       if (!day || !userId) return;
@@ -441,28 +568,22 @@ const RoadMapPage = () => {
       }
       setSelectedDayId(day.id);
       if (activitiesCache[day.id]) return;
-      try {
-        setActivityLoading(true);
-        const res = await api.get(`/days/${day.id}/activities`);
-        setActivitiesCache((prev) => ({ ...prev, [day.id]: res.data?.data || [] }));
-      } catch (error) {
-        console.error(error);
-        showNotice('Không thể tải danh sách hoạt động.');
-      } finally {
-        setActivityLoading(false);
-      }
+      await refreshActivitiesForDay(day.id);
     },
-    [activitiesCache, enrolled, showNotice, userId]
+    [activitiesCache, enrolled, refreshActivitiesForDay, showNotice, userId]
   );
 
   const handleLogActivity = useCallback(
-    async (activityId, timeSpent, isCompleted) => {
+    async ({ activityId, dayId, timeSpent, isCompleted }) => {
       if (!activityId || !userId) return;
       try {
         await api.put(`/users/${userId}/activities/${activityId}`, {
           timeSpent,
           isCompleted,
         });
+        if (dayId) {
+          refreshActivitiesForDay(dayId, { silent: true });
+        }
         if (isCompleted) {
           refreshCurrentPageDays();
         }
@@ -471,7 +592,7 @@ const RoadMapPage = () => {
         showNotice('Không ghi được tiến trình hoạt động.');
       }
     },
-    [refreshCurrentPageDays, showNotice, userId]
+    [refreshActivitiesForDay, refreshCurrentPageDays, showNotice, userId]
   );
 
   const loadMiniGamesFor = useCallback((dayId, activitiesList, activityIndex) => {
@@ -536,7 +657,12 @@ const RoadMapPage = () => {
   const completeMiniGameActivity = useCallback(async () => {
     if (!miniGameView.activity) return;
     const timeSpent = Math.max(5, Math.round((Date.now() - miniGameView.startTime) / 1000));
-    await handleLogActivity(miniGameView.activity.id, timeSpent, true);
+    await handleLogActivity({
+      activityId: miniGameView.activity.id,
+      dayId: miniGameView.dayId,
+      timeSpent,
+      isCompleted: true,
+    });
     const isLastActivity = miniGameView.activityIndex >= miniGameView.activities.length - 1;
     if (isLastActivity) {
       closeMiniGameView();
@@ -566,7 +692,11 @@ const RoadMapPage = () => {
   }, [days, roadmap, enrolled]);
 
   const selectedDay = useMemo(() => sourceDays.find((d) => d.id === selectedDayId) || null, [selectedDayId, sourceDays]);
-  const drawerActivities = selectedDayId ? activitiesCache[selectedDayId] || [] : [];
+  const drawerRecord = selectedDayId ? activitiesCache[selectedDayId] : null;
+  const drawerActivities = drawerRecord?.list || [];
+  const drawerInitialIndex = drawerRecord?.initialIndex ?? 0;
+  const drawerProgressPercent = drawerRecord?.progressPercent;
+  const drawerCompletedCount = drawerRecord?.completedCount;
 
   const { totalCount, completedCount, inProgressCount } = useMemo(() => {
     const total = totalDays || sourceDays.length;
@@ -809,6 +939,9 @@ const RoadMapPage = () => {
           onClose={() => setSelectedDayId(null)}
           onLogActivity={handleLogActivity}
           onLaunchMiniGame={handleLaunchMiniGame}
+          initialIndex={drawerInitialIndex}
+          progressPercentOverride={drawerProgressPercent}
+          completedCountOverride={drawerCompletedCount}
         />
       )}
     </div>
