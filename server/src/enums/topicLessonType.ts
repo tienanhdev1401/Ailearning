@@ -1,0 +1,21 @@
+export enum TopicLessonType {
+  Movie = "Movie short clip",
+  DailyEnglish = "Daily English Conversation",
+  LearningResources = "Learning resources",
+  Listening = "Listening Time (Shadowing)",
+  IELTS = "IELTS Listening",
+  USUKSongs = "US UK songs",
+  TOEIC = "TOEIC Listening",
+  Entertainment = "Entertainment",
+  BBC = "BBC learning english",
+  VOA = "VOA Learning English",
+  Toefl = "Toefl Listening",
+  Science = "Science and Facts",
+  FairyTales = "Fairy Tales",
+  IPA = "IPA",
+  News = "News",
+  VietnamToday = "Vietnam Today",
+  TravelVlog = "Travel vlog",
+  Animals = "Animals and wildlife",
+  Business = "Business English"
+}

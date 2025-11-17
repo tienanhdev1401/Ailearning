@@ -6,7 +6,7 @@ import { HttpStatusCode } from "axios";
 // Rate limit chung cho toàn bộ app
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút detect spam
-  max: 100, // mỗi IP tối đa 100 request
+  max: 1000, // mỗi IP tối đa 1000 request
   message: "Bạn đã gửi quá nhiều request, vui lòng thử lại sau 15 phút",
 });
 
