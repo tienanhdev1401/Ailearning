@@ -1,15 +1,14 @@
 import React, { useState } from "react";
-import { Button, Row, Col, Card, Alert } from "react-bootstrap";
+import styles from "../../styles/MiniGameMatchImageWord.module.css";
 
 const MiniGameMatchImageWord = ({ data, onNext }) => {
-  // Lưu state cho ảnh đã chọn và từ đã chọn
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedWord, setSelectedWord] = useState("");
-  const [completedPairs, setCompletedPairs] = useState([]); // lưu id ảnh đã match
-  const [feedback, setFeedback] = useState(null); // null | true | false
+  const [completedPairs, setCompletedPairs] = useState([]);
+  const [feedback, setFeedback] = useState(null);
 
   const handleSelectImage = (img) => {
-    if (completedPairs.includes(img.id)) return; // đã hoàn thành
+    if (completedPairs.includes(img.id)) return;
     setSelectedImage(img);
     setFeedback(null);
   };
@@ -27,69 +26,89 @@ const MiniGameMatchImageWord = ({ data, onNext }) => {
 
     setSelectedImage(null);
     setSelectedWord("");
+
+    setTimeout(() => setFeedback(null), 1500);
   };
 
   const allCompleted = completedPairs.length === data.resources.images.length;
+  const progress = Math.round((completedPairs.length / data.resources.images.length) * 100);
 
   return (
-    <div className="container mt-4">
-      <h3 className="text-center fw-bold mb-3">{data.prompt}</h3>
+    <div className={styles.gameContainer}>
+      <div className={styles.gameHeader}>
+        <h2 className={styles.prompt}>{data.prompt}</h2>
+        <div className={styles.progressBar}>
+          <div className={styles.progressFill} style={{ width: `${progress}%` }}></div>
+        </div>
+        <span className={styles.progressText}>{completedPairs.length} / {data.resources.images.length}</span>
+      </div>
 
-      {feedback === true && <Alert variant="success">🎉 Chính xác!</Alert>}
-      {feedback === false && <Alert variant="danger">❌ Sai rồi, thử lại!</Alert>}
+      {feedback !== null && (
+        <div className={`${styles.feedbackOverlay} ${feedback ? styles.feedbackSuccess : styles.feedbackError}`}>
+          <div className={styles.feedbackContent}>
+            {feedback ? (
+              <>
+                <span className={styles.feedbackIcon}>🎉</span>
+                <span className={styles.feedbackText}>Chính xác!</span>
+              </>
+            ) : (
+              <>
+                <span className={styles.feedbackIcon}>❌</span>
+                <span className={styles.feedbackText}>Thử lại!</span>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
-      <Row className="g-3 justify-content-center mt-3">
+      <div className={styles.imagesGrid}>
         {data.resources.images.map((img) => (
-          <Col xs={12} md={6} lg={4} key={img.id}>
-            <Card
-              className={`h-100 shadow-sm ${
-                completedPairs.includes(img.id) ? "border-success" : ""
-              } ${selectedImage?.id === img.id ? "border-primary" : ""}`}
-              onClick={() => handleSelectImage(img)}
-              style={{ cursor: "pointer", transition: "transform 0.2s" }}
-            >
-              <Card.Img
-                variant="top"
-                src={img.imageUrl}
-                style={{ height: "200px", objectFit: "cover" }}
-              />
-              <Card.Body className="d-flex justify-content-center">
-                {completedPairs.includes(img.id) ? (
-                  <small className="text-success">✔ Đã hoàn thành</small>
-                ) : (
-                  <small className="text-muted">Nhấn để chọn ảnh</small>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
-      <div className="d-flex justify-content-center flex-wrap gap-2 mt-4">
-        {data.resources.images.map((img) => (
-          <Button
-            key={img.correctWord}
-            variant={
-              completedPairs.includes(img.id)
-                ? "success"
-                : selectedWord === img.correctWord
-                ? "primary"
-                : "outline-primary"
-            }
-            size="lg"
-            onClick={() => handleSelectWord(img.correctWord)}
-            disabled={completedPairs.includes(img.id)}
+          <div
+            key={img.id}
+            className={`${styles.imageCard} ${
+              completedPairs.includes(img.id) ? styles.completed : ""
+            } ${selectedImage?.id === img.id ? styles.selected : ""}`}
+            onClick={() => handleSelectImage(img)}
           >
-            {img.correctWord}
-          </Button>
+            <div className={styles.imageWrapper}>
+              <img
+                src={img.imageUrl}
+                alt={img.correctWord}
+                className={styles.image}
+              />
+              {completedPairs.includes(img.id) && (
+                <div className={styles.completedBadge}>✔</div>
+              )}
+            </div>
+          </div>
         ))}
       </div>
 
+      <div className={styles.wordsContainer}>
+        <div className={styles.wordsGrid}>
+          {data.resources.images.map((img) => (
+            <button
+              key={img.correctWord}
+              className={`${styles.wordButton} ${
+                completedPairs.includes(img.id) ? styles.wordCompleted : ""
+              } ${selectedWord === img.correctWord ? styles.wordSelected : ""}`}
+              onClick={() => handleSelectWord(img.correctWord)}
+              disabled={completedPairs.includes(img.id)}
+            >
+              {img.correctWord}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {allCompleted && (
-        <div className="text-center mt-4">
-          <Button onClick={onNext} variant="success" size="lg">
+        <div className={styles.completionContainer}>
+          <div className={styles.completionMessage}>
+            <h3 className={styles.completionText}>Hoàn thành xuất sắc!</h3>
+          </div>
+          <button onClick={onNext} className={styles.nextButton}>
             Tiếp theo 🎯
-          </Button>
+          </button>
         </div>
       )}
     </div>
