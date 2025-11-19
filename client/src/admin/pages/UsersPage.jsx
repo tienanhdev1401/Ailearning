@@ -1,0 +1,921 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import Chart from 'react-apexcharts';
+import userService from '../../services/userService';
+import {
+  ACTIVE_RATE_SERIES,
+  INITIAL_USERS,
+  RECENT_USER_ACTIVITIES,
+  SYSTEM_ALERTS,
+  USER_GROWTH_CATEGORIES,
+  USER_GROWTH_SERIES
+} from '../data/users';
+
+const ROLE_LABELS = {
+  admin: 'Quản trị viên',
+  moderator: 'Moderator',
+  user: 'Học viên',
+  staff: 'Nhân viên',
+  guest: 'Khách'
+};
+
+const STATUS_LABELS = {
+  active: 'Hoạt động',
+  pending: 'Chờ duyệt',
+  inactive: 'Ngưng'
+};
+
+const STATUS_VARIANTS = {
+  active: 'bg-success',
+  pending: 'bg-warning text-dark',
+  inactive: 'bg-secondary'
+};
+
+const STATUS_OPTIONS = [
+  { value: 'all', label: 'Tất cả trạng thái' },
+  { value: 'active', label: 'Hoạt động' },
+  { value: 'pending', label: 'Chờ duyệt' },
+  { value: 'inactive', label: 'Ngưng' }
+];
+
+const ROLE_OPTIONS = [
+  { value: 'all', label: 'Tất cả vai trò' },
+  { value: 'admin', label: 'Quản trị viên' },
+  { value: 'staff', label: 'Nhân viên' },
+  { value: 'moderator', label: 'Moderator' },
+  { value: 'user', label: 'Học viên' },
+  { value: 'guest', label: 'Khách' }
+];
+
+const ITEMS_PER_PAGE_OPTIONS = [5, 10, 25];
+
+const emptyForm = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  role: 'user',
+  status: 'active',
+  phone: ''
+};
+
+const mapServerStatus = (status) => {
+  switch ((status || '').toUpperCase()) {
+    case 'VERIFIED':
+      return 'active';
+    case 'UNVERIFIED':
+    case 'PENDING':
+      return 'pending';
+    case 'SUSPENDED':
+      return 'inactive';
+    default:
+      return 'active';
+  }
+};
+
+const formatDate = (value) => {
+  if (!value) return 'Chưa cập nhật';
+  try {
+    return new Intl.DateTimeFormat('vi-VN').format(new Date(value));
+  } catch {
+    return 'Chưa cập nhật';
+  }
+};
+
+const formatDateTime = (value) => {
+  if (!value) return 'Chưa cập nhật';
+  try {
+    return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+  } catch {
+    return 'Chưa cập nhật';
+  }
+};
+
+const seededInitialUsers = INITIAL_USERS.map(user => ({ ...user, joinedAt: user.joinDate }));
+
+const normalizeServerUser = (user) => ({
+  id: user.id,
+  name: user.name || 'Chưa rõ tên',
+  email: user.email || 'Chưa có email',
+  role: user.role || 'user',
+  status: mapServerStatus(user.status),
+  lastActive: formatDateTime(user.updatedAt || user.startedAt || user.createdAt),
+  joinedAt: user.startedAt || user.createdAt || new Date().toISOString(),
+  avatar: user.avatarUrl || '/assets/images/avatar-placeholder.svg',
+  phone: user.phone || '—',
+  department: user.department || 'Đang cập nhật'
+});
+
+const UsersPage = () => {
+  const [users, setUsers] = useState(seededInitialUsers);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [sortField, setSortField] = useState('name');
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [modalState, setModalState] = useState({ type: null, payload: null });
+
+  const loadUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await userService.getAllUsers();
+      const normalized = Array.isArray(data) ? data.map(normalizeServerUser) : [];
+      setUsers(normalized.length ? normalized : []);
+      setError(null);
+    } catch (fetchError) {
+      setError(fetchError.message || 'Không thể tải danh sách người dùng');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchUsers = async () => {
+      if (cancelled) return;
+      await loadUsers();
+    };
+    fetchUsers();
+    return () => {
+      cancelled = true;
+    };
+  }, [loadUsers]);
+
+  const stats = useMemo(() => {
+    const total = users.length;
+    const active = users.filter(u => u.status === 'active').length;
+    const pending = users.filter(u => u.status === 'pending').length;
+    const inactive = users.filter(u => u.status === 'inactive').length;
+    const now = new Date();
+    const newThisMonth = users.filter(u => {
+      if (!u.joinedAt) return false;
+      const joined = new Date(u.joinedAt);
+      return Number.isFinite(joined.getTime()) && joined.getMonth() === now.getMonth() && joined.getFullYear() === now.getFullYear();
+    }).length;
+    return {
+      total,
+      active,
+      pending,
+      inactive,
+      newThisMonth,
+      activePercentage: total ? Math.round((active / total) * 100) : 0
+    };
+  }, [users]);
+
+  const filteredUsers = useMemo(() => {
+    const lowered = search.trim().toLowerCase();
+    return users.filter(user => {
+      const matchesQuery =
+        lowered.length === 0 ||
+        user.name.toLowerCase().includes(lowered) ||
+        user.email.toLowerCase().includes(lowered) ||
+        user.department.toLowerCase().includes(lowered);
+      const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+      const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+      return matchesQuery && matchesStatus && matchesRole;
+    });
+  }, [users, search, statusFilter, roleFilter]);
+
+  const sortedUsers = useMemo(() => {
+    const copy = [...filteredUsers];
+    copy.sort((a, b) => {
+      const aValue = a[sortField];
+      const bValue = b[sortField];
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        const result = aValue.localeCompare(bValue, 'vi', { sensitivity: 'base' });
+        return sortDirection === 'asc' ? result : -result;
+      }
+      if (aValue === bValue) return 0;
+      if (sortDirection === 'asc') return aValue > bValue ? 1 : -1;
+      return aValue < bValue ? 1 : -1;
+    });
+    return copy;
+  }, [filteredUsers, sortDirection, sortField]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedUsers.length / itemsPerPage));
+
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return sortedUsers.slice(start, start + itemsPerPage);
+  }, [currentPage, itemsPerPage, sortedUsers]);
+
+  const paginationRange = useMemo(() => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i += 1) {
+      range.push(i);
+    }
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, '...');
+    } else {
+      rangeWithDots.push(1);
+    }
+    rangeWithDots.push(...range);
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push('...', totalPages);
+    } else if (totalPages > 1) {
+      rangeWithDots.push(totalPages);
+    }
+    return [...new Set(rangeWithDots)];
+  }, [currentPage, totalPages]);
+
+  const roleDistribution = useMemo(() => {
+    const counts = users.reduce((acc, user) => {
+      const key = user.role || 'user';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    const entries = Object.keys(counts);
+    if (!entries.length) {
+      return { labels: ['Chưa có dữ liệu'], series: [1] };
+    }
+    const labels = entries.map(role => ROLE_LABELS[role] || role);
+    const series = entries.map(role => counts[role]);
+    return { labels, series };
+  }, [users]);
+
+  const departmentStats = useMemo(() => {
+    const totals = users.reduce((acc, user) => {
+      const key = user.department || 'Đang cập nhật';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(totals).map(([department, count]) => ({
+      department,
+      count,
+      percentage: users.length ? Math.round((count / users.length) * 100) : 0
+    }));
+  }, [users]);
+
+  const sparklineOptions = useMemo(() => ({
+    chart: { type: 'line', height: 50, sparkline: { enabled: true } },
+    stroke: { curve: 'smooth', width: 2 },
+    colors: ['#10b981'],
+    tooltip: { enabled: false }
+  }), []);
+
+  const userGrowthOptions = useMemo(() => ({
+    chart: {
+      type: 'bar',
+      height: 250,
+      toolbar: { show: false },
+      parentHeightOffset: 0
+    },
+    plotOptions: {
+      bar: { borderRadius: 4, columnWidth: '60%' }
+    },
+    xaxis: {
+      categories: USER_GROWTH_CATEGORIES,
+      axisBorder: { show: false },
+      axisTicks: { show: false }
+    },
+    yaxis: { show: false },
+    dataLabels: { enabled: false },
+    grid: { show: false },
+    colors: ['#6366f1']
+  }), []);
+
+  const roleDistributionOptions = useMemo(() => ({
+    chart: { type: 'donut', height: 220 },
+    labels: roleDistribution.labels,
+    legend: { show: false },
+    dataLabels: { enabled: false },
+    colors: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#0ea5e9'],
+    plotOptions: { pie: { donut: { size: '70%' } } }
+  }), [roleDistribution]);
+
+  const toggleSort = (field) => {
+    setCurrentPage(1);
+    setSortField(field);
+    setSortDirection(prev => (sortField === field ? (prev === 'asc' ? 'desc' : 'asc') : 'asc'));
+  };
+
+  const toggleSelectAll = (checked) => {
+    const pageIds = paginatedUsers.map(user => user.id);
+    if (checked) {
+      setSelectedIds(prev => Array.from(new Set([...prev, ...pageIds])));
+    } else {
+      setSelectedIds(prev => prev.filter(id => !pageIds.includes(id)));
+    }
+  };
+
+  const toggleSelectOne = (userId) => {
+    setSelectedIds(prev => (prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]));
+  };
+
+  const handleBulkAction = (action) => {
+    if (!selectedIds.length) {
+      window.alert('Vui lòng chọn người dùng trước.');
+      return;
+    }
+    if (action === 'delete') {
+      if (!window.confirm(`Xóa ${selectedIds.length} người dùng?`)) return;
+      setUsers(prev => prev.filter(user => !selectedIds.includes(user.id)));
+    } else if (action === 'activate' || action === 'deactivate') {
+      const status = action === 'activate' ? 'active' : 'inactive';
+      setUsers(prev => prev.map(user => (selectedIds.includes(user.id) ? { ...user, status } : user)));
+    }
+    setSelectedIds([]);
+  };
+
+  const handleDeleteUser = (user) => {
+    if (!window.confirm(`Xóa ${user.name}?`)) return;
+    setUsers(prev => prev.filter(item => item.id !== user.id));
+    setSelectedIds(prev => prev.filter(id => id !== user.id));
+  };
+
+  const handleOpenUserModal = (user = null) => {
+    setModalState({ type: 'user', payload: user });
+  };
+
+  const handleOpenImportModal = () => {
+    setModalState({ type: 'import', payload: null });
+  };
+
+  const handleCloseModal = () => {
+    setModalState({ type: null, payload: null });
+  };
+
+  const handleSaveUser = (form, editingId) => {
+    if (editingId) {
+      setUsers(prev => prev.map(user => (user.id === editingId
+        ? {
+            ...user,
+            name: `${form.firstName} ${form.lastName}`.trim(),
+            email: form.email,
+            role: form.role,
+            status: form.status,
+            phone: form.phone
+          }
+        : user)));
+    } else {
+      const nextId = Math.max(0, ...users.map(u => u.id || 0)) + 1;
+      setUsers(prev => [
+        ...prev,
+        {
+          id: nextId,
+          name: `${form.firstName} ${form.lastName}`.trim(),
+          email: form.email,
+          role: form.role,
+          status: form.status,
+          phone: form.phone,
+          lastActive: 'Vừa cập nhật',
+          joinedAt: new Date().toISOString(),
+          avatar: '/assets/images/avatar-placeholder.svg',
+          department: 'Người dùng mới'
+        }
+      ]);
+    }
+    handleCloseModal();
+  };
+
+  const handleExport = () => {
+    const headers = ['ID', 'Name', 'Email', 'Role', 'Status', 'Department', 'Phone', 'Join Date', 'Last Active'];
+    const rows = sortedUsers.map(user => [
+      user.id,
+      user.name,
+      user.email,
+      user.role,
+      user.status,
+      user.department,
+      user.phone,
+      formatDate(user.joinedAt),
+      user.lastActive
+    ]);
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(value => `"${value ?? ''}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'users-export.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const isAllSelected = paginatedUsers.length > 0 && paginatedUsers.every(user => selectedIds.includes(user.id));
+
+  return (
+    <div className="container-fluid p-4 p-lg-5">
+      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-5">
+        <div>
+          <h1 className="h3 mb-1">Quản lý người dùng</h1>
+          <p className="text-muted mb-0">Theo dõi vai trò, trạng thái và hoạt động người dùng.</p>
+        </div>
+        <div className="d-flex flex-wrap gap-2">
+          <button type="button" className="btn btn-outline-secondary" onClick={handleOpenImportModal}>
+            <i className="bi bi-upload me-2" />Import Users
+          </button>
+          <button type="button" className="btn btn-outline-secondary" onClick={handleExport}>
+            <i className="bi bi-download me-2" />Export
+          </button>
+          <button type="button" className="btn btn-primary" onClick={() => handleOpenUserModal()}>
+            <i className="bi bi-person-plus me-2" />Thêm người dùng
+          </button>
+        </div>
+      </div>
+
+      {loading && (
+        <div className="alert alert-info d-flex align-items-center gap-2" role="alert">
+          <span className="spinner-border spinner-border-sm" aria-hidden="true" />
+          <span>Đang tải dữ liệu thật từ server...</span>
+        </div>
+      )}
+
+      {error && (
+        <div className="alert alert-warning" role="alert">
+          Không thể tải dữ liệu từ server: {error}. Dữ liệu đang hiển thị có thể chưa được cập nhật mới nhất.
+        </div>
+      )}
+
+      <div className="row g-4 mb-5">
+        <StatsCard
+          title="Tổng người dùng"
+          value={stats.total}
+          subtitle="Biến động theo tháng"
+          iconClass="bi-people-fill"
+          variant="primary"
+        />
+        <StatsCard
+          title="Đang hoạt động"
+          value={stats.active}
+          subtitle="Tăng trưởng tuần này"
+          iconClass="bi-person-check-fill"
+          variant="success"
+        />
+        <StatsCard
+          title="Mới trong tháng"
+          value={stats.newThisMonth}
+          subtitle="So với tháng trước"
+          iconClass="bi-person-plus-fill"
+          variant="info"
+        />
+        <div className="col-xl-3 col-lg-6">
+          <div className="card h-100">
+            <div className="card-body p-3 p-lg-4 d-flex align-items-center">
+              <div style={{ width: 80 }}>
+                <Chart options={sparklineOptions} series={[{ name: 'Active', data: ACTIVE_RATE_SERIES }]} type="line" height={60} />
+              </div>
+              <div className="ms-3">
+                <h6 className="mb-0 text-muted">Tỉ lệ hoạt động</h6>
+                <h3 className="mb-0">{stats.activePercentage}%</h3>
+                <small className="text-muted"><i className="bi bi-clock me-1" />24h gần nhất</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card mb-4">
+        <div className="card-body">
+          <div className="row g-3 align-items-end">
+            <div className="col-xl-4 col-lg-6">
+              <label className="form-label">Tìm kiếm</label>
+              <div className="input-group">
+                <span className="input-group-text"><i className="bi bi-search" /></span>
+                <input
+                  type="search"
+                  className="form-control"
+                  placeholder="Tên, email hoặc phòng ban"
+                  value={search}
+                  onChange={(event) => {
+                    setSearch(event.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+            </div>
+            <div className="col-lg-3 col-md-4">
+              <label className="form-label">Trạng thái</label>
+              <select
+                className="form-select"
+                value={statusFilter}
+                onChange={(event) => {
+                  setStatusFilter(event.target.value);
+                  setCurrentPage(1);
+                }}
+              >
+                {STATUS_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-lg-3 col-md-4">
+              <label className="form-label">Vai trò</label>
+              <select
+                className="form-select"
+                value={roleFilter}
+                onChange={(event) => {
+                  setRoleFilter(event.target.value);
+                  setCurrentPage(1);
+                }}
+              >
+                {ROLE_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-lg-2 col-md-4">
+              <label className="form-label">Mỗi trang</label>
+              <select
+                className="form-select"
+                value={itemsPerPage}
+                onChange={(event) => {
+                  setItemsPerPage(Number(event.target.value));
+                  setCurrentPage(1);
+                }}
+              >
+                {ITEMS_PER_PAGE_OPTIONS.map(size => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="d-flex flex-wrap gap-2 mt-4">
+            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => handleBulkAction('activate')}>
+              <i className="bi bi-check-circle me-1" />Kích hoạt
+            </button>
+            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => handleBulkAction('deactivate')}>
+              <i className="bi bi-pause-circle me-1" />Tạm ngưng
+            </button>
+            <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => handleBulkAction('delete')}>
+              <i className="bi bi-trash me-1" />Xóa đã chọn
+            </button>
+            {selectedIds.length > 0 && (
+              <span className="badge bg-primary align-self-center">{selectedIds.length} người dùng đã chọn</span>
+            )}
+            <button type="button" className="btn btn-outline-primary btn-sm ms-auto" onClick={loadUsers}>
+              <i className="bi bi-arrow-clockwise me-1" />Tải lại từ server
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="card mb-5">
+        <div className="table-responsive">
+          <table className="table align-middle mb-0">
+            <thead className="table-light">
+              <tr>
+                <th scope="col" style={{ width: 48 }}>
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={(event) => toggleSelectAll(event.target.checked)}
+                  />
+                </th>
+                <SortableHeader label="Tên" field="name" sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
+                <SortableHeader label="Email" field="email" sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
+                <th scope="col">Vai trò</th>
+                <th scope="col">Phòng ban</th>
+                <SortableHeader label="Trạng thái" field="status" sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
+                <th scope="col">Điện thoại</th>
+                <SortableHeader label="Hoạt động" field="lastActive" sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
+                <th scope="col" className="text-end">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedUsers.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="text-center py-5 text-muted">Không có dữ liệu phù hợp.</td>
+                </tr>
+              )}
+              {paginatedUsers.map(user => (
+                <tr key={user.id}>
+                  <td>
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={selectedIds.includes(user.id)}
+                      onChange={() => toggleSelectOne(user.id)}
+                    />
+                  </td>
+                  <td>
+                    <div className="d-flex align-items-center">
+                      <img src={user.avatar} alt={user.name} width="36" height="36" className="rounded-circle me-3" />
+                      <div>
+                        <span className="fw-semibold d-block">{user.name}</span>
+                        <small className="text-muted">Tham gia ngày {formatDate(user.joinedAt)}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{user.email}</td>
+                  <td>
+                    <span className="badge bg-light text-dark border">{ROLE_LABELS[user.role] || user.role}</span>
+                  </td>
+                  <td>{user.department}</td>
+                  <td>
+                    <span className={`badge ${STATUS_VARIANTS[user.status] || 'bg-secondary'}`}>
+                      {STATUS_LABELS[user.status] || user.status}
+                    </span>
+                  </td>
+                  <td>{user.phone}</td>
+                  <td>{user.lastActive}</td>
+                  <td className="text-end">
+                    <div className="btn-group btn-group-sm">
+                      <button type="button" className="btn btn-outline-secondary" onClick={() => window.alert('Xem chi tiết người dùng')}>
+                        <i className="bi bi-eye" />
+                      </button>
+                      <button type="button" className="btn btn-outline-secondary" onClick={() => handleOpenUserModal(user)}>
+                        <i className="bi bi-pencil" />
+                      </button>
+                      <button type="button" className="btn btn-outline-danger" onClick={() => handleDeleteUser(user)}>
+                        <i className="bi bi-trash" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="card-footer d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+          <small className="text-muted">Hiển thị {paginatedUsers.length} / {sortedUsers.length} người dùng</small>
+          <ul className="pagination mb-0">
+            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+              <button className="page-link" type="button" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
+                &laquo;
+              </button>
+            </li>
+            {paginationRange.map((page, index) => (
+              <li key={`${page}-${index}`} className={`page-item ${page === currentPage ? 'active' : ''} ${page === '...' ? 'disabled' : ''}`}>
+                {page === '...' ? (
+                  <span className="page-link">&hellip;</span>
+                ) : (
+                  <button className="page-link" type="button" onClick={() => setCurrentPage(page)}>
+                    {page}
+                  </button>
+                )}
+              </li>
+            ))}
+            <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+              <button className="page-link" type="button" onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}>
+                &raquo;
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="row g-4 mb-5">
+        <div className="col-xl-8">
+          <SectionCard title="Tăng trưởng người dùng">
+            <Chart options={userGrowthOptions} series={[{ name: 'Người dùng mới', data: USER_GROWTH_SERIES }]} type="bar" height={260} />
+          </SectionCard>
+        </div>
+        <div className="col-xl-4">
+          <SectionCard title="Phân bổ vai trò">
+            <div className="text-center">
+              <Chart options={roleDistributionOptions} series={roleDistribution.series} type="donut" height={220} />
+              <div className="mt-3">
+                {roleDistribution.labels.map((label, index) => (
+                  <div key={label} className="d-flex justify-content-between small text-muted">
+                    <span>{label}</span>
+                    <span>{users.length ? roleDistribution.series[index] : 0} người</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </SectionCard>
+        </div>
+      </div>
+
+      <div className="row g-4">
+        <div className="col-xl-4">
+          <SectionCard title="Phòng ban">
+            {departmentStats.map(item => (
+              <div key={item.department} className="mb-3">
+                <div className="d-flex justify-content-between">
+                  <strong>{item.department}</strong>
+                  <span className="text-muted">{item.count} ({item.percentage}%)</span>
+                </div>
+                <div className="progress" style={{ height: 6 }}>
+                  <div className="progress-bar bg-primary" role="progressbar" style={{ width: `${item.percentage}%` }} />
+                </div>
+              </div>
+            ))}
+          </SectionCard>
+        </div>
+        <div className="col-xl-4">
+          <SectionCard title="Hoạt động gần đây">
+            <ul className="list-group list-group-flush">
+              {RECENT_USER_ACTIVITIES.map(activity => (
+                <li key={activity.id} className="list-group-item px-0">
+                  <div className="d-flex gap-3">
+                    <span className="badge bg-light text-primary rounded-circle p-3"><i className={`bi ${activity.icon}`} /></span>
+                    <div>
+                      <strong>{activity.user}</strong>
+                      <p className="mb-1">{activity.action}</p>
+                      <small className="text-muted">{activity.time} &middot; {activity.details}</small>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+        </div>
+        <div className="col-xl-4">
+          <SectionCard title="Thông báo hệ thống">
+            <ul className="list-group list-group-flush">
+              {SYSTEM_ALERTS.map(alert => (
+                <li key={alert.id} className="list-group-item px-0">
+                  <div className="d-flex justify-content-between">
+                    <div>
+                      <strong>{alert.title}</strong>
+                      <p className="mb-1 text-muted">{alert.message}</p>
+                    </div>
+                    <span className={`badge ${alert.type === 'warning' ? 'bg-warning text-dark' : alert.type === 'success' ? 'bg-success' : 'bg-info text-dark'}`}>
+                      {alert.time}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+        </div>
+      </div>
+
+      {modalState.type === 'user' && (
+        <UserModal show onClose={handleCloseModal} onSave={handleSaveUser} user={modalState.payload} />
+      )}
+
+      {modalState.type === 'import' && (
+        <ImportUsersModal show onClose={handleCloseModal} />
+      )}
+    </div>
+  );
+};
+
+const StatsCard = ({ title, value, subtitle, iconClass, variant }) => (
+  <div className="col-xl-3 col-lg-6">
+    <div className="card h-100">
+      <div className="card-body p-3 p-lg-4">
+        <div className="d-flex align-items-center">
+          <div className={`stats-icon bg-${variant} bg-opacity-10 text-${variant} me-3`}>
+            <i className={`bi ${iconClass}`} />
+          </div>
+          <div>
+            <h6 className="mb-0 text-muted">{title}</h6>
+            <h3 className="mb-0">{value}</h3>
+            <small className="text-muted">{subtitle}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const SectionCard = ({ title, children }) => (
+  <div className="card h-100">
+    <div className="card-body">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h5 className="mb-0">{title}</h5>
+      </div>
+      {children}
+    </div>
+  </div>
+);
+
+const SortableHeader = ({ label, field, sortField, sortDirection, onSort }) => (
+  <th scope="col" role="button" onClick={() => onSort(field)}>
+    <span className="d-inline-flex align-items-center">
+      {label}
+      {sortField === field && (
+        <i className={`bi ms-1 ${sortDirection === 'asc' ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`} />
+      )}
+    </span>
+  </th>
+);
+
+const UserModal = ({ show, onClose, onSave, user }) => {
+  const [form, setForm] = useState(emptyForm);
+  const editingId = user?.id ?? null;
+
+  useEffect(() => {
+    if (show) {
+      if (user) {
+        const [firstName, ...rest] = user.name.split(' ');
+        setForm({
+          firstName,
+          lastName: rest.join(' '),
+          email: user.email,
+          role: user.role,
+          status: user.status,
+          phone: user.phone || ''
+        });
+      } else {
+        setForm(emptyForm);
+      }
+    }
+  }, [show, user]);
+
+  if (!show) return null;
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    onSave(form, editingId);
+  };
+
+  return (
+    <div className="modal fade show" style={{ display: 'block' }}>
+      <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title">{editingId ? 'Cập nhật người dùng' : 'Thêm người dùng'}</h5>
+            <button type="button" className="btn-close" onClick={onClose} />
+          </div>
+          <form onSubmit={handleSubmit}>
+            <div className="modal-body">
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label">Họ</label>
+                  <input type="text" className="form-control" value={form.firstName} onChange={(event) => setForm(prev => ({ ...prev, firstName: event.target.value }))} required />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Tên</label>
+                  <input type="text" className="form-control" value={form.lastName} onChange={(event) => setForm(prev => ({ ...prev, lastName: event.target.value }))} required />
+                </div>
+                <div className="col-12">
+                  <label className="form-label">Email</label>
+                  <input type="email" className="form-control" value={form.email} onChange={(event) => setForm(prev => ({ ...prev, email: event.target.value }))} required />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Vai trò</label>
+                  <select className="form-select" value={form.role} onChange={(event) => setForm(prev => ({ ...prev, role: event.target.value }))}>
+                    {ROLE_OPTIONS.filter(option => option.value !== 'all').map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Trạng thái</label>
+                  <select className="form-select" value={form.status} onChange={(event) => setForm(prev => ({ ...prev, status: event.target.value }))}>
+                    {STATUS_OPTIONS.filter(option => option.value !== 'all').map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-12">
+                  <label className="form-label">Điện thoại</label>
+                  <input type="text" className="form-control" value={form.phone} onChange={(event) => setForm(prev => ({ ...prev, phone: event.target.value }))} />
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-outline-secondary" onClick={onClose}>Đóng</button>
+              <button type="submit" className="btn btn-primary">{editingId ? 'Cập nhật' : 'Thêm mới'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div className="modal-backdrop fade show" />
+    </div>
+  );
+};
+
+const ImportUsersModal = ({ show, onClose }) => {
+  const [fileName, setFileName] = useState('');
+
+  if (!show) return null;
+
+  return (
+    <div className="modal fade show" style={{ display: 'block' }}>
+      <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title">Import Users</h5>
+            <button type="button" className="btn-close" onClick={onClose} />
+          </div>
+          <div className="modal-body">
+            <p className="text-muted">Upload file CSV để tạo hoặc cập nhật người dùng hàng loạt.</p>
+            <label className="form-label">Chọn file CSV</label>
+            <input
+              type="file"
+              accept=".csv"
+              className="form-control"
+              onChange={(event) => setFileName(event.target.files?.[0]?.name || '')}
+            />
+            {fileName && <small className="text-success d-block mt-2">Đã chọn: {fileName}</small>}
+            <div className="alert alert-light border mt-3" role="alert">
+              <strong>Mẹo:</strong> tải file mẫu ở dashboard gốc để đúng định dạng.
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-outline-secondary" onClick={onClose}>Hủy</button>
+            <button type="button" className="btn btn-primary" onClick={() => { window.alert('Import thành công (mô phỏng)'); onClose(); }}>
+              Tải lên
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="modal-backdrop fade show" />
+    </div>
+  );
+};
+
+export default UsersPage;

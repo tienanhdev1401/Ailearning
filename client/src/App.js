@@ -1,19 +1,22 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "./client/pages/LoginPage";
 import HomePage from "./client/pages/HomePage";
 import GrammarCheckerPage from "./client/pages/GrammarCheckerPage";
 import ClientLayout from "./layout/ClientLayout";
 import AdminLayout from "./layout/AdminLayout";
+import DashboardPage from "./admin/pages/DashboardPage";
+import CalendarPage from "./admin/pages/CalendarPage";
+import UsersPage from "./admin/pages/UsersPage";
+import ReportsPage from "./admin/pages/ReportsPage";
 import ForgotPasswordPage from "./client/pages/ForgotPasswordPage";
 import ProtectedRoute from "./routers/ProtectedRoute";
 
-import Dashboard from "./admin/pages/Dashboard";
 import VideoPraticePage from "./client/pages/VideoPraticePage";
 import SpeakingVideoPraticePage from "./client/pages/SpeakingVideoPraticePage";
 
 import StudentChat from "./client/pages/StudentChat";
-import StaffChat from "./admin/pages/StaffChat";
+import MessagesPage from "./admin/pages/MessagesPage";
 import AiChatExperience from "./client/pages/AiChatExperience";
 
 import ReasonPage from "./client/pages/muticheckPage/ReasonPage";
@@ -31,6 +34,7 @@ import ProfilePage from "./client/pages/ProfilePage";
 
 import LessonTopicPage from "./client/pages/LessonTopicPage";
 import TopicDetailPage from "./client/pages/LessonTopicDetailPage";
+import USER_ROLE from "./enums/userRole.enum";
 
 function App() {
   return (
@@ -138,13 +142,51 @@ function App() {
 
       
       <Route
-        path="/dashboard"
+        path="/admin"
         element={
-          <ProtectedRoute>
-            <AdminLayout><Dashboard /></AdminLayout>
+          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+            <AdminLayout><DashboardPage /></AdminLayout>
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+            <AdminLayout><UsersPage /></AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/reports"
+        element={
+          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+            <AdminLayout><ReportsPage /></AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/calendar"
+        element={
+          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+            <AdminLayout><CalendarPage /></AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/messages"
+        element={
+          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+            <AdminLayout><MessagesPage /></AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
 
       <Route 
         path="/student" 
@@ -159,7 +201,7 @@ function App() {
         path="/staff" 
         element={
           <ProtectedRoute>
-            <StaffChat />
+            <Navigate to="/admin/messages" replace />
           </ProtectedRoute>
         } 
       />

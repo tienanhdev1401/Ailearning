@@ -1,4 +1,11 @@
 import api from '../api/api';
+
+const extractErrorMessage = (error, fallbackMessage) => (
+    error.response?.data?.error ||
+    error.response?.data?.message ||
+    fallbackMessage
+);
+
 const userService = {
     sendVerificationCode: async (email) => {
         try {
@@ -13,9 +20,7 @@ const userService = {
         throw new Error(response.data.message || 'Lỗi không xác định khi gửi mã');
         } catch (error) {
         // Xử lý lỗi từ server hoặc lỗi mạng
-        const errorMessage = error.response?.data?.error
-            || error.response?.data?.message
-            || 'Không thể kết nối đến server';
+        const errorMessage = extractErrorMessage(error, 'Không thể kết nối đến server');
 
         throw new Error(errorMessage);
         }
@@ -26,9 +31,7 @@ const userService = {
         const response = await api.get("/auth/me");
         return response.data;
         } catch (error) {
-        const errorMessage = error.response?.data?.error
-            || error.response?.data?.message
-            || 'Không thể lấy thông tin người dùng';
+        const errorMessage = extractErrorMessage(error, 'Không thể lấy thông tin người dùng');
         throw new Error(errorMessage);
         }
     },
@@ -38,9 +41,7 @@ const userService = {
         const response = await api.patch("/auth/me", payload);
         return response.data;
         } catch (error) {
-        const errorMessage = error.response?.data?.error
-            || error.response?.data?.message
-            || 'Không thể cập nhật hồ sơ';
+        const errorMessage = extractErrorMessage(error, 'Không thể cập nhật hồ sơ');
         throw new Error(errorMessage);
         }
     },
@@ -61,9 +62,7 @@ const userService = {
 
             return response.data;
         } catch (error) {
-            const errorMessage = error.response?.data?.error
-                || error.response?.data?.message
-                || 'Không thể tải ảnh lên';
+            const errorMessage = extractErrorMessage(error, 'Không thể tải ảnh lên');
             throw new Error(errorMessage);
         }
     },
@@ -81,10 +80,18 @@ const userService = {
         }
         throw new Error(response.data.message || 'Đổi mật khẩu thất bại');
         } catch (error) {
-        const errorMessage = error.response?.data?.error
-            || error.response?.data?.message
-            || 'Không thể kết nối đến server';
+        const errorMessage = extractErrorMessage(error, 'Không thể kết nối đến server');
         throw new Error(errorMessage);
+        }
+    },
+
+    getAllUsers: async () => {
+        try {
+            const response = await api.get('/users');
+            return response.data;
+        } catch (error) {
+            const errorMessage = extractErrorMessage(error, 'Không thể tải danh sách người dùng');
+            throw new Error(errorMessage);
         }
     }
 };
