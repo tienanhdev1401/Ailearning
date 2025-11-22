@@ -9,6 +9,8 @@ import DashboardPage from "./admin/pages/DashboardPage";
 import CalendarPage from "./admin/pages/CalendarPage";
 import UsersPage from "./admin/pages/UsersPage";
 import ReportsPage from "./admin/pages/ReportsPage";
+import RoadmapsPage from "./admin/pages/RoadmapsPage";
+import RoadmapDaysPage from "./admin/pages/RoadmapDaysPage";
 import StaffPage from "./admin/pages/StaffPage";
 import ForgotPasswordPage from "./client/pages/ForgotPasswordPage";
 import ProtectedRoute from "./routers/ProtectedRoute";
@@ -192,6 +194,23 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
             <AdminLayout><MessagesPage /></AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/roadmaps"
+        element={
+          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+            <AdminLayout><RoadmapsPage /></AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/roadmaps/:roadmapId/days"
+        element={
+          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+            <AdminLayout><RoadmapDaysPage /></AdminLayout>
           </ProtectedRoute>
         }
       />
