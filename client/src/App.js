@@ -9,6 +9,7 @@ import DashboardPage from "./admin/pages/DashboardPage";
 import CalendarPage from "./admin/pages/CalendarPage";
 import UsersPage from "./admin/pages/UsersPage";
 import ReportsPage from "./admin/pages/ReportsPage";
+import StaffPage from "./admin/pages/StaffPage";
 import ForgotPasswordPage from "./client/pages/ForgotPasswordPage";
 import ProtectedRoute from "./routers/ProtectedRoute";
 
@@ -155,6 +156,15 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
             <AdminLayout><UsersPage /></AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/staff"
+        element={
+          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN]}>
+            <AdminLayout><StaffPage /></AdminLayout>
           </ProtectedRoute>
         }
       />

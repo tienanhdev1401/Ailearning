@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Chart from 'react-apexcharts';
 import userService from '../../services/userService';
 import {
@@ -12,7 +13,6 @@ import {
 
 const ROLE_LABELS = {
   admin: 'Quản trị viên',
-  moderator: 'Moderator',
   user: 'Học viên',
   staff: 'Nhân viên',
   guest: 'Khách'
@@ -41,9 +41,21 @@ const ROLE_OPTIONS = [
   { value: 'all', label: 'Tất cả vai trò' },
   { value: 'admin', label: 'Quản trị viên' },
   { value: 'staff', label: 'Nhân viên' },
-  { value: 'moderator', label: 'Moderator' },
   { value: 'user', label: 'Học viên' },
   { value: 'guest', label: 'Khách' }
+];
+
+const GENDER_LABELS = {
+  MALE: 'Nam',
+  FEMALE: 'Nữ',
+  OTHER: 'Khác'
+};
+
+const GENDER_OPTIONS = [
+  { value: '', label: 'Chưa chọn' },
+  { value: 'MALE', label: 'Nam' },
+  { value: 'FEMALE', label: 'Nữ' },
+  { value: 'OTHER', label: 'Khác' }
 ];
 
 const ITEMS_PER_PAGE_OPTIONS = [5, 10, 25];
@@ -54,20 +66,40 @@ const emptyForm = {
   email: '',
   role: 'user',
   status: 'active',
-  phone: ''
+  phone: '',
+  avatarUrl: '',
+  birthday: '',
+  gender: ''
 };
+
+const ensureUserRoleList = (list) => list.filter(user => (user.role || 'user') === 'user');
 
 const mapServerStatus = (status) => {
   switch ((status || '').toUpperCase()) {
     case 'VERIFIED':
+    case 'ACTIVE':
       return 'active';
     case 'UNVERIFIED':
     case 'PENDING':
       return 'pending';
     case 'SUSPENDED':
+    case 'INACTIVE':
       return 'inactive';
     default:
       return 'active';
+  }
+};
+
+const mapClientStatusToServer = (status) => {
+  switch ((status || '').toLowerCase()) {
+    case 'active':
+      return 'VERIFIED';
+    case 'pending':
+      return 'PENDING';
+    case 'inactive':
+      return 'SUSPENDED';
+    default:
+      return 'VERIFIED';
   }
 };
 
@@ -89,20 +121,46 @@ const formatDateTime = (value) => {
   }
 };
 
-const seededInitialUsers = INITIAL_USERS.map(user => ({ ...user, joinedAt: user.joinDate }));
+const normalizeServerUser = (user) => {
+  const role = (user.role || 'user').toString().toLowerCase();
+  const status = mapServerStatus(user.status);
+  const birthdayRaw = user.birthday ? new Date(user.birthday).toISOString().slice(0, 10) : '';
+  const avatarRaw = user.avatarUrl ?? '';
+  const avatarDisplay = avatarRaw || '/assets/images/avatar-placeholder.svg';
+  return {
+    id: user.id,
+    name: user.name || 'Chưa rõ tên',
+    email: user.email || 'Chưa có email',
+    role,
+    status,
+    lastActive: formatDateTime(user.updatedAt || user.startedAt || user.createdAt),
+    joinedAt: user.startedAt || user.createdAt || new Date().toISOString(),
+    avatarUrl: avatarRaw,
+    avatarDisplay,
+    phone: user.phone ?? '',
+    birthday: birthdayRaw,
+    gender: user.gender || '',
+    department: user.department || 'Đang cập nhật'
+  };
+};
 
-const normalizeServerUser = (user) => ({
-  id: user.id,
-  name: user.name || 'Chưa rõ tên',
-  email: user.email || 'Chưa có email',
-  role: user.role || 'user',
-  status: mapServerStatus(user.status),
-  lastActive: formatDateTime(user.updatedAt || user.startedAt || user.createdAt),
-  joinedAt: user.startedAt || user.createdAt || new Date().toISOString(),
-  avatar: user.avatarUrl || '/assets/images/avatar-placeholder.svg',
-  phone: user.phone || '—',
-  department: user.department || 'Đang cập nhật'
-});
+const seededInitialUsers = ensureUserRoleList(
+  INITIAL_USERS.map(user => normalizeServerUser({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    status: user.status,
+    startedAt: user.joinDate,
+    createdAt: user.joinDate,
+    updatedAt: user.joinDate,
+    avatarUrl: user.avatar,
+    phone: user.phone,
+    birthday: user.birthday ?? null,
+    gender: user.gender ?? null,
+    department: user.department
+  }))
+);
 
 const UsersPage = () => {
   const [users, setUsers] = useState(seededInitialUsers);
@@ -123,7 +181,8 @@ const UsersPage = () => {
     try {
       const data = await userService.getAllUsers();
       const normalized = Array.isArray(data) ? data.map(normalizeServerUser) : [];
-      setUsers(normalized.length ? normalized : []);
+      const filtered = ensureUserRoleList(normalized);
+      setUsers(filtered);
       setError(null);
     } catch (fetchError) {
       setError(fetchError.message || 'Không thể tải danh sách người dùng');
@@ -322,10 +381,15 @@ const UsersPage = () => {
     setSelectedIds([]);
   };
 
-  const handleDeleteUser = (user) => {
+  const handleDeleteUser = async (user) => {
     if (!window.confirm(`Xóa ${user.name}?`)) return;
-    setUsers(prev => prev.filter(item => item.id !== user.id));
-    setSelectedIds(prev => prev.filter(id => id !== user.id));
+    try {
+      await userService.deleteUser(user.id);
+      setUsers(prev => prev.filter(item => item.id !== user.id));
+      setSelectedIds(prev => prev.filter(id => id !== user.id));
+    } catch (deleteError) {
+      window.alert(deleteError.message || 'Không thể xóa người dùng. Vui lòng thử lại.');
+    }
   };
 
   const handleOpenUserModal = (user = null) => {
@@ -340,37 +404,57 @@ const UsersPage = () => {
     setModalState({ type: null, payload: null });
   };
 
-  const handleSaveUser = (form, editingId) => {
+  const handleSaveUser = async (form, editingId) => {
     if (editingId) {
-      setUsers(prev => prev.map(user => (user.id === editingId
-        ? {
-            ...user,
-            name: `${form.firstName} ${form.lastName}`.trim(),
-            email: form.email,
-            role: form.role,
-            status: form.status,
-            phone: form.phone
-          }
-        : user)));
+      const payload = {
+        name: `${form.firstName} ${form.lastName}`.replace(/\s+/g, ' ').trim(),
+        email: form.email,
+        role: form.role,
+        status: mapClientStatusToServer(form.status),
+        phone: form.phone?.trim() || null,
+        avatarUrl: form.avatarUrl?.trim() || null,
+        birthday: form.birthday || null,
+        gender: form.gender || null
+      };
+
+      try {
+        const updatedUser = await userService.updateUser(editingId, payload);
+        const normalizedUser = normalizeServerUser(updatedUser);
+        setUsers(prev => ensureUserRoleList(prev.map(user => (
+          user.id === editingId ? normalizedUser : user
+        ))));
+        setSelectedIds(prev => prev.filter(id => id !== editingId));
+        handleCloseModal();
+      } catch (updateError) {
+        window.alert(updateError.message || 'Không thể cập nhật người dùng. Vui lòng thử lại.');
+        throw updateError;
+      }
+      return;
     } else {
       const nextId = Math.max(0, ...users.map(u => u.id || 0)) + 1;
-      setUsers(prev => [
+      const now = new Date().toISOString();
+      const pseudoUser = {
+        id: nextId,
+        name: `${form.firstName} ${form.lastName}`.replace(/\s+/g, ' ').trim(),
+        email: form.email,
+        role: form.role,
+        status: mapClientStatusToServer(form.status),
+        phone: form.phone?.trim() || null,
+        avatarUrl: form.avatarUrl?.trim() || null,
+        birthday: form.birthday || null,
+        gender: form.gender || null,
+        startedAt: now,
+        createdAt: now,
+        updatedAt: now,
+        department: 'Người dùng mới'
+      };
+      setUsers(prev => ensureUserRoleList([
         ...prev,
-        {
-          id: nextId,
-          name: `${form.firstName} ${form.lastName}`.trim(),
-          email: form.email,
-          role: form.role,
-          status: form.status,
-          phone: form.phone,
-          lastActive: 'Vừa cập nhật',
-          joinedAt: new Date().toISOString(),
-          avatar: '/assets/images/avatar-placeholder.svg',
-          department: 'Người dùng mới'
-        }
-      ]);
+        normalizeServerUser(pseudoUser)
+      ]));
+      handleCloseModal();
+      return;
     }
-    handleCloseModal();
   };
 
   const handleExport = () => {
@@ -575,6 +659,8 @@ const UsersPage = () => {
                 <th scope="col">Phòng ban</th>
                 <SortableHeader label="Trạng thái" field="status" sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
                 <th scope="col">Điện thoại</th>
+                <th scope="col">Giới tính</th>
+                <th scope="col">Ngày sinh</th>
                 <SortableHeader label="Hoạt động" field="lastActive" sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
                 <th scope="col" className="text-end">Thao tác</th>
               </tr>
@@ -582,7 +668,7 @@ const UsersPage = () => {
             <tbody>
               {paginatedUsers.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="text-center py-5 text-muted">Không có dữ liệu phù hợp.</td>
+                  <td colSpan={11} className="text-center py-5 text-muted">Không có dữ liệu phù hợp.</td>
                 </tr>
               )}
               {paginatedUsers.map(user => (
@@ -597,7 +683,7 @@ const UsersPage = () => {
                   </td>
                   <td>
                     <div className="d-flex align-items-center">
-                      <img src={user.avatar} alt={user.name} width="36" height="36" className="rounded-circle me-3" />
+                      <img src={user.avatarDisplay} alt={user.name} width="36" height="36" className="rounded-circle me-3" />
                       <div>
                         <span className="fw-semibold d-block">{user.name}</span>
                         <small className="text-muted">Tham gia ngày {formatDate(user.joinedAt)}</small>
@@ -614,7 +700,9 @@ const UsersPage = () => {
                       {STATUS_LABELS[user.status] || user.status}
                     </span>
                   </td>
-                  <td>{user.phone}</td>
+                  <td>{user.phone || '—'}</td>
+                  <td>{user.gender ? GENDER_LABELS[user.gender] || user.gender : '—'}</td>
+                  <td>{user.birthday ? formatDate(user.birthday) : '—'}</td>
                   <td>{user.lastActive}</td>
                   <td className="text-end">
                     <div className="btn-group btn-group-sm">
@@ -792,9 +880,12 @@ const SortableHeader = ({ label, field, sortField, sortDirection, onSort }) => (
   </th>
 );
 
+const modalRoot = typeof document !== 'undefined' ? document.body : null;
+
 const UserModal = ({ show, onClose, onSave, user }) => {
   const [form, setForm] = useState(emptyForm);
   const editingId = user?.id ?? null;
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (show) {
@@ -806,115 +897,149 @@ const UserModal = ({ show, onClose, onSave, user }) => {
           email: user.email,
           role: user.role,
           status: user.status,
-          phone: user.phone || ''
+          phone: user.phone || '',
+          avatarUrl: user.avatarUrl || '',
+          birthday: user.birthday || '',
+          gender: user.gender || ''
         });
       } else {
         setForm(emptyForm);
       }
+      setSubmitting(false);
     }
   }, [show, user]);
 
-  if (!show) return null;
+  if (!show || !modalRoot) return null;
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    onSave(form, editingId);
+    if (submitting) return;
+    try {
+      setSubmitting(true);
+      await onSave(form, editingId);
+    } catch (error) {
+      setSubmitting(false);
+    }
   };
 
-  return (
-    <div className="modal fade show" style={{ display: 'block' }}>
-      <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">{editingId ? 'Cập nhật người dùng' : 'Thêm người dùng'}</h5>
-            <button type="button" className="btn-close" onClick={onClose} />
-          </div>
-          <form onSubmit={handleSubmit}>
-            <div className="modal-body">
-              <div className="row g-3">
-                <div className="col-md-6">
-                  <label className="form-label">Họ</label>
-                  <input type="text" className="form-control" value={form.firstName} onChange={(event) => setForm(prev => ({ ...prev, firstName: event.target.value }))} required />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Tên</label>
-                  <input type="text" className="form-control" value={form.lastName} onChange={(event) => setForm(prev => ({ ...prev, lastName: event.target.value }))} required />
-                </div>
-                <div className="col-12">
-                  <label className="form-label">Email</label>
-                  <input type="email" className="form-control" value={form.email} onChange={(event) => setForm(prev => ({ ...prev, email: event.target.value }))} required />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Vai trò</label>
-                  <select className="form-select" value={form.role} onChange={(event) => setForm(prev => ({ ...prev, role: event.target.value }))}>
-                    {ROLE_OPTIONS.filter(option => option.value !== 'all').map(option => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Trạng thái</label>
-                  <select className="form-select" value={form.status} onChange={(event) => setForm(prev => ({ ...prev, status: event.target.value }))}>
-                    {STATUS_OPTIONS.filter(option => option.value !== 'all').map(option => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-12">
-                  <label className="form-label">Điện thoại</label>
-                  <input type="text" className="form-control" value={form.phone} onChange={(event) => setForm(prev => ({ ...prev, phone: event.target.value }))} />
+  return createPortal(
+    <>
+      <div className="modal fade show" style={{ display: 'block', zIndex: 1060 }}>
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">{editingId ? 'Cập nhật người dùng' : 'Thêm người dùng'}</h5>
+              <button type="button" className="btn-close" onClick={onClose} />
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body">
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Họ</label>
+                    <input type="text" className="form-control" value={form.firstName} onChange={(event) => setForm(prev => ({ ...prev, firstName: event.target.value }))} required />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Tên</label>
+                    <input type="text" className="form-control" value={form.lastName} onChange={(event) => setForm(prev => ({ ...prev, lastName: event.target.value }))} required />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label">Email</label>
+                    <input type="email" className="form-control" value={form.email} onChange={(event) => setForm(prev => ({ ...prev, email: event.target.value }))} required />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Vai trò</label>
+                    <select className="form-select" value={form.role} onChange={(event) => setForm(prev => ({ ...prev, role: event.target.value }))}>
+                      {ROLE_OPTIONS.filter(option => option.value !== 'all').map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Trạng thái</label>
+                    <select className="form-select" value={form.status} onChange={(event) => setForm(prev => ({ ...prev, status: event.target.value }))}>
+                      {STATUS_OPTIONS.filter(option => option.value !== 'all').map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Điện thoại</label>
+                    <input type="tel" className="form-control" value={form.phone} onChange={(event) => setForm(prev => ({ ...prev, phone: event.target.value }))} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Giới tính</label>
+                    <select className="form-select" value={form.gender} onChange={(event) => setForm(prev => ({ ...prev, gender: event.target.value }))}>
+                      {GENDER_OPTIONS.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Ngày sinh</label>
+                    <input type="date" className="form-control" value={form.birthday} onChange={(event) => setForm(prev => ({ ...prev, birthday: event.target.value }))} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Ảnh đại diện (URL)</label>
+                    <input type="url" className="form-control" value={form.avatarUrl} onChange={(event) => setForm(prev => ({ ...prev, avatarUrl: event.target.value }))} placeholder="https://" />
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn btn-outline-secondary" onClick={onClose}>Đóng</button>
-              <button type="submit" className="btn btn-primary">{editingId ? 'Cập nhật' : 'Thêm mới'}</button>
-            </div>
-          </form>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline-secondary" onClick={onClose} disabled={submitting}>Đóng</button>
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                  {submitting ? 'Đang lưu...' : (editingId ? 'Cập nhật' : 'Thêm mới')}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
-      <div className="modal-backdrop fade show" />
-    </div>
+      <div className="modal-backdrop fade show" style={{ zIndex: 1050 }} />
+    </>,
+    modalRoot
   );
 };
 
 const ImportUsersModal = ({ show, onClose }) => {
   const [fileName, setFileName] = useState('');
 
-  if (!show) return null;
+  if (!show || !modalRoot) return null;
 
-  return (
-    <div className="modal fade show" style={{ display: 'block' }}>
-      <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">Import Users</h5>
-            <button type="button" className="btn-close" onClick={onClose} />
-          </div>
-          <div className="modal-body">
-            <p className="text-muted">Upload file CSV để tạo hoặc cập nhật người dùng hàng loạt.</p>
-            <label className="form-label">Chọn file CSV</label>
-            <input
-              type="file"
-              accept=".csv"
-              className="form-control"
-              onChange={(event) => setFileName(event.target.files?.[0]?.name || '')}
-            />
-            {fileName && <small className="text-success d-block mt-2">Đã chọn: {fileName}</small>}
-            <div className="alert alert-light border mt-3" role="alert">
-              <strong>Mẹo:</strong> tải file mẫu ở dashboard gốc để đúng định dạng.
+  return createPortal(
+    <>
+      <div className="modal fade show" style={{ display: 'block', zIndex: 1060 }}>
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Import Users</h5>
+              <button type="button" className="btn-close" onClick={onClose} />
             </div>
-          </div>
-          <div className="modal-footer">
-            <button type="button" className="btn btn-outline-secondary" onClick={onClose}>Hủy</button>
-            <button type="button" className="btn btn-primary" onClick={() => { window.alert('Import thành công (mô phỏng)'); onClose(); }}>
-              Tải lên
-            </button>
+            <div className="modal-body">
+              <p className="text-muted">Upload file CSV để tạo hoặc cập nhật người dùng hàng loạt.</p>
+              <label className="form-label">Chọn file CSV</label>
+              <input
+                type="file"
+                accept=".csv"
+                className="form-control"
+                onChange={(event) => setFileName(event.target.files?.[0]?.name || '')}
+              />
+              {fileName && <small className="text-success d-block mt-2">Đã chọn: {fileName}</small>}
+              <div className="alert alert-light border mt-3" role="alert">
+                <strong>Mẹo:</strong> tải file mẫu ở dashboard gốc để đúng định dạng.
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-outline-secondary" onClick={onClose}>Hủy</button>
+              <button type="button" className="btn btn-primary" onClick={() => { window.alert('Import thành công (mô phỏng)'); onClose(); }}>
+                Tải lên
+              </button>
+            </div>
           </div>
         </div>
       </div>
-      <div className="modal-backdrop fade show" />
-    </div>
+      <div className="modal-backdrop fade show" style={{ zIndex: 1050 }} />
+    </>,
+    modalRoot
   );
 };
 

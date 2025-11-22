@@ -93,6 +93,26 @@ const userService = {
             const errorMessage = extractErrorMessage(error, 'Không thể tải danh sách người dùng');
             throw new Error(errorMessage);
         }
+    },
+
+    updateUser: async (userId, payload) => {
+        try {
+            const response = await api.put(`/users/${userId}`, payload);
+            return response.data;
+        } catch (error) {
+            const errorMessage = extractErrorMessage(error, 'Không thể cập nhật người dùng');
+            throw new Error(errorMessage);
+        }
+    },
+
+    deleteUser: async (userId) => {
+        try {
+            const response = await api.delete(`/users/${userId}`);
+            return response.data;
+        } catch (error) {
+            const errorMessage = extractErrorMessage(error, 'Không thể xóa người dùng');
+            throw new Error(errorMessage);
+        }
     }
 };
  

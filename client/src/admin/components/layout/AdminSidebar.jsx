@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { NAV_ADMIN, NAV_PRIMARY } from '../../data/navigation';
 
 const getInitialSubmenuState = () => {
   try {
@@ -14,7 +13,7 @@ const getInitialSubmenuState = () => {
 
 const requiresExactMatch = (path) => path === '/admin';
 
-const AdminSidebar = () => {
+const AdminSidebar = ({ navPrimary = [], navAdmin = [] }) => {
   const [submenuState, setSubmenuState] = useState(getInitialSubmenuState);
 
   useEffect(() => {
@@ -107,13 +106,13 @@ const AdminSidebar = () => {
       <div className="sidebar-content">
         <nav className="sidebar-nav">
           <ul className="nav flex-column">
-            {NAV_PRIMARY.map(renderNavItem)}
-            {NAV_ADMIN.length > 0 && (
+            {navPrimary.map(renderNavItem)}
+            {navAdmin.length > 0 && (
               <>
                 <li className="nav-item mt-3">
                   <small className="text-muted px-3 text-uppercase fw-bold">Admin</small>
                 </li>
-                {NAV_ADMIN.map(item => (
+                {navAdmin.map(item => (
                   <li className="nav-item" key={item.label}>
                     {item.path ? (
                       <NavLink

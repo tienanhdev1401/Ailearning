@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { SEARCH_INDEX } from '../../data/navigation';
 
 const DROPDOWN_HIDE_DELAY = 120;
 
-const AdminHeader = ({ theme, onThemeToggle }) => {
+const AdminHeader = ({ theme, onThemeToggle, searchIndex = [] }) => {
   const [query, setQuery] = useState('');
   const [isSearchFocused, setSearchFocused] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -17,8 +16,8 @@ const AdminHeader = ({ theme, onThemeToggle }) => {
   const filteredResults = useMemo(() => {
     if (query.trim().length < 2) return [];
     const lowerQuery = query.toLowerCase();
-    return SEARCH_INDEX.filter(item => item.title.toLowerCase().includes(lowerQuery)).slice(0, 5);
-  }, [query]);
+    return searchIndex.filter(item => item.title.toLowerCase().includes(lowerQuery)).slice(0, 5);
+  }, [query, searchIndex]);
 
   const handleDocumentClick = (event) => {
     if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
