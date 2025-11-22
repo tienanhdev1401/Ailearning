@@ -559,7 +559,7 @@ const UsersPage = () => {
       <div className="card mb-5">
         <div className="table-responsive">
           <table className="table align-middle mb-0">
-            <thead className="table-light">
+            <thead>
               <tr>
                 <th scope="col" style={{ width: 48 }}>
                   <input
@@ -606,7 +606,7 @@ const UsersPage = () => {
                   </td>
                   <td>{user.email}</td>
                   <td>
-                    <span className="badge bg-light text-dark border">{ROLE_LABELS[user.role] || user.role}</span>
+                    <span className="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">{ROLE_LABELS[user.role] || user.role}</span>
                   </td>
                   <td>{user.department}</td>
                   <td>
@@ -707,7 +707,7 @@ const UsersPage = () => {
               {RECENT_USER_ACTIVITIES.map(activity => (
                 <li key={activity.id} className="list-group-item px-0">
                   <div className="d-flex gap-3">
-                    <span className="badge bg-light text-primary rounded-circle p-3"><i className={`bi ${activity.icon}`} /></span>
+                    <span className="badge bg-primary-subtle text-primary-emphasis rounded-circle p-3"><i className={`bi ${activity.icon}`} /></span>
                     <div>
                       <strong>{activity.user}</strong>
                       <p className="mb-1">{activity.action}</p>
