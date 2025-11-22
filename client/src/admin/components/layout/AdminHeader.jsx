@@ -57,9 +57,11 @@ const AdminHeader = ({ theme, onThemeToggle }) => {
     }
   };
 
+  const navbarThemeClass = theme === 'dark' ? 'navbar-dark' : 'navbar-light';
+
   return (
     <header className="admin-header">
-      <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+      <nav className={`navbar navbar-expand-lg ${navbarThemeClass} bg-body border-bottom`}> 
         <div className="container-fluid">
           <Link className="navbar-brand d-flex align-items-center" to="/admin">
             <h1 className="h4 mb-0 fw-bold text-primary">AelanG</h1>
@@ -80,12 +82,12 @@ const AdminHeader = ({ theme, onThemeToggle }) => {
               />
               <i className="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3" />
               {(isSearchFocused && filteredResults.length > 0) && (
-                <div className="position-absolute top-100 start-0 w-100 bg-white border rounded-2 shadow-lg mt-1 z-3">
+                <div className="position-absolute top-100 start-0 w-100 bg-body border rounded-2 shadow-lg mt-1 z-3">
                   {filteredResults.map(result => (
                     <Link
                       key={result.title}
                       to={result.path}
-                      className="d-block px-3 py-2 text-decoration-none text-dark border-bottom"
+                      className="d-block px-3 py-2 text-decoration-none text-body border-bottom"
                       onClick={() => {
                         setSearchFocused(false);
                         setQuery('');

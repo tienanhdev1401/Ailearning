@@ -367,7 +367,7 @@ const ReportsPage = () => {
         <div className="card-body p-0">
           <div className="table-responsive">
             <table className="table table-hover mb-0">
-              <thead className="table-light">
+              <thead>
                 <tr>
                   <th>Report Name</th>
                   <th>Type</th>
@@ -385,7 +385,7 @@ const ReportsPage = () => {
                       <small className="text-muted">ID: {report.id}</small>
                     </td>
                     <td>
-                      <span className="badge bg-light text-dark">{report.type}</span>
+                      <span className="badge bg-secondary-subtle text-secondary-emphasis">{report.type}</span>
                     </td>
                     <td>{report.dateRange}</td>
                     <td>{report.generated}</td>
