@@ -13,6 +13,9 @@ export class Roadmap {
   @Column({ name: "description", type: "text", nullable: true })
   description!: string | null;
 
+  @Column({ name: "overview", type: "text", nullable: true })
+  overview!: string | null;
+
   @OneToMany(() => Day, (day) => day.roadmap)
   days!: Day[];
 

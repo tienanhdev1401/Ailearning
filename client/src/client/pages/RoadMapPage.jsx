@@ -333,6 +333,7 @@ const RoadMapPage = () => {
   });
   const [publicRoadmapCache, setPublicRoadmapCache] = useState(null);
   const [interactionNotice, setInteractionNotice] = useState('');
+  const [overviewOpen, setOverviewOpen] = useState(false);
   const noticeTimerRef = useRef(null);
 
   const hydratePublicRoadmap = useCallback(async () => {
@@ -723,6 +724,43 @@ const RoadMapPage = () => {
     return Math.round((completedCount / totalCount) * 100);
   }, [completedCount, totalCount]);
 
+  const mapTitleText = useMemo(() => {
+    if (!totalCount) {
+      return enrolled ? 'Đang theo dõi lộ trình' : 'Khám phá lộ trình';
+    }
+    if (!enrolled) {
+      return `Lộ trình gồm ${totalCount} ngày luyện tập`;
+    }
+    return `Đã hoàn thành ${completedCount}/${totalCount} ngày (${progressPercent}%)`;
+  }, [completedCount, enrolled, progressPercent, totalCount]);
+
+  const overviewHtml = useMemo(() => (roadmap?.overview ?? '').trim(), [roadmap?.overview]);
+  const hasOverview = overviewHtml.length > 0;
+  const openOverview = useCallback(() => {
+    if (!hasOverview) {
+      showNotice('Lộ trình chưa có phần giới thiệu.');
+      return;
+    }
+    setOverviewOpen(true);
+  }, [hasOverview, showNotice]);
+  const closeOverview = useCallback(() => {
+    setOverviewOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!overviewOpen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        closeOverview();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [overviewOpen, closeOverview]);
+
+
   const mapNodes = useMemo(() => {
     if (!sourceDays.length) return [];
     const previewMode = !enrolled;
@@ -765,6 +803,20 @@ const RoadMapPage = () => {
     if (!enrolled) return sourceDays[0];
     return sourceDays.find((day) => day.status !== 'completed') || sourceDays[sourceDays.length - 1];
   }, [enrolled, sourceDays]);
+
+  const mapHintText = useMemo(() => {
+    if (!enrolled) {
+      return 'Ghi danh để theo dõi tiến trình cá nhân và mở khóa mini game mỗi ngày.';
+    }
+    if (!totalCount) {
+      return 'Giữ nhịp học tập mỗi ngày để thấy tiến bộ rõ rệt.';
+    }
+    if (!nextUnlock || completedCount >= totalCount) {
+      return 'Bạn đã hoàn thành toàn bộ lộ trình – hãy ôn lại hoặc chờ nội dung mới!';
+    }
+    const nextSummary = nextUnlock.description?.trim() || nextUnlock.theme?.trim();
+    return `Ngày tiếp theo: Day ${nextUnlock.dayNumber} • ${nextSummary || 'Sẵn sàng để chinh phục'}`;
+  }, [completedCount, enrolled, nextUnlock, totalCount]);
 
   const handleMapSelect = useCallback(
     (node) => {
@@ -811,8 +863,8 @@ const RoadMapPage = () => {
                   Tiếp tục học
                 </button>
               )}
-              <button className={styles.ctaGhost} type="button">
-                Xem bảng thưởng
+              <button className={styles.ctaGhost} type="button" onClick={openOverview}>
+                Giới thiệu lộ trình
               </button>
             </div>
           </div>
@@ -830,10 +882,10 @@ const RoadMapPage = () => {
           <div className={styles.mapColumn}>
             <div className={styles.mapHeading}>
               <div>
-                <p className={styles.mapLabel}>sẽ để gì đó ở đây</p>
-                <h2 className={styles.mapTitle}>sẽ để gì đó ở đây</h2>
+                <p className={styles.mapLabel}>Tổng quan</p>
+                <h2 className={styles.mapTitle}>{mapTitleText}</h2>
               </div>
-              <span className={styles.mapHint}>sẽ để gì đó ở đây như thành tiến trình hay gì đó</span>
+              <span className={styles.mapHint}>{mapHintText}</span>
             </div>
             {interactionNotice && (
               <div className={styles.noticeBanner}>{interactionNotice}</div>
@@ -931,6 +983,27 @@ const RoadMapPage = () => {
           </aside>
         </section>
       </section>
+      {overviewOpen && hasOverview && (
+        <div className={styles.drawerOverlay} onClick={closeOverview}>
+          <div
+            className={classNames(styles.popupShell, styles.overviewPopup)}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className={styles.overviewHeader}>
+              <div>
+                <h3 className={styles.overviewTitle}>
+                  {roadmap?.levelName ? `${roadmap.levelName} Roadmap` : 'Giới thiệu lộ trình'}
+                </h3>
+                <p className={styles.popupSubtitle}>Tổng quan về nội dung bạn sẽ học.</p>
+              </div>
+              <button className={styles.closeBtn} type="button" onClick={closeOverview} aria-label="Đóng tổng quan">
+                ×
+              </button>
+            </header>
+            <div className={styles.overviewContent} dangerouslySetInnerHTML={{ __html: overviewHtml }} />
+          </div>
+        </div>
+      )}
       {selectedDay && (
         <ActivityDrawer
           day={selectedDay}

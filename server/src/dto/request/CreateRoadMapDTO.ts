@@ -26,4 +26,8 @@ export class CreateRoadmapDto {
   @IsOptional()
   @IsString({ message: "Mô tả phải là chuỗi ký tự" })
   description?: string;
+
+    @IsOptional()
+    @IsString({ message: "Overview phải là chuỗi ký tự" })
+    overview?: string;
 }

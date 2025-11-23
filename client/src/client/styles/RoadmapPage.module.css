@@ -582,6 +582,65 @@
   gap: 16px;
 }
 
+.overviewPopup {
+  width: min(820px, 92%);
+  max-height: 80vh;
+}
+
+.overviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.overviewTitle {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.overviewContent {
+  overflow-y: auto;
+  max-height: 60vh;
+  padding-right: 6px;
+  color: var(--roadmap-text);
+  line-height: 1.7;
+}
+
+.overviewContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overviewContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overviewContent::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0, 255, 204, 0.6), rgba(0, 168, 255, 0.6));
+  border-radius: 999px;
+}
+
+.overviewContent :global(h1),
+.overviewContent :global(h2),
+.overviewContent :global(h3),
+.overviewContent :global(h4),
+.overviewContent :global(h5),
+.overviewContent :global(h6) {
+  color: var(--roadmap-text);
+  margin-top: 1.4em;
+}
+
+.overviewContent :global(p),
+.overviewContent :global(li) {
+  color: var(--roadmap-text);
+}
+
+.overviewContent :global(a) {
+  color: #00ffcc;
+  text-decoration: underline;
+}
+
 .popupHeader {
   display: flex;
   justify-content: space-between;

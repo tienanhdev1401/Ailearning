@@ -39,6 +39,7 @@ export class RoadmapService {
     const newRoadmap = roadmapRepository.create({
       levelName: createRoadmapDto.levelName,
       description: createRoadmapDto.description || null,
+      overview: createRoadmapDto.overview || null,
     });
 
     return await roadmapRepository.save(newRoadmap);
