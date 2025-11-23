@@ -7,15 +7,13 @@ export class CreateDayDto {
 
   @IsOptional()
   @IsString()
-  theme?: string;
+  description?: string;
 
   @IsOptional()
   @IsString()
-  description?: string;
+  content?: string;
 
   @IsInt()
   condition?: number;
 
-  @IsInt()
-  roadmapId!: number;
 }

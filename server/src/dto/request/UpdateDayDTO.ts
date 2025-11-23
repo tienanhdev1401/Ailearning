@@ -7,13 +7,10 @@ export class UpdateDayDto {
 
   @IsOptional()
   @IsString()
-  theme?: string;
-
-  @IsOptional()
-  @IsString()
   description?: string;
 
   @IsOptional()
-  @IsInt()
-  condition?: number;
+  @IsString()
+  content?: string;
+
 }

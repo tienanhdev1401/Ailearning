@@ -245,7 +245,6 @@ export class RoadmapService {
       return {
         id: day.id,
         dayNumber: day.dayNumber,
-        theme: day.theme,
         description: day.description,
         condition: day.condition,
         status,

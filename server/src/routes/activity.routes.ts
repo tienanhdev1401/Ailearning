@@ -17,8 +17,6 @@ router.post(
   ActivityController.addActivityToDay
 );
 
-
-
 router.get(
   "/:id",
   verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
@@ -31,7 +29,6 @@ router.put(
   verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
   ActivityController.updateActivity
 );
-
 
 router.delete(
   "/:id",
