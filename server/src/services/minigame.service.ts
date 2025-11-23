@@ -1,6 +1,8 @@
 // services/minigame.service.ts
 import { MiniGame } from "../models/minigame";
 import { MatchImageWordMiniGame } from "../models/minigameImp/match-image-word-minigame";
+import { LessonMiniGame } from "../models/minigameImp/lesson-minigame";
+import { ExamMiniGame } from "../models/minigameImp/exam-minigame";
 import { Activity } from "../models/activity";
 import ApiError from "../utils/ApiError";
 import { HttpStatusCode } from "axios";
@@ -9,6 +11,7 @@ import { UpdateMiniGameDto } from "../dto/request/UpdateMiniGameDTO";
 import MiniGameType from "../enums/minigameType.enum";
 import { minigameRepository } from "../repositories/minigame.repository";
 import { activityRepository } from "../repositories/activity.repostitory";
+
 
 export class MiniGameService {
   // 🔹 Tạo instance MiniGame đúng type
@@ -19,7 +22,10 @@ export class MiniGameService {
     switch (dto.type) {
       case MiniGameType.MATCH_IMAGE_WORD:
         return new MatchImageWordMiniGame(dto.prompt, dto.resources as any, activity, dto.type);
-
+      case MiniGameType.LESSON:
+        return new LessonMiniGame(dto.prompt, dto.resources as any, activity, dto.type);
+      case MiniGameType.EXAM:
+        return new ExamMiniGame(dto.prompt, dto.resources as any, activity, dto.type);
       default:
         throw new ApiError(HttpStatusCode.BadRequest, `Loại minigame không hợp lệ: ${dto.type}`);
     }

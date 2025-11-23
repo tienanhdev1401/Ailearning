@@ -2,12 +2,15 @@
 import { ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from "class-validator";
 import { plainToInstance } from "class-transformer";
 import { MatchImageWordResources } from "../dto/request/MinigameResourceDTO/MatchImageWordResources";
+import { LessonResources } from "../dto/request/MinigameResourceDTO/LessonResources";
+import { ExamResources } from "../dto/request/MinigameResourceDTO/ExamResource";
 import EType from "../enums/minigameType.enum";
 
 // 🔹 Map type → resource class
 export const resourceClassMap: Record<EType, any> = {
   [EType.MATCH_IMAGE_WORD]: MatchImageWordResources,
-  // thêm các type khác ở đây
+  [EType.LESSON]: LessonResources,
+  [EType.EXAM]: ExamResources,
 };
 
 // 🔹 Lấy class resource theo type, throw lỗi nếu không có
