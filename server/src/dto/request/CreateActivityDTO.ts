@@ -12,7 +12,7 @@ export class CreateActivityDto {
 
   @IsString()
   @IsOptional()
-  content?: string;
+  title?: string;
 
   @IsInt()
   dayId!: number;

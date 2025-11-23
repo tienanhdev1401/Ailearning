@@ -12,7 +12,7 @@ class UpdateActivityItemDto {
 
   @IsOptional()
   @IsString()
-  content?: string;
+  title?: string;
 
   @IsOptional()
   @IsEnum(Skill)

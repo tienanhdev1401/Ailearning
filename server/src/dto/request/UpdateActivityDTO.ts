@@ -16,5 +16,5 @@ export class UpdateActivityDto {
 
   @IsOptional()
   @IsString()
-  content?: string;
+  title?: string;
 }

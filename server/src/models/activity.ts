@@ -19,8 +19,8 @@ export class Activity {
   @Column({ name: "order", type: "int", nullable: false })
   order!: number;
 
-  @Column({ name: "content", type: "text", nullable: true })
-  content?: string;
+  @Column({ name: "title", type: "text", nullable: true })
+  title?: string;   
 
   @ManyToOne(() => Day, (day) => day.activities, { onDelete: "CASCADE" })
   day!: Day;

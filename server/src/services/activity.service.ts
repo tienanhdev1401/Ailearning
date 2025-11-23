@@ -35,7 +35,7 @@ export class ActivityService {
       skill: dto.skill,
       pointOfAc: dto.pointOfAc,
       order: dto.order,
-      content: dto.content,
+      title: dto.title,
       day,
     });
 
