@@ -30,7 +30,6 @@ export class DayService {
     const newDay = this.dayRepository.create({
       dayNumber: createDayDto.dayNumber,
       description: createDayDto.description,
-      content: createDayDto.content,
       condition: createDayDto.condition,
       roadmap,
     });

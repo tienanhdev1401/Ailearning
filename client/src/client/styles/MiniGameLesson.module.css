@@ -1,0 +1,81 @@
+.lessonContainer {
+  background: rgba(4, 20, 34, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  padding: clamp(24px, 4vw, 40px);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.lessonHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lessonTitle {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 700;
+}
+
+.lessonHint {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.lessonBody {
+  border-radius: 24px;
+  background: rgba(8, 32, 54, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: clamp(20px, 3vw, 32px);
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.75;
+  font-size: 15px;
+}
+
+.lessonBody :global(h1),
+.lessonBody :global(h2),
+.lessonBody :global(h3) {
+  margin-top: 24px;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.lessonBody :global(p) {
+  margin: 12px 0;
+}
+
+.lessonBody :global(ul),
+.lessonBody :global(ol) {
+  padding-left: 22px;
+  margin: 16px 0;
+}
+
+.lessonFooter {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nextButton {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 28px;
+  font-weight: 700;
+  font-size: 15px;
+  background: linear-gradient(120deg, #15f4c4, #00a8ff);
+  color: #041422;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(0, 255, 204, 0.35);
+  transition: transform 0.2s ease;
+}
+
+.nextButton:hover {
+  transform: translateY(-1px);
+}

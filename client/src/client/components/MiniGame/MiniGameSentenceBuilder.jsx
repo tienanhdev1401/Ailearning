@@ -56,6 +56,7 @@ const MiniGameSentenceBuilder = ({ data, onNext }) => {
   };
 
   const allPlaced = pool.length === 0 && slots.length === tokens.length;
+  const canAdvance = isCorrect === true && allPlaced;
 
   return (
     <div className={styles.gameContainer}>
@@ -115,7 +116,7 @@ const MiniGameSentenceBuilder = ({ data, onNext }) => {
           <p className={styles.feedbackError}>❌ Chưa đúng lắm, thử đổi lại thứ tự nhé.</p>
         )}
 
-        {isCorrect === true && allPlaced && (
+        {canAdvance && (
           <div className={styles.nextWrapper}>
             <button type="button" className={styles.nextBtn} onClick={onNext}>
               Tiếp theo 🎯

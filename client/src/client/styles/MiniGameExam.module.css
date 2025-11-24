@@ -1,0 +1,168 @@
+.examContainer {
+  background: rgba(4, 20, 34, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  padding: clamp(20px, 3.5vw, 36px);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.examHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.questionList {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.examTitle {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 700;
+}
+
+.examSubtitle {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 14px;
+}
+
+.questionCard {
+  background: rgba(8, 32, 54, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.questionTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.optionList {
+  display: grid;
+  gap: 12px;
+}
+
+.optionButton {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  background: transparent;
+  color: inherit;
+  padding: 12px 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: border 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.optionButton:hover:not(.optionDisabled) {
+  border-color: rgba(0, 255, 204, 0.8);
+  transform: translateY(-1px);
+}
+
+.optionSelected {
+  border-color: rgba(0, 255, 204, 0.8);
+  background: rgba(0, 255, 204, 0.12);
+}
+
+.optionCorrect {
+  border-color: rgba(97, 217, 107, 0.95);
+  background: rgba(65, 184, 131, 0.12);
+}
+
+.optionWrong {
+  border-color: rgba(255, 99, 132, 0.9);
+  background: rgba(255, 99, 132, 0.12);
+}
+
+.optionDisabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.examFooter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 12px;
+}
+
+.primaryBtn {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 26px;
+  font-weight: 700;
+  font-size: 14px;
+  background: linear-gradient(120deg, #15f4c4, #00a8ff);
+  color: #041422;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(0, 255, 204, 0.3);
+}
+
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.secondaryBtn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 12px 26px;
+  font-weight: 600;
+  font-size: 14px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.scoreBadge {
+  font-weight: 700;
+  font-size: 15px;
+  color: rgba(0, 255, 204, 0.85);
+}
+
+.scoreBadgeFail {
+  color: rgba(255, 99, 132, 0.9);
+}
+
+.successBanner {
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: rgba(65, 184, 131, 0.15);
+  border: 1px solid rgba(65, 184, 131, 0.35);
+  color: rgba(224, 255, 239, 0.95);
+  font-weight: 600;
+}
+
+.failBanner {
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: rgba(255, 99, 132, 0.15);
+  border: 1px solid rgba(255, 99, 132, 0.35);
+  color: rgba(255, 210, 218, 0.95);
+  font-weight: 600;
+}
+
+.nextWrapper {
+  display: flex;
+  justify-content: flex-end;
+}

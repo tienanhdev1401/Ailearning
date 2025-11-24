@@ -9,10 +9,6 @@ export class CreateDayDto {
   @IsString()
   description?: string;
 
-  @IsOptional()
-  @IsString()
-  content?: string;
-
   @IsInt()
   condition?: number;
 

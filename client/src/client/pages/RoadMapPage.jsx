@@ -947,9 +947,6 @@ const RoadMapPage = () => {
                   </div>
                 </div>
                 <div className={styles.miniGameHubFooter}>
-                  <button className={styles.primaryBtn} type="button" onClick={handleMiniGameViewNext}>
-                    {miniGameView.selectedIndex < miniGameView.miniGames.length - 1 ? 'Game tiếp theo' : 'Hoàn thành hoạt động'}
-                  </button>
                   <div className={styles.footerHint}>Hoàn tất {miniGameView.activityIndex + 1} / {miniGameView.activities?.length || 0} hoạt động.</div>
                 </div>
               </div>
