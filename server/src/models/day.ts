@@ -13,9 +13,6 @@ export class Day {
   @Column({ name: "description", type: "text", nullable: true })
   description?: string;
 
-  @Column({ name: "content", type: "text", nullable: true })
-  content?: string;
-
   @Column({ name: "condition", type: "int", nullable: true })
   condition?: number;
 
