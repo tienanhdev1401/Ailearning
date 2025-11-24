@@ -38,6 +38,7 @@ import ProfilePage from "./client/pages/ProfilePage";
 import LessonTopicPage from "./client/pages/LessonTopicPage";
 import TopicDetailPage from "./client/pages/LessonTopicDetailPage";
 import USER_ROLE from "./enums/userRole.enum";
+import ActivityManagerPage from "./admin/pages/ActivityManagerPage.jsx";
 
 function App() {
   return (
@@ -211,6 +212,15 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
             <AdminLayout><RoadmapDaysPage /></AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/days/:dayId/activities"
+        element={
+          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+            <AdminLayout><ActivityManagerPage /></AdminLayout>
           </ProtectedRoute>
         }
       />
