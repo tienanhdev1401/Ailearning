@@ -108,11 +108,6 @@ const LessonMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>{saving ? "Đang lưu..." : "Lưu"}</button>
           <button className="btn btn-outline-secondary" onClick={onClose}>Đóng</button>
         </div>
-
-        <div className="small text-muted mt-3">
-          <div>Created: {minigame.createdAt}</div>
-          <div>Updated: {minigame.updatedAt}</div>
-        </div>
       </div>
     </div>
   );

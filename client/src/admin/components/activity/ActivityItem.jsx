@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../../../api/api";
 import MiniGameList from "../minigame/MiniGameList";
 
 const ActivityItem = ({ activity, onRefresh }) => {
@@ -8,7 +8,7 @@ const ActivityItem = ({ activity, onRefresh }) => {
   const handleDelete = async () => {
     if (!window.confirm("Xóa activity này?")) return;
     try {
-      await axios.delete(`/api/activities/${activity.id}`);
+      await api.delete(`/activities/${activity.id}`);
       onRefresh && onRefresh();
     } catch (err) {
       console.error(err);
