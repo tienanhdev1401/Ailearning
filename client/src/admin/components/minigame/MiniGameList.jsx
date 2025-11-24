@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import api from "../../../api/api";
 import MatchImageWordMiniGame from "./MatchImageWordMiniGame";
+import LessonMiniGame from "./LessonMiniGame";
 
 const MiniGameList = ({ activityId, onRefresh }) => {
   const [minigames, setMinigames] = useState([]);
@@ -184,18 +185,25 @@ const MiniGameList = ({ activityId, onRefresh }) => {
                   onSave={(payload) => handleSaveDetail(selected.id, payload)}
                   onDelete={() => handleDeleteDetail(selected.id)}
                 />
+              ) : (selected.type === "LESSON" || selected.type === "lesson") ? (
+                <LessonMiniGame
+                  minigame={selected}
+                  onClose={closeDetail}
+                  onSave={(payload) => handleSaveDetail(selected.id, payload)}
+                  onDelete={() => handleDeleteDetail(selected.id)}
+                />
               ) : (
-                <div className="card p-3">
-                  <div className="d-flex justify-content-between">
-                    <h5>Minigame: {selected.type}</h5>
-                    <div>
-                      <button className="btn btn-sm btn-danger me-2" onClick={() => handleDeleteDetail(selected.id)}>Xóa</button>
-                      <button className="btn btn-sm btn-outline-secondary" onClick={closeDetail}>Đóng</button>
-                    </div>
-                  </div>
-                  <pre style={{ maxHeight: 400, overflow: "auto" }}>{JSON.stringify(selected, null, 2)}</pre>
-                </div>
-              )
+                 <div className="card p-3">
+                   <div className="d-flex justify-content-between">
+                     <h5>Minigame: {selected.type}</h5>
+                     <div>
+                       <button className="btn btn-sm btn-danger me-2" onClick={() => handleDeleteDetail(selected.id)}>Xóa</button>
+                       <button className="btn btn-sm btn-outline-secondary" onClick={closeDetail}>Đóng</button>
+                     </div>
+                   </div>
+                   <pre style={{ maxHeight: 400, overflow: "auto" }}>{JSON.stringify(selected, null, 2)}</pre>
+                 </div>
+               )
             )}
           </div>
         </div>,
