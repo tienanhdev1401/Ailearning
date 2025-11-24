@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styles from "../../styles/MiniGameMatchImageWord.module.css";
 
 const MiniGameMatchImageWord = ({ data, onNext }) => {
+  const imageList = Array.isArray(data?.resources?.images) ? data.resources.images : [];
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedWord, setSelectedWord] = useState("");
   const [completedPairs, setCompletedPairs] = useState([]);
@@ -30,8 +31,10 @@ const MiniGameMatchImageWord = ({ data, onNext }) => {
     setTimeout(() => setFeedback(null), 1500);
   };
 
-  const allCompleted = completedPairs.length === data.resources.images.length;
-  const progress = Math.round((completedPairs.length / data.resources.images.length) * 100);
+  const allCompleted = imageList.length === 0 || completedPairs.length === imageList.length;
+  const progress = imageList.length
+    ? Math.round((completedPairs.length / imageList.length) * 100)
+    : 0;
 
   return (
     <div className={styles.gameContainer}>
@@ -40,7 +43,7 @@ const MiniGameMatchImageWord = ({ data, onNext }) => {
         <div className={styles.progressBar}>
           <div className={styles.progressFill} style={{ width: `${progress}%` }}></div>
         </div>
-        <span className={styles.progressText}>{completedPairs.length} / {data.resources.images.length}</span>
+        <span className={styles.progressText}>{completedPairs.length} / {imageList.length}</span>
       </div>
 
       {feedback !== null && (
@@ -62,7 +65,7 @@ const MiniGameMatchImageWord = ({ data, onNext }) => {
       )}
 
       <div className={styles.imagesGrid}>
-        {data.resources.images.map((img) => (
+        {imageList.map((img) => (
           <div
             key={img.id}
             className={`${styles.imageCard} ${
@@ -86,7 +89,7 @@ const MiniGameMatchImageWord = ({ data, onNext }) => {
 
       <div className={styles.wordsContainer}>
         <div className={styles.wordsGrid}>
-          {data.resources.images.map((img) => (
+          {imageList.map((img) => (
             <button
               key={img.correctWord}
               className={`${styles.wordButton} ${

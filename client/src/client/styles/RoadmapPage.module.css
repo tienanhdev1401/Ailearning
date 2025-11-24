@@ -872,6 +872,13 @@
   box-shadow: 0 12px 30px rgba(0, 255, 204, 0.4);
 }
 
+.primaryBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  filter: grayscale(0.2);
+}
+
 .secondaryBtn {
   border: none;
   border-radius: 999px;
