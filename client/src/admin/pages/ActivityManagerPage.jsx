@@ -8,9 +8,7 @@ const ActivityManagerPage = () => {
   const navigate = useNavigate();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [dayContent, setDayContent] = useState(null);
 
-  // new: add form state
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newSkill, setNewSkill] = useState("reading");
@@ -23,12 +21,10 @@ const ActivityManagerPage = () => {
       const resp = await api.get(`/days/${dayId}/activities`);
       const returned = resp.data;
       const items = returned?.data ?? returned;
-      setDayContent(returned?.dayContent ?? null);
       setActivities(Array.isArray(items) ? items : items?.data ?? items ?? []);
     } catch (err) {
       console.error("Load activities error", err);
       setActivities([]);
-      setDayContent(null);
     } finally {
       setLoading(false);
     }
@@ -37,7 +33,7 @@ const ActivityManagerPage = () => {
   useEffect(() => {
     if (!dayId) return;
     load();
-  }, [load]);
+  }, [load, dayId]);
 
   const handleReorder = async (newActivities) => {
     setActivities(newActivities);
@@ -59,14 +55,6 @@ const ActivityManagerPage = () => {
         <button className="btn btn-secondary me-3" onClick={() => navigate(-1)}>Back</button>
         <h2 className="mb-0">Quản lý Activities - Day #{dayId}</h2>
       </div>
-
-      {dayContent ? (
-        <div className="mb-3">
-          <h5>Nội dung day</h5>
-          <div className="card p-3" dangerouslySetInnerHTML={{ __html: dayContent }} />
-        </div>
-      ) : null}
-
       <div className="mb-3">
         <div className="d-flex gap-2 mb-2">
           <button className="btn btn-primary" onClick={load} disabled={loading}>Tải lại</button>
