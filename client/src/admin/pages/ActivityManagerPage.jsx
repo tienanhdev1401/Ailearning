@@ -8,9 +8,7 @@ const ActivityManagerPage = () => {
   const navigate = useNavigate();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [dayContent, setDayContent] = useState(null);
 
-  // new: add form state
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newSkill, setNewSkill] = useState("reading");
@@ -23,12 +21,10 @@ const ActivityManagerPage = () => {
       const resp = await api.get(`/days/${dayId}/activities`);
       const returned = resp.data;
       const items = returned?.data ?? returned;
-      setDayContent(returned?.dayContent ?? null);
       setActivities(Array.isArray(items) ? items : items?.data ?? items ?? []);
     } catch (err) {
       console.error("Load activities error", err);
       setActivities([]);
-      setDayContent(null);
     } finally {
       setLoading(false);
     }
@@ -37,7 +33,7 @@ const ActivityManagerPage = () => {
   useEffect(() => {
     if (!dayId) return;
     load();
-  }, [load]);
+  }, [load, dayId]);
 
   const handleReorder = async (newActivities) => {
     setActivities(newActivities);
@@ -55,103 +51,116 @@ const ActivityManagerPage = () => {
 
   return (
     <div className="container p-4">
-      <div className="d-flex align-items-center mb-3">
-        <button className="btn btn-secondary me-3" onClick={() => navigate(-1)}>Back</button>
-        <h2 className="mb-0">Quản lý Activities - Day #{dayId}</h2>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <button
+            className="btn btn-secondary me-3"
+            onClick={() => navigate(-1)}
+          >
+            Back
+          </button>
+
+          <h2 className="mb-0">Quản lý Activities - Day #{dayId}</h2>
+        </div>
+        <div className="d-flex gap-2">
+          <button className="btn btn-outline-primary" onClick={load} disabled={loading}>Refesh</button>
+          <button className="btn btn-primary" onClick={() => setShowAddForm(true)}>Thêm activity</button>
+        </div>
       </div>
-
-      {dayContent ? (
-        <div className="mb-3">
-          <h5>Nội dung day</h5>
-          <div className="card p-3" dangerouslySetInnerHTML={{ __html: dayContent }} />
-        </div>
-      ) : null}
-
-      <div className="mb-3">
-        <div className="d-flex gap-2 mb-2">
-          <button className="btn btn-primary" onClick={load} disabled={loading}>Tải lại</button>
-          {!showAddForm && (
-            <button className="btn btn-success" onClick={() => setShowAddForm(true)}>Thêm activity</button>
-          )}
-        </div>
-
+      {/* POPUP FORM ADD ACTIVITY */}
         {showAddForm && (
-          <div className="card card-body mb-3">
-            <div className="row g-2 align-items-center">
-              <div className="col-md-5">
-                <input
-                  className="form-control"
-                  placeholder="Tiêu đề activity"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                />
-              </div>
-              <div className="col-md-3">
-                <select
-                  className="form-select"
-                  value={newSkill}
-                  onChange={(e) => setNewSkill(e.target.value)}
-                >
-                  {ALLOWED_SKILLS.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-md-2">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="pointOfAc"
-                  value={newPointOfAc}
-                  onChange={(e) => setNewPointOfAc(e.target.value)}
-                />
-              </div>
-              <div className="col-md-2 d-flex gap-2">
-                <button
-                  className="btn btn-success"
-                  onClick={async () => {
-                    // validation
-                    if (!newTitle || !newTitle.trim()) {
-                      alert("Tiêu đề không được rỗng");
-                      return;
-                    }
-                    if (!ALLOWED_SKILLS.includes(newSkill)) {
-                      alert("Skill không hợp lệ");
-                      return;
-                    }
-                    const point = Number(newPointOfAc);
-                    if (!Number.isInteger(point)) {
-                      alert("pointOfAc phải là số nguyên");
-                      return;
-                    }
-                    try {
-                      await api.post("/activities", {
-                        title: newTitle.trim(),
-                        dayId: Number(dayId),
-                        order: activities.length + 1,
-                        skill: newSkill,
-                        pointOfAc: point,
-                      });
-                      // reset & reload
-                      setNewTitle("");
-                      setNewSkill("reading");
-                      setNewPointOfAc(0);
-                      setShowAddForm(false);
-                      await load();
-                    } catch (e) {
-                      console.error(e);
-                      alert("Tạo activity thất bại");
-                    }
-                  }}
-                >
-                  Lưu
-                </button>
-                <button className="btn btn-outline-secondary" onClick={() => setShowAddForm(false)}>Hủy</button>
-              </div>
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ background: "rgba(0,0,0,0.45)", zIndex: 9999 }}
+        >
+          <div className="card shadow p-4" style={{ width: 600 }}>
+            <h5 className="mb-3">Thêm Activity</h5>
+
+            {/* TIÊU ĐỀ */}
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Tiêu đề</label>
+              <input
+                className="form-control"
+                placeholder="Nhập tiêu đề"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+              />
+            </div>
+
+            {/* SKILL COMBOBOX – KHÔNG ĐƯỢC NHẬP */}
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Skill</label>
+
+              <select
+                className="form-select"
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+              >
+                <option value="">-- Chọn skill --</option>
+                {ALLOWED_SKILLS.map((skill) => (
+                  <option key={skill} value={skill}>
+                    {skill}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* ĐIỂM */}
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Điểm activity</label>
+              <input
+                type="number"
+                className="form-control"
+                placeholder="Ví dụ: 10"
+                value={newPointOfAc}
+                onChange={(e) => setNewPointOfAc(e.target.value)}
+              />
+            </div>
+
+            {/* BUTTONS */}
+            <div className="d-flex justify-content-end gap-2 mt-2">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowAddForm(false)}
+              >
+                Đóng
+              </button>
+
+              <button
+                className="btn btn-primary"
+                onClick={async () => {
+                  if (!newTitle.trim()) return alert("Tiêu đề không được rỗng");
+                  if (!ALLOWED_SKILLS.includes(newSkill))
+                    return alert("Skill không hợp lệ");
+                  if (!Number.isInteger(Number(newPointOfAc)))
+                    return alert("Điểm phải là số nguyên");
+
+                  try {
+                    await api.post("/activities", {
+                      title: newTitle.trim(),
+                      dayId: Number(dayId),
+                      order: activities.length + 1,
+                      skill: newSkill,
+                      pointOfAc: Number(newPointOfAc),
+                    });
+
+                    setNewTitle("");
+                    setNewSkill("reading");
+                    setNewPointOfAc(0);
+                    setShowAddForm(false);
+                    await load();
+                  } catch (err) {
+                    console.error(err);
+                    alert("Tạo activity thất bại");
+                  }
+                }}
+              >
+                Lưu
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <ActivityList activities={activities} onReorder={handleReorder} onRefresh={load} />
     </div>

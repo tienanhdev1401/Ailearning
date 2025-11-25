@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/api';
+import { ThemeContext } from '../../context/ThemeContext';
 
 const emptyForm = { dayNumber: '', theme: '', description: '', condition: '' };
 
@@ -17,6 +18,8 @@ const RoadmapDaysPage = () => {
   const [modal, setModal] = useState({ type: null, payload: null });
   const [form, setForm] = useState(emptyForm);
   const [hoveredDay, setHoveredDay] = useState(null);
+
+  const { isDarkMode } = useContext(ThemeContext);
 
   const loadRoadmap = useCallback(async () => {
     try {
@@ -118,25 +121,48 @@ const RoadmapDaysPage = () => {
       ? rowCount * DAY_HEIGHT + (rowCount - 1) * GAP // rows * rowHeight + gaps giữa hàng
       : undefined;
 
+  
+  const dayColors = {
+    light: {
+      background: "#e8f4ff",      // xanh nhạt
+      text: "#005b99",
+      circleBg: "#e8f4ff",
+      circleShadow: `
+        0 0 0 3px #90d8ff inset,
+        0 0 0 6px #64bbf5 inset,
+        0 0 12px rgba(80,170,255,0.4)
+      `
+    },
+
+    dark: {
+      background: "#002b36",
+      text: "#fff",
+      circleBg: "radial-gradient(circle, #003b48, #002b36)",
+      circleShadow: `
+        0 0 0 3px #2af5d2 inset,
+        0 0 0 6px #1fbfa1 inset,
+        0 0 12px rgba(42,245,210,0.6)
+      `
+    }
+  };
+
+
   return (
-    <div className="calendar-page container-fluid p-5 p-lg-4" style={{ marginTop: "24px" }}>
+    <div>
+      <div className="container p-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <div>
-          <div className="d-flex align-items-center mb-3">
-            <button
-              className="btn btn-primary"
-              onClick={() => navigate('/admin/roadmaps')}
-            >
-              ← Back
-            </button>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <button
+            className="btn btn-secondary me-3"
+            onClick={() => navigate(-1)}
+          >
+            Back
+          </button>
 
-            <h1 className="h3 mb-0 ms-2">
-              Ngày của roadmap: {roadmap?.levelName || roadmapId}
-            </h1>
-          </div>
-          <p className="text-muted mb-0">Manage days visually</p>
+          <h2 className="mb-0">
+            Quản lý ngày của roadmap: {roadmap?.levelName || roadmapId}
+          </h2>
         </div>
-
         <div className="d-flex gap-2">
           <button className="btn btn-outline-primary" onClick={loadRoadmap}>Refresh</button>
           <button className="btn btn-primary" onClick={openAdd}>Thêm ngày</button>
@@ -159,205 +185,133 @@ const RoadmapDaysPage = () => {
         }}
       >
         {days.map((d) => {
-          const num = Number(d.dayNumber);
+        const num = Number(d.dayNumber);
+        const theme = isDarkMode ? dayColors.dark : dayColors.light;
 
-          return (
+        return (
+          <div
+            key={num}
+            className="month-day card p-0"
+            onDoubleClick={() => openAddAt(num)}
+            onClick={() => navigate(`/admin/days/${d.id}/activities`)}
+            onMouseEnter={() => setHoveredDay(num)}
+            onMouseLeave={() => setHoveredDay(null)}
+            style={{
+              background: theme.background,
+              minHeight: DAY_HEIGHT,
+              display: 'flex',
+              cursor: 'pointer',
+              borderRadius: 8,
+              overflow: 'hidden',
+              position: 'relative',
+              color: theme.text,
+              transition: "transform 0.25s ease, box-shadow 0.25s ease",
+              transform: hoveredDay === num ? "scale(1.06)" : "scale(1)",
+              boxShadow:
+                hoveredDay === num
+                  ? "0 10px 20px rgba(0,0,0,0.35)"
+                  : "0 2px 8px rgba(0,0,0,0.15)",
+              zIndex: hoveredDay === num ? 5 : 1,
+            }}
+          >
+            {/* ICONS */}
             <div
-              key={num}
-              className="month-day card p-0"
-              onDoubleClick={() => openAddAt(num)}
-              onClick={() => navigate(`/admin/days/${d.id}/activities`)}
-              onMouseEnter={() => setHoveredDay(num)}
-              onMouseLeave={() => setHoveredDay(null)}
               style={{
-                background: '#002b36',
-                // giữ chiều cao ô như bạn muốn
-                minHeight: DAY_HEIGHT,
-                display: 'flex',
-                cursor: 'pointer',
-                borderRadius: 8,
-                overflow: 'hidden',
-                position: 'relative',
-                color: '#fff',
-                transition: "transform 0.25s ease, box-shadow 0.25s ease",
-                transform: hoveredDay === num ? "scale(1.06)" : "scale(1)",
-                boxShadow:
-                  hoveredDay === num
-                    ? "0 10px 20px rgba(0,0,0,0.35)"
-                    : "0 2px 8px rgba(0,0,0,0.15)",
-                zIndex: hoveredDay === num ? 5 : 1,
+                position: "absolute",
+                top: 8,
+                right: 8,
+                display: "flex",
+                gap: 4,
+                pointerEvents: "auto"
               }}
             >
-              {/* DESCRIPTION HOVER */}
-              {hoveredDay === num && d?.description && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: '100%',
-                    left: '50%',
-                    transform: 'translateX(-50%) translateY(-8px)',
-                    background: 'rgba(0,0,0,0.85)',
-                    color: '#fff',
-                    padding: '10px 14px',
-                    borderRadius: 8,
-                    width: 240,
-                    textAlign: 'center',
-                    fontSize: 14,
-                    zIndex: 999,
-                    whiteSpace: 'normal',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
-                    pointerEvents: 'none'
-                  }}
-                >
-                  {d.description}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: 0,
-                      height: 0,
-                      borderLeft: '8px solid transparent',
-                      borderRight: '8px solid transparent',
-                      borderTop: '8px solid rgba(0,0,0,0.85)'
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* ICONS */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  display: "flex",
-                  gap: 4,
-                  pointerEvents: "auto"
-                }}
+              <button
+                className="btn btn-sm btn-light p-1"
+                style={{ width: 26, height: 26 }}
+                onClick={(e) => { e.stopPropagation(); openEdit(d); }}
               >
-                <button
-                  className="btn btn-sm btn-light p-1"
-                  style={{ width: 26, height: 26 }}
-                  onClick={(e) => { e.stopPropagation(); openEdit(d); }}
-                >
-                  <i className="bi bi-pencil" style={{ fontSize: 14 }} />
-                </button>
+                <i className="bi bi-pencil" style={{ fontSize: 14 }} />
+              </button>
 
-                <button
-                  className="btn btn-sm btn-danger p-1"
-                  style={{ width: 26, height: 26 }}
-                  onClick={(e) => { e.stopPropagation(); deleteDay(d); }}
-                >
-                  <i className="bi bi-trash" style={{ fontSize: 14 }} />
-                </button>
+              <button
+                className="btn btn-sm btn-danger p-1"
+                style={{ width: 26, height: 26 }}
+                onClick={(e) => { e.stopPropagation(); deleteDay(d); }}
+              >
+                <i className="bi bi-trash" style={{ fontSize: 14 }} />
+              </button>
+            </div>
+
+            {/* CIRCLE */}
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                width: 80,
+                height: 80,
+                borderRadius: "50%",
+                background: theme.circleBg,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: theme.circleShadow,
+                color: theme.text,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.85, letterSpacing: 1 }}>
+                DAY
               </div>
-
-              {/* BLUE DAY CIRCLE */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  width: 80,
-                  height: 80,
-                  borderRadius: "50%",
-                  background: "radial-gradient(circle, #003b48, #002b36)",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: `
-                      0 0 0 3px #2af5d2 inset,
-                      0 0 0 6px #1fbfa1 inset,
-                      0 0 12px rgba(42,245,210,0.6)
-                    `,
-                  color: "#fff",
-                }}
-              >
-                <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.85, letterSpacing: 1 }}>
-                  DAY
-                </div>
-                <div style={{ fontSize: 26, fontWeight: 800, marginTop: -2 }}>
-                  {num}
-                </div>
+              <div style={{ fontSize: 26, fontWeight: 800, marginTop: -2 }}>
+                {num}
               </div>
             </div>
-          );
-        })}
+          </div>
+        );
+      })}
       </div>
 
       {/* MODAL */}
       {modal.type && (
       <div
-        className="modal-backdrop"
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.35)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1050
-        }}
+        className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ background: "rgba(0,0,0,0.45)", zIndex: 9999 }}
       >
-        <div className="modal-dialog" style={{ maxWidth: 600, width: '100%' }}>
+        <div >
           <div
-            className="modal-content p-3"
-            style={{
-              background: "#ffffff",
-              color: "#000000",
-              borderRadius: 12,
-              border: "1px solid #ccc",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
-            }}
+            className="card shadow p-4" style={{ width: 600 }}
           >
-            <h5 className="mb-3" style={{ color: "#000", fontWeight: 700 }}>
+            <h5 className="mb-3">
               {modal.type === 'add' ? 'Thêm ngày' : 'Sửa ngày'}
             </h5>
 
-            <div className="mb-2">
-              <label className="form-label" style={{ color: "#000" }}>Số ngày</label>
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Số ngày</label>
               <input
                 className="form-control"
-                type="number"
-                style={{
-                  background: "#fff",
-                  border: "1px solid #ccc",
-                  color: "#000"
-                }}
+                type="number" 
                 value={form.dayNumber}
                 onChange={e => setForm(f => ({ ...f, dayNumber: e.target.value }))}
               />
             </div>
 
-            <div className="mb-2">
-              <label className="form-label" style={{ color: "#000" }}>Mô tả</label>
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Mô tả</label>
               <textarea
                 className="form-control"
                 rows={3}
-                style={{
-                  background: "#fff",
-                  border: "1px solid #ccc",
-                  color: "#000"
-                }}
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
               />
             </div>
 
-            <div className="mb-2">
-              <label className="form-label" style={{ color: "#000" }}>Condition (số)</label>
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Condition (số)</label>
               <input
                 className="form-control"
                 type="number"
-                style={{
-                  background: "#fff",
-                  border: "1px solid #ccc",
-                  color: "#000"
-                }}
                 value={form.condition}
                 onChange={e => setForm(f => ({ ...f, condition: e.target.value }))}
               />
@@ -371,12 +325,11 @@ const RoadmapDaysPage = () => {
                 Lưu
               </button>
             </div>
-
           </div>
         </div>
       </div>
-    )}
-
+      )}
+      </div>
     </div>
   );
 };
