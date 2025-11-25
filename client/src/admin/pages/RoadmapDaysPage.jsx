@@ -276,72 +276,42 @@ const RoadmapDaysPage = () => {
       {/* MODAL */}
       {modal.type && (
       <div
-        className="modal-backdrop"
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.35)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1050
-        }}
+        className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ background: "rgba(0,0,0,0.45)", zIndex: 9999 }}
       >
-        <div className="modal-dialog" style={{ maxWidth: 600, width: '100%' }}>
+        <div >
           <div
-            className="modal-content p-3"
-            style={{
-              background: "#ffffff",
-              color: "#000000",
-              borderRadius: 12,
-              border: "1px solid #ccc",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
-            }}
+            className="card shadow p-4" style={{ width: 600 }}
           >
-            <h5 className="mb-3" style={{ color: "#000", fontWeight: 700 }}>
+            <h5 className="mb-3">
               {modal.type === 'add' ? 'Thêm ngày' : 'Sửa ngày'}
             </h5>
 
-            <div className="mb-2">
-              <label className="form-label" style={{ color: "#000" }}>Số ngày</label>
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Số ngày</label>
               <input
                 className="form-control"
-                type="number"
-                style={{
-                  background: "#fff",
-                  border: "1px solid #ccc",
-                  color: "#000"
-                }}
+                type="number" 
                 value={form.dayNumber}
                 onChange={e => setForm(f => ({ ...f, dayNumber: e.target.value }))}
               />
             </div>
 
-            <div className="mb-2">
-              <label className="form-label" style={{ color: "#000" }}>Mô tả</label>
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Mô tả</label>
               <textarea
                 className="form-control"
                 rows={3}
-                style={{
-                  background: "#fff",
-                  border: "1px solid #ccc",
-                  color: "#000"
-                }}
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
               />
             </div>
 
-            <div className="mb-2">
-              <label className="form-label" style={{ color: "#000" }}>Condition (số)</label>
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Condition (số)</label>
               <input
                 className="form-control"
                 type="number"
-                style={{
-                  background: "#fff",
-                  border: "1px solid #ccc",
-                  color: "#000"
-                }}
                 value={form.condition}
                 onChange={e => setForm(f => ({ ...f, condition: e.target.value }))}
               />
