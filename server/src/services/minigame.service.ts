@@ -3,6 +3,7 @@ import { MiniGame } from "../models/minigame";
 import { MatchImageWordMiniGame } from "../models/minigameImp/match-image-word-minigame";
 import { LessonMiniGame } from "../models/minigameImp/lesson-minigame";
 import { ExamMiniGame } from "../models/minigameImp/exam-minigame";
+import { SentenceBuilderMiniGame } from "../models/minigameImp/sentence_builder";
 import { ListenSelectMiniGame } from "../models/minigameImp/listen-select-minigame";
 import { TrueFalseMiniGame } from "../models/minigameImp/true-false-minigame";
 import { TypingChallengeMiniGame } from "../models/minigameImp/typing-challenge-minigame";
@@ -29,6 +30,8 @@ export class MiniGameService {
         return new LessonMiniGame(dto.prompt, dto.resources as any, activity, dto.type);
       case MiniGameType.EXAM:
         return new ExamMiniGame(dto.prompt, dto.resources as any, activity, dto.type);
+      case MiniGameType.SENTENCE_BUILDER:
+        return new SentenceBuilderMiniGame(dto.prompt, dto.resources as any, activity, dto.type);
       case MiniGameType.LISTEN_SELECT:
         return new ListenSelectMiniGame(dto.prompt, dto.resources as any, activity, dto.type);
       case MiniGameType.TRUE_FALSE:

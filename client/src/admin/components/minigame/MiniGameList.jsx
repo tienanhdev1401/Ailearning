@@ -4,6 +4,8 @@ import api from "../../../api/api";
 import MatchImageWordMiniGame from "./MatchImageWordMiniGame";
 import LessonMiniGame from "./LessonMiniGame";
 import SentenceBuilderMiniGame from "./SentenceBuilderMiniGame";
+import ListenSelectMiniGame from "./ListenSelectMiniGame";
+import ExamMiniGame from "./ExamMiniGame";
 import TrueFalseMiniGame from "./TrueFalseMiniGame";
 import TypingChallengeMiniGame from "./TypingChallengeMiniGame";
 
@@ -76,6 +78,21 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 		const [content, setContent] = useState("");
     const [showPreview, setShowPreview] = useState(false);
 
+		// Exam fields
+		const [questions, setQuestions] = useState([]);
+		const addQuestion = () => { setQuestions([...questions, { question: "", options: ["","","",""], correctIndex: 0 }]);};
+		const updateQuestion = (idx, field, value) => {setQuestions(prev => { const copy = [...prev]; copy[idx][field] = value; return copy;});};
+		const updateOption = (qIdx, optIdx, value) => {setQuestions(prev => { const copy = [...prev]; copy[qIdx].options[optIdx] = value; return copy;});};
+		const removeQuestion = (idx) => { setQuestions(prev => prev.filter((_, i) => i !== idx));};
+
+		// Listen Select fields
+		const [audioUrl, setAudioUrl] = useState("");
+		const [listenOptions, setListenOptions] = useState([]);
+		const [correctIndex, setCorrectIndex] = useState(0);
+		const addListenOption = () => {setListenOptions([...listenOptions, { id: Date.now(), text: "", imageUrl: "" }]);};
+		const updateListenOption = (idx, field, value) => { setListenOptions(prev => { const copy = [...prev]; copy[idx][field] = value; return copy;});};
+		const removeListenOption = (idx) => { setListenOptions(prev => prev.filter((_, i) => i !== idx));};
+
 		const handleSubmit = async () => {
 			// basic validation
 			if (!prompt.trim()) return alert("Prompt không được rỗng");
@@ -83,12 +100,37 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 			if (type === "match_image_word") {
 				if (images.length < 2) return alert("Cần ít nhất 2 ảnh");
 				resources = { images: images.map(img => ({ id: img.id, imageUrl: img.imageUrl, correctWord: img.correctWord })) };
-			} else if (type === "lesson") {
+			} 
+			else if (type === "lesson") {
 				if (!content.trim()) return alert("Content HTML không được rỗng");
 				resources = { content };
-			} else if (type === "sentence_builder") {
+			} 
+			else if (type === "sentence_builder") {
 				if (tokens.length < 3) return alert("Cần ít nhất 3 từ");
 				resources = { tokens: tokens.map(t => ({ id: t.id, text: t.text })) };
+			} 
+			else if (type === "listen_select") {
+				if (!audioUrl.trim()) return alert("audioUrl không được rỗng");
+				if (listenOptions.length  <2) return alert("Phải có tối thiểu 2 lựa chọn");
+				if (listenOptions.some(o => !o.text || !o.imageUrl))
+					return alert("Mỗi option phải có text + imageUrl");
+				if (correctIndex < 0 || correctIndex > 3)
+					return alert("correctIndex phải từ 0 → 3");
+				resources = { audioUrl, options: listenOptions.map(o => ({ id: o.id, text: o.text,imageUrl: o.imageUrl})),correctIndex};
+			}
+			else if (type === "exam"){
+				if (questions.length === 0)
+					return alert("Cần ít nhất 1 câu hỏi");
+				for (const q of questions) {
+					if (!q.question.trim()) return alert("Câu hỏi không được rỗng");
+					if (q.options.length !== 4) return alert("Mỗi câu phải có đúng 4 đáp án");
+					if (q.options.some(o => !o.trim())) return alert("Đáp án không được rỗng");
+					if (q.correctIndex < 0 || q.correctIndex > 3)
+						return alert("correctIndex phải từ 0 → 3");
+				}
+				resources = { questions: questions.map(q => ({ question: q.question, options: q.options, correctIndex: q.correctIndex}))};
+			}
+			
 			} else if (type === "true_false") {
 				if (!tfStatement.trim()) return alert("Statement không được rỗng");
 				if (!tfOptions.every((opt) => opt.label.trim())) return alert("Vui lòng nhập đủ nội dung cho các lựa chọn");
@@ -246,6 +288,142 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 							))}
 						</div>
 					)}
+					{type === "exam" && (
+					<div>
+						<div className="d-flex justify-content-between align-items-center mb-2">
+							<h6>Các câu hỏi</h6>
+							<button className="btn btn-sm btn-outline-primary" onClick={addQuestion}>
+								Thêm câu hỏi
+							</button>
+						</div>
+
+						{questions.map((q, qIdx) => (
+							<div key={qIdx} className="card mb-3">
+								<div className="card-header d-flex justify-content-between align-items-center">
+									<strong>Câu {qIdx + 1}</strong>
+									<button className="btn btn-sm btn-outline-danger" onClick={() => removeQuestion(qIdx)}>X</button>
+								</div>
+
+								<div className="card-body">
+									<label className="form-label">Câu hỏi</label>
+									<input
+										className="form-control mb-3"
+										value={q.question}
+										onChange={(e) => updateQuestion(qIdx, "question", e.target.value)}
+									/>
+
+									<label className="form-label">Đáp án</label>
+									{q.options.map((opt, optIdx) => (
+										<div key={optIdx} className="input-group mb-2">
+											<span className="input-group-text">{String.fromCharCode(65 + optIdx)}</span>
+											<input
+												className="form-control"
+												value={opt}
+												onChange={(e) => updateOption(qIdx, optIdx, e.target.value)}
+											/>
+											<div className="input-group-text">
+												<input
+													type="radio"
+													checked={q.correctIndex === optIdx}
+													onChange={() => updateQuestion(qIdx, "correctIndex", optIdx)}
+												/>
+											</div>
+										</div>
+									))}
+								</div>
+							</div>
+						))}
+					</div>
+				)}
+				{type === "listen_select" && (
+				<div>
+					<label className="form-label">Audio URL</label>
+					<input
+						className="form-control mb-3"
+						value={audioUrl}
+						onChange={(e) => setAudioUrl(e.target.value)}
+					/>
+
+					{audioUrl && (
+						<audio controls className="mb-3" style={{ width: "100%" }}>
+							<source src={audioUrl} />
+						</audio>
+					)}
+
+					<div className="d-flex justify-content-between align-items-center mb-2">
+						<h6>Options</h6>
+						<button className="btn btn-sm btn-outline-primary" onClick={addListenOption}>
+							Thêm option
+						</button>
+					</div>
+
+					{listenOptions.map((opt, idx) => (
+						<div key={opt.id} className="card mb-2">
+							<div className="card-header d-flex justify-content-between align-items-center">
+							{/* Left section: Option title + Radio */}
+							<div className="d-flex align-items-center gap-3">
+								<strong>Option {idx + 1}</strong>
+
+								<div className="input-group-text">
+									<input
+										type="radio"
+										checked={correctIndex === idx}
+										onChange={() => setCorrectIndex(idx)}
+									/>
+								</div>
+							</div>
+
+							{/* Right section: delete button */}
+							<button
+								className="btn btn-sm btn-outline-danger"
+								onClick={() => removeListenOption(idx)}
+							>
+								X
+							</button>
+						</div>
+
+							<div className="card-body">
+								<div className="mb-2">
+									<label className="form-label">Text</label>
+									<input
+										className="form-control"
+										value={opt.text}
+										onChange={(e) => updateListenOption(idx, "text", e.target.value)}
+									/>
+								</div>
+
+								<div>
+									<label className="form-label">Image URL</label>
+									<input
+										className="form-control"
+										value={opt.imageUrl}
+										onChange={(e) => updateListenOption(idx, "imageUrl", e.target.value)}
+									/>
+
+									{opt.imageUrl && (
+										<img
+											src={opt.imageUrl}
+											alt=""
+											style={{
+												width: "100%",
+												maxHeight: 200,
+												objectFit: "contain",
+												borderRadius: 6,
+												marginTop: 8
+											}}
+											onError={(e) => (e.target.style.display = "none")}
+										/>
+									)}
+								</div>
+							</div>
+						</div>
+					))}
+				</div>
+			)}
+								</div>
+							))}
+						</div>
+					)}
 					{type === "true_false" && (
 						<div>
 							<div className="mb-3">
@@ -371,6 +549,7 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 	// save từ modal -> gọi API PUT, reload list và cập nhật selected
 	const handleSaveDetail = async (id, payload) => {
 		try {
+			console.log("Saving minigame", id, payload);
 			const resp = await api.put(`/minigames/${id}`, payload);
 			// cập nhật selected với dữ liệu trả về (nếu server trả)
 			setSelected(resp.data ?? { ...selected, ...payload });
@@ -444,6 +623,8 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 							<option value="match_image_word">match_image_word</option>
 							<option value="lesson">lesson</option>
 							<option value="sentence_builder">sentence_builder</option>
+							<option value="listen_select">listen_select</option>
+							<option value="exam">exam</option>
 							<option value="true_false">true_false</option>
 							<option value="typing_challenge">typing_challenge</option>
 						</select>
@@ -523,6 +704,20 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 								/>
 							) : (selected.type === "sentence_builder") ? (
 								<SentenceBuilderMiniGame
+									minigame={selected}
+									onClose={closeDetail}
+									onSave={(payload) => handleSaveDetail(selected.id, payload)}
+									onDelete={() => handleDeleteDetail(selected.id)}
+								/>
+							) : (selected.type === "listen_select") ? (
+								<ListenSelectMiniGame
+									minigame={selected}
+									onClose={closeDetail}
+									onSave={(payload) => handleSaveDetail(selected.id, payload)}
+									onDelete={() => handleDeleteDetail(selected.id)}
+								/>
+							): (selected.type === "exam") ? (
+								<ExamMiniGame
 									minigame={selected}
 									onClose={closeDetail}
 									onSave={(payload) => handleSaveDetail(selected.id, payload)}

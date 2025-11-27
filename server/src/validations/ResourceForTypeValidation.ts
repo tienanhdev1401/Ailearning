@@ -4,7 +4,8 @@ import { plainToInstance } from "class-transformer";
 import { MatchImageWordResources } from "../dto/request/MinigameResourceDTO/MatchImageWordResources";
 import { LessonResources } from "../dto/request/MinigameResourceDTO/LessonResources";
 import { ExamResources } from "../dto/request/MinigameResourceDTO/ExamResource";
-import { ListenSelectResources } from "../dto/request/MinigameResourceDTO/ListenSelectResource";
+import { SentenceBuilderResources } from "../dto/request/MinigameResourceDTO/SentenceBuilderResources";
+import { ListenSelectResources } from "../dto/request/MinigameResourceDTO/ListenSelectResources";
 import EType from "../enums/minigameType.enum";
 import { TrueFalseResources } from "../dto/request/MinigameResourceDTO/TrueFalseResource";
 import { TypingChallengeResources } from "../dto/request/MinigameResourceDTO/TypingChallengeResource";
@@ -14,6 +15,7 @@ export const resourceClassMap: Record<EType, any> = {
   [EType.MATCH_IMAGE_WORD]: MatchImageWordResources,
   [EType.LESSON]: LessonResources,
   [EType.EXAM]: ExamResources,
+  [EType.SENTENCE_BUILDER]: SentenceBuilderResources,
   [EType.LISTEN_SELECT]: ListenSelectResources,
   [EType.TRUE_FALSE]: TrueFalseResources,
   [EType.TYPING_CHALLENGE]: TypingChallengeResources,

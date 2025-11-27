@@ -3,16 +3,16 @@ import { MiniGame } from "../minigame";
 import { Activity } from "../activity";
 import MiniGameType from "../../enums/minigameType.enum";
 
-interface ListenOption {
-  id?: string | number;
-  imageUrl?: string;
-  text?: string;
+interface ListenSelectOption {
+  id: number;
+  text: string;
+  imageUrl: string;
 }
 
 interface ListenSelectResources {
-  audioUrl: string; // audio to play for this question
-  options: ListenOption[]; // 4 options
-  correctIndex: number; // index of correct option
+  options: ListenSelectOption[];
+  audioUrl: string;
+  correctIndex: number;
 }
 
 @ChildEntity(MiniGameType.LISTEN_SELECT)
@@ -20,7 +20,12 @@ export class ListenSelectMiniGame extends MiniGame {
   @Column({ type: "json" })
   resources!: ListenSelectResources;
 
-  constructor(prompt?: string, resources?: ListenSelectResources, activity?: Activity, type?: MiniGameType) {
+  constructor(
+    prompt?: string,
+    resources?: ListenSelectResources,
+    activity?: Activity,
+    type?: MiniGameType
+  ) {
     super(prompt, resources, activity, MiniGameType.LISTEN_SELECT);
   }
 }
