@@ -3,6 +3,7 @@ enum MiniGameType {
   LESSON = "lesson",
   EXAM = "exam",
   SENTENCE_BUILDER = "sentence_builder",
+  LISTEN_SELECT = "listen_select",
 }
 
 export default MiniGameType;
