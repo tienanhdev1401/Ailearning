@@ -6,6 +6,8 @@ import { LessonResources } from "../dto/request/MinigameResourceDTO/LessonResour
 import { ExamResources } from "../dto/request/MinigameResourceDTO/ExamResource";
 import { ListenSelectResources } from "../dto/request/MinigameResourceDTO/ListenSelectResource";
 import EType from "../enums/minigameType.enum";
+import { TrueFalseResources } from "../dto/request/MinigameResourceDTO/TrueFalseResource";
+import { TypingChallengeResources } from "../dto/request/MinigameResourceDTO/TypingChallengeResource";
 
 // 🔹 Map type → resource class
 export const resourceClassMap: Record<EType, any> = {
@@ -13,6 +15,8 @@ export const resourceClassMap: Record<EType, any> = {
   [EType.LESSON]: LessonResources,
   [EType.EXAM]: ExamResources,
   [EType.LISTEN_SELECT]: ListenSelectResources,
+  [EType.TRUE_FALSE]: TrueFalseResources,
+  [EType.TYPING_CHALLENGE]: TypingChallengeResources,
 };
 
 // 🔹 Lấy class resource theo type, throw lỗi nếu không có

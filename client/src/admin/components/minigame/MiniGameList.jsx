@@ -4,6 +4,8 @@ import api from "../../../api/api";
 import MatchImageWordMiniGame from "./MatchImageWordMiniGame";
 import LessonMiniGame from "./LessonMiniGame";
 import SentenceBuilderMiniGame from "./SentenceBuilderMiniGame";
+import TrueFalseMiniGame from "./TrueFalseMiniGame";
+import TypingChallengeMiniGame from "./TypingChallengeMiniGame";
 
 const MiniGameList = ({ activityId, onRefresh }) => {
 	const [minigames, setMinigames] = useState([]);
@@ -35,6 +37,41 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 		const updateToken = (i, text) => { const c = [...tokens]; c[i] = { ...c[i], text }; setTokens(c); };
 		const removeToken = (i) => setTokens((s) => s.filter((_, idx) => idx !== i));
 
+		// TRUE_FALSE fields
+		const [tfStatement, setTfStatement] = useState("");
+		const [tfOptions, setTfOptions] = useState([
+			{ key: "A", label: "Đúng" },
+			{ key: "B", label: "Sai" },
+		]);
+		const [tfCorrect, setTfCorrect] = useState("A");
+		const [tfExplanation, setTfExplanation] = useState("");
+		const updateTfOption = (key, value) => {
+			setTfOptions((prev) => prev.map((opt) => (opt.key === key ? { ...opt, label: value } : opt)));
+		};
+
+		// TYPING_CHALLENGE fields
+		const [typingTarget, setTypingTarget] = useState("");
+		const [typingCaseSensitive, setTypingCaseSensitive] = useState(false);
+		const [typingTimeLimit, setTypingTimeLimit] = useState("");
+		const [typingHints, setTypingHints] = useState([]);
+		const [typingHintInput, setTypingHintInput] = useState("");
+		const addTypingHint = () => {
+			const next = (typingHintInput || "").trim();
+			if (!next) return;
+			if (typingHints.length >= 5) {
+				alert("Tối đa 5 gợi ý");
+				return;
+			}
+			setTypingHints((prev) => [...prev, next]);
+			setTypingHintInput("");
+		};
+		const updateTypingHint = (index, value) => {
+			setTypingHints((prev) => prev.map((hint, idx) => (idx === index ? value : hint)));
+		};
+		const removeTypingHint = (index) => {
+			setTypingHints((prev) => prev.filter((_, idx) => idx !== index));
+		};
+
 		// LESSON fields
 		const [content, setContent] = useState("");
     const [showPreview, setShowPreview] = useState(false);
@@ -52,6 +89,27 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 			} else if (type === "sentence_builder") {
 				if (tokens.length < 3) return alert("Cần ít nhất 3 từ");
 				resources = { tokens: tokens.map(t => ({ id: t.id, text: t.text })) };
+			} else if (type === "true_false") {
+				if (!tfStatement.trim()) return alert("Statement không được rỗng");
+				if (!tfOptions.every((opt) => opt.label.trim())) return alert("Vui lòng nhập đủ nội dung cho các lựa chọn");
+				resources = {
+					statement: tfStatement.trim(),
+					options: tfOptions.map((opt) => ({ key: opt.key, label: opt.label.trim() })),
+					correctOption: tfCorrect,
+					explanation: tfExplanation.trim() || undefined,
+				};
+			} else if (type === "typing_challenge") {
+				if (!typingTarget.trim()) return alert("Target text không được rỗng");
+				const numericLimit = Number(typingTimeLimit);
+				if (typingTimeLimit !== "" && (!Number.isFinite(numericLimit) || numericLimit <= 0)) {
+					return alert("Thời gian phải là số dương");
+				}
+				resources = {
+					targetText: typingTarget.trim(),
+					caseSensitive: Boolean(typingCaseSensitive),
+					hints: typingHints.map((hint) => hint.trim()).filter(Boolean),
+					...(typingTimeLimit === "" ? {} : { timeLimitSeconds: Math.floor(numericLimit) }),
+				};
 			}
 
 			try {
@@ -188,6 +246,74 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 							))}
 						</div>
 					)}
+					{type === "true_false" && (
+						<div>
+							<div className="mb-3">
+								<label className="form-label">Statement</label>
+								<textarea className="form-control" rows={3} value={tfStatement} onChange={(e) => setTfStatement(e.target.value)} />
+							</div>
+
+							<div className="mb-3">
+								<h6 className="mb-2">Lựa chọn</h6>
+								{tfOptions.map((opt) => (
+									<div key={opt.key} className="mb-2">
+										<label className="form-label">Phương án {opt.key}</label>
+										<input className="form-control" value={opt.label} onChange={(e) => updateTfOption(opt.key, e.target.value)} />
+									</div>
+								))}
+							</div>
+
+							<div className="mb-3">
+								<label className="form-label">Đáp án đúng</label>
+								<select className="form-select" value={tfCorrect} onChange={(e) => setTfCorrect(e.target.value)}>
+									<option value="A">A</option>
+									<option value="B">B</option>
+								</select>
+							</div>
+
+							<div className="mb-3">
+								<label className="form-label">Giải thích (tùy chọn)</label>
+								<textarea className="form-control" rows={3} value={tfExplanation} onChange={(e) => setTfExplanation(e.target.value)} />
+							</div>
+						</div>
+					)}
+
+					{type === "typing_challenge" && (
+						<div>
+							<div className="mb-3">
+								<label className="form-label">Target text</label>
+								<textarea className="form-control" rows={3} value={typingTarget} onChange={(e) => setTypingTarget(e.target.value)} />
+							</div>
+
+							<div className="form-check form-switch mb-3">
+								<input className="form-check-input" type="checkbox" id="typingCaseSensitiveToggle" checked={typingCaseSensitive} onChange={(e) => setTypingCaseSensitive(e.target.checked)} />
+								<label className="form-check-label" htmlFor="typingCaseSensitiveToggle">Phân biệt chữ hoa chữ thường</label>
+							</div>
+
+							<div className="mb-3">
+								<label className="form-label">Thời gian (giây, tùy chọn)</label>
+								<input className="form-control" type="number" min="0" value={typingTimeLimit} onChange={(e) => setTypingTimeLimit(e.target.value === "" ? "" : Number(e.target.value))} />
+							</div>
+
+							<div className="mb-3">
+								<div className="d-flex justify-content-between align-items-center mb-2">
+									<label className="form-label mb-0">Gợi ý (tối đa 5)</label>
+									<div className="d-flex gap-2">
+										<input className="form-control form-control-sm" style={{ width: 240 }} placeholder="Thêm gợi ý" value={typingHintInput} onChange={(e) => setTypingHintInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTypingHint(); } }} />
+										<button className="btn btn-sm btn-outline-primary" onClick={addTypingHint}>Thêm</button>
+									</div>
+								</div>
+								{typingHints.length === 0 && <div className="text-muted">Chưa có gợi ý</div>}
+								{typingHints.map((hint, idx) => (
+									<div key={idx} className="input-group mb-2">
+										<span className="input-group-text">{idx + 1}</span>
+										<input className="form-control" value={hint} onChange={(e) => updateTypingHint(idx, e.target.value)} />
+										<button className="btn btn-outline-danger" onClick={() => removeTypingHint(idx)}>Xóa</button>
+									</div>
+								))}
+							</div>
+						</div>
+					)}
           <div className="d-flex align-items-center mb-3">
 						<div className="ms-auto">
 							<button className="btn btn-sm btn-outline-secondary me-2" onClick={onCancel}>Hủy</button>
@@ -318,10 +444,13 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 							<option value="match_image_word">match_image_word</option>
 							<option value="lesson">lesson</option>
 							<option value="sentence_builder">sentence_builder</option>
+							<option value="true_false">true_false</option>
+							<option value="typing_challenge">typing_challenge</option>
 						</select>
 					</div>
 					{/* render form for selected addType */}
 					<AddMiniGameForm
+						key={addType}
 						activityId={activityId}
 						type={addType}
 						onCancel={() => setShowAddPanel(false)}
@@ -394,6 +523,20 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 								/>
 							) : (selected.type === "sentence_builder") ? (
 								<SentenceBuilderMiniGame
+									minigame={selected}
+									onClose={closeDetail}
+									onSave={(payload) => handleSaveDetail(selected.id, payload)}
+									onDelete={() => handleDeleteDetail(selected.id)}
+								/>
+							) : (selected.type === "true_false") ? (
+								<TrueFalseMiniGame
+									minigame={selected}
+									onClose={closeDetail}
+									onSave={(payload) => handleSaveDetail(selected.id, payload)}
+									onDelete={() => handleDeleteDetail(selected.id)}
+								/>
+							) : (selected.type === "typing_challenge") ? (
+								<TypingChallengeMiniGame
 									minigame={selected}
 									onClose={closeDetail}
 									onSave={(payload) => handleSaveDetail(selected.id, payload)}

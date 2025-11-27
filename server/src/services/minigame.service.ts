@@ -4,6 +4,8 @@ import { MatchImageWordMiniGame } from "../models/minigameImp/match-image-word-m
 import { LessonMiniGame } from "../models/minigameImp/lesson-minigame";
 import { ExamMiniGame } from "../models/minigameImp/exam-minigame";
 import { ListenSelectMiniGame } from "../models/minigameImp/listen-select-minigame";
+import { TrueFalseMiniGame } from "../models/minigameImp/true-false-minigame";
+import { TypingChallengeMiniGame } from "../models/minigameImp/typing-challenge-minigame";
 import { Activity } from "../models/activity";
 import ApiError from "../utils/ApiError";
 import { HttpStatusCode } from "axios";
@@ -29,6 +31,10 @@ export class MiniGameService {
         return new ExamMiniGame(dto.prompt, dto.resources as any, activity, dto.type);
       case MiniGameType.LISTEN_SELECT:
         return new ListenSelectMiniGame(dto.prompt, dto.resources as any, activity, dto.type);
+      case MiniGameType.TRUE_FALSE:
+        return new TrueFalseMiniGame(dto.prompt, dto.resources as any, activity);
+      case MiniGameType.TYPING_CHALLENGE:
+        return new TypingChallengeMiniGame(dto.prompt, dto.resources as any, activity);
       default:
         throw new ApiError(HttpStatusCode.BadRequest, `Loại minigame không hợp lệ: ${dto.type}`);
     }

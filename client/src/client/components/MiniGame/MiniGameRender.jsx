@@ -4,6 +4,8 @@ import MiniGameSentenceBuilder from "../MiniGame/MiniGameSentenceBuilder";
 import MiniGameLesson from "../MiniGame/MiniGameLesson";
 import MiniGameExam from "../MiniGame/MiniGameExam";
 import MiniGameListenSelect from "../MiniGame/MiniGameListenSelect";
+import MiniGameTrueFalse from "../MiniGame/MiniGameTrueFalse";
+import MiniGameTypingChallenge from "../MiniGame/MiniGameTypingChallenge";
 
 const MiniGameRenderer = ({ game, onNext }) => {
   switch (game.type) {
@@ -17,6 +19,10 @@ const MiniGameRenderer = ({ game, onNext }) => {
       return <MiniGameExam data={game} onNext={onNext} />;
     case "listen_select":
       return <MiniGameListenSelect data={game} onNext={onNext} />;
+    case "true_false":
+      return <MiniGameTrueFalse data={game} onNext={onNext} />;
+    case "typing_challenge":
+      return <MiniGameTypingChallenge data={game} onNext={onNext} />;
     default:
       return <div className="text-center mt-5">❌ Chưa hỗ trợ loại minigame: {game.type}</div>;
   }
