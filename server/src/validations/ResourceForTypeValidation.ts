@@ -4,6 +4,7 @@ import { plainToInstance } from "class-transformer";
 import { MatchImageWordResources } from "../dto/request/MinigameResourceDTO/MatchImageWordResources";
 import { LessonResources } from "../dto/request/MinigameResourceDTO/LessonResources";
 import { ExamResources } from "../dto/request/MinigameResourceDTO/ExamResource";
+import { SentenceBuilderResources } from "../dto/request/MinigameResourceDTO/SentenceBuilderResources";
 import EType from "../enums/minigameType.enum";
 
 // 🔹 Map type → resource class
@@ -11,6 +12,7 @@ export const resourceClassMap: Record<EType, any> = {
   [EType.MATCH_IMAGE_WORD]: MatchImageWordResources,
   [EType.LESSON]: LessonResources,
   [EType.EXAM]: ExamResources,
+  [EType.SENTENCE_BUILDER]: SentenceBuilderResources,
 };
 
 // 🔹 Lấy class resource theo type, throw lỗi nếu không có
