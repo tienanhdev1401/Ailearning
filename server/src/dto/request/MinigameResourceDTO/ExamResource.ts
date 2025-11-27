@@ -1,4 +1,4 @@
-import { IsArray, IsInt, IsString, Length, Min, Max, ValidateNested } from "class-validator";
+import { IsArray, IsInt, IsString, Length, Min, Max, ValidateNested, ArrayMinSize, ArrayMaxSize  } from "class-validator";
 import { Type } from "class-transformer";
 
 export class ExamQuestion {
@@ -6,7 +6,8 @@ export class ExamQuestion {
   question!: string;
 
   @IsArray({ message: "options phải là mảng" })
-  @Length(4, 4, { message: "Mỗi câu phải có đúng 4 đáp án" })
+  @ArrayMinSize(4, { message: "Mỗi câu phải có đúng 4 đáp án" })
+  @ArrayMaxSize(4, { message: "Mỗi câu phải có đúng 4 đáp án" })
   @IsString({ each: true })
   options!: string[];
 
