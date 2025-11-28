@@ -135,7 +135,7 @@ const AdminHeader = ({ theme, onThemeToggle, searchIndex = [] }) => {
               >
                 <i className="bi bi-bell" />
                 <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                  3
+                  2
                 </span>
               </button>
               {notificationsOpen && (
@@ -143,7 +143,6 @@ const AdminHeader = ({ theme, onThemeToggle, searchIndex = [] }) => {
                   <li><h6 className="dropdown-header">Notifications</h6></li>
                   <li><Link className="dropdown-item" to="/admin/users" onClick={() => setNotificationsOpen(false)}>New user registered</Link></li>
                   <li><Link className="dropdown-item" to="/admin/reports" onClick={() => setNotificationsOpen(false)}>Server status update</Link></li>
-                  <li><Link className="dropdown-item" to="/admin/messages" onClick={() => setNotificationsOpen(false)}>New message received</Link></li>
                   <li><hr className="dropdown-divider" /></li>
                   <li>
                     <button
@@ -151,7 +150,7 @@ const AdminHeader = ({ theme, onThemeToggle, searchIndex = [] }) => {
                       className="dropdown-item text-center"
                       onClick={() => {
                         setNotificationsOpen(false);
-                        navigate('/admin/messages');
+                        navigate('/admin/reports');
                       }}
                     >
                       View all notifications

@@ -18,18 +18,17 @@ import grammarCheckerRouter from './routes/grammarChecker.routes'
 import lessonRouter from './routes/lesson.routes'
 import pronunciationRouter from './routes/pronunciation.routes'
 import roadmapRouter from './routes/roadmap.routes'
-import dayRouter from './routes/day.routes.js'
+import dayRouter from './routes/day.routes'
 import activityRouter from './routes/activity.routes'
 import minigameRouter from './routes/minigame.routes'
-import userconfirmRouter from './routes/userconfirm.routes.js'
-import './config/passport.js'   // chạy file config để đăng ký strategy
+import userconfirmRouter from './routes/userconfirm.routes'
+import './config/passport'   // chạy file config để đăng ký strategy
 import errorHandlingMiddleware from './middlewares/errorHandling.middleware'
 import { limiter } from './middlewares/ratelimit.middleware'
 import uploadRouter from './routes/upload.routes'
 
 import { swaggerUi, swaggerSpec } from "./config/swagger";
 import { setupSocket } from './socket';
-import chatRouter from "./routes/chat.router.js";
 import aiChatRouter from "./routes/aiChat.routes";
 import { ensureAiChatFolders } from "./services/ai-chat/audioStorage.service";
 import { seedAiScenarios } from "./seeds/aiScenarios.seed";
@@ -70,7 +69,6 @@ app.use('/api/roadmaps', roadmapRouter);
 app.use('/api/days', dayRouter);
 app.use('/api/activities', activityRouter);
 app.use('/api/minigames', minigameRouter);
-app.use("/api/chat", chatRouter);
 app.use("/api/ai-chat", aiChatRouter);
 app.use('/api/confirm', userconfirmRouter);
 app.use('/api/uploads', uploadRouter);

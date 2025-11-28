@@ -12,14 +12,13 @@ import ReportsPage from "./admin/pages/ReportsPage";
 import RoadmapsPage from "./admin/pages/RoadmapsPage";
 import RoadmapDaysPage from "./admin/pages/RoadmapDaysPage";
 import StaffPage from "./admin/pages/StaffPage";
+import MessagesPage from "./admin/pages/MessagesPage";
 import ForgotPasswordPage from "./client/pages/ForgotPasswordPage";
 import ProtectedRoute from "./routers/ProtectedRoute";
 
 import VideoPraticePage from "./client/pages/VideoPraticePage";
 import SpeakingVideoPraticePage from "./client/pages/SpeakingVideoPraticePage";
 
-import StudentChat from "./client/pages/StudentChat";
-import MessagesPage from "./admin/pages/MessagesPage";
 import AiChatExperience from "./client/pages/AiChatExperience";
 
 import ReasonPage from "./client/pages/muticheckPage/ReasonPage";
@@ -39,10 +38,13 @@ import LessonTopicPage from "./client/pages/LessonTopicPage";
 import TopicDetailPage from "./client/pages/LessonTopicDetailPage";
 import USER_ROLE from "./enums/userRole.enum";
 import ActivityManagerPage from "./admin/pages/ActivityManagerPage.jsx";
+import TawkChat from "./component/TawkChat";
 
 function App() {
   return (
-    <Routes>
+    <>
+      <TawkChat />
+      <Routes>
       <Route
         path="/"
         element={
@@ -182,6 +184,15 @@ function App() {
       />
 
       <Route
+        path="/admin/messages"
+        element={
+          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+            <AdminLayout><MessagesPage /></AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/admin/calendar"
         element={
           <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
@@ -190,14 +201,6 @@ function App() {
         }
       />
 
-      <Route
-        path="/admin/messages"
-        element={
-          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
-            <AdminLayout><MessagesPage /></AdminLayout>
-          </ProtectedRoute>
-        }
-      />
       <Route
         path="/admin/roadmaps"
         element={
@@ -226,25 +229,8 @@ function App() {
       />
 
       <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
-
-      <Route 
-        path="/student" 
-        element={
-          <ProtectedRoute>
-            <StudentChat />
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/staff" 
-        element={
-          <ProtectedRoute>
-            <Navigate to="/admin/messages" replace />
-          </ProtectedRoute>
-        } 
-      />
     </Routes>
+    </>
   );
 }
 

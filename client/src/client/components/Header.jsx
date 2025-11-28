@@ -140,14 +140,6 @@ const Header = () => {
                                     {enablePopup ? "🔕 Tắt Popup Dịch" : "🔔 Bật Popup Dịch"}
                                 </div>
 
-                                {/* Teacher chat */}
-                                <div
-                                    className={styles.settingsItem}
-                                    onClick={() => navigate("/teacher-chat")}
-                                >
-                                    💬 Chat với Giáo Viên
-                                </div>
-
                                 {/* Notification toggle */}
                                 <div className={styles.settingsItem}>
                                     🔕 Tắt thông báo
