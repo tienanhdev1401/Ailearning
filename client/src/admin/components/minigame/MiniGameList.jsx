@@ -131,7 +131,7 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 				resources = { questions: questions.map(q => ({ question: q.question, options: q.options, correctIndex: q.correctIndex}))};
 			}
 			
-			} else if (type === "true_false") {
+			else if (type === "true_false") {
 				if (!tfStatement.trim()) return alert("Statement không được rỗng");
 				if (!tfOptions.every((opt) => opt.label.trim())) return alert("Vui lòng nhập đủ nội dung cho các lựa chọn");
 				resources = {
@@ -417,12 +417,8 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 								</div>
 							</div>
 						</div>
-					))}
-				</div>
-			)}
-								</div>
-							))}
-						</div>
+						))}
+					</div>
 					)}
 					{type === "true_false" && (
 						<div>
