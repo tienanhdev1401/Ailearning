@@ -140,7 +140,6 @@ const normalizeServerUser = (user) => {
     phone: user.phone ?? '',
     birthday: birthdayRaw,
     gender: user.gender || '',
-    department: user.department || 'Đang cập nhật'
   };
 };
 
@@ -158,7 +157,6 @@ const seededInitialUsers = ensureUserRoleList(
     phone: user.phone,
     birthday: user.birthday ?? null,
     gender: user.gender ?? null,
-    department: user.department
   }))
 );
 
@@ -230,8 +228,7 @@ const UsersPage = () => {
       const matchesQuery =
         lowered.length === 0 ||
         user.name.toLowerCase().includes(lowered) ||
-        user.email.toLowerCase().includes(lowered) ||
-        user.department.toLowerCase().includes(lowered);
+        user.email.toLowerCase().includes(lowered);
       const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
       return matchesQuery && matchesStatus && matchesRole;
@@ -297,19 +294,6 @@ const UsersPage = () => {
     return { labels, series };
   }, [users]);
 
-  const departmentStats = useMemo(() => {
-    const totals = users.reduce((acc, user) => {
-      const key = user.department || 'Đang cập nhật';
-      acc[key] = (acc[key] || 0) + 1;
-      return acc;
-    }, {});
-    return Object.entries(totals).map(([department, count]) => ({
-      department,
-      count,
-      percentage: users.length ? Math.round((count / users.length) * 100) : 0
-    }));
-  }, [users]);
-
   const sparklineOptions = useMemo(() => ({
     chart: { type: 'line', height: 50, sparkline: { enabled: true } },
     stroke: { curve: 'smooth', width: 2 },
@@ -366,7 +350,7 @@ const UsersPage = () => {
     setSelectedIds(prev => (prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]));
   };
 
-  const handleBulkAction = (action) => {
+  const handleBulkAction = async (action) => {
     if (!selectedIds.length) {
       window.alert('Vui lòng chọn người dùng trước.');
       return;
@@ -374,11 +358,45 @@ const UsersPage = () => {
     if (action === 'delete') {
       if (!window.confirm(`Xóa ${selectedIds.length} người dùng?`)) return;
       setUsers(prev => prev.filter(user => !selectedIds.includes(user.id)));
+      setSelectedIds([]);
     } else if (action === 'activate' || action === 'deactivate') {
       const status = action === 'activate' ? 'active' : 'inactive';
-      setUsers(prev => prev.map(user => (selectedIds.includes(user.id) ? { ...user, status } : user)));
+      const serverStatus = mapClientStatusToServer(status);
+      
+      try {
+        // Cập nhật từng user qua API
+        const updatePromises = selectedIds.map(async (userId) => {
+          const user = users.find(u => u.id === userId);
+          if (!user) return null;
+          
+          const payload = {
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            status: serverStatus,
+            phone: user.phone || null,
+            avatarUrl: user.avatarUrl || null,
+            birthday: user.birthday || null,
+            gender: user.gender || null
+          };
+          
+          const updatedUser = await userService.updateUser(userId, payload);
+          return normalizeServerUser(updatedUser);
+        });
+        
+        const updatedUsers = await Promise.all(updatePromises);
+        
+        // Cập nhật state với dữ liệu từ server
+        setUsers(prev => ensureUserRoleList(prev.map(user => {
+          const updated = updatedUsers.find(u => u && u.id === user.id);
+          return updated || user;
+        })));
+        
+        setSelectedIds([]);
+      } catch (updateError) {
+        window.alert(updateError.message || 'Không thể cập nhật trạng thái người dùng. Vui lòng thử lại.');
+      }
     }
-    setSelectedIds([]);
   };
 
   const handleDeleteUser = async (user) => {
@@ -389,6 +407,33 @@ const UsersPage = () => {
       setSelectedIds(prev => prev.filter(id => id !== user.id));
     } catch (deleteError) {
       window.alert(deleteError.message || 'Không thể xóa người dùng. Vui lòng thử lại.');
+    }
+  };
+
+  const handleToggleUserStatus = async (user) => {
+    const newStatus = user.status === 'active' ? 'inactive' : 'active';
+    const serverStatus = mapClientStatusToServer(newStatus);
+    
+    try {
+      const payload = {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: serverStatus,
+        phone: user.phone || null,
+        avatarUrl: user.avatarUrl || null,
+        birthday: user.birthday || null,
+        gender: user.gender || null
+      };
+      
+      const updatedUser = await userService.updateUser(user.id, payload);
+      const normalizedUser = normalizeServerUser(updatedUser);
+      
+      setUsers(prev => ensureUserRoleList(prev.map(u => (
+        u.id === user.id ? normalizedUser : u
+      ))));
+    } catch (updateError) {
+      window.alert(updateError.message || 'Không thể cập nhật trạng thái người dùng. Vui lòng thử lại.');
     }
   };
 
@@ -446,7 +491,6 @@ const UsersPage = () => {
         startedAt: now,
         createdAt: now,
         updatedAt: now,
-        department: 'Người dùng mới'
       };
       setUsers(prev => ensureUserRoleList([
         ...prev,
@@ -458,14 +502,13 @@ const UsersPage = () => {
   };
 
   const handleExport = () => {
-    const headers = ['ID', 'Name', 'Email', 'Role', 'Status', 'Department', 'Phone', 'Join Date', 'Last Active'];
+    const headers = ['ID', 'Name', 'Email', 'Role', 'Status','Phone', 'Join Date', 'Last Active'];
     const rows = sortedUsers.map(user => [
       user.id,
       user.name,
       user.email,
       user.role,
       user.status,
-      user.department,
       user.phone,
       formatDate(user.joinedAt),
       user.lastActive
@@ -517,7 +560,7 @@ const UsersPage = () => {
         </div>
       )}
 
-      <div className="row g-4 mb-5">
+      {/* <div className="row g-4 mb-5">
         <StatsCard
           title="Tổng người dùng"
           value={stats.total}
@@ -553,7 +596,7 @@ const UsersPage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="card mb-4">
         <div className="card-body">
@@ -565,7 +608,7 @@ const UsersPage = () => {
                 <input
                   type="search"
                   className="form-control"
-                  placeholder="Tên, email hoặc phòng ban"
+                  placeholder="Tên hoặc email"
                   value={search}
                   onChange={(event) => {
                     setSearch(event.target.value);
@@ -589,7 +632,7 @@ const UsersPage = () => {
                 ))}
               </select>
             </div>
-            <div className="col-lg-3 col-md-4">
+            {/* <div className="col-lg-3 col-md-4">
               <label className="form-label">Vai trò</label>
               <select
                 className="form-select"
@@ -603,7 +646,7 @@ const UsersPage = () => {
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
-            </div>
+            </div> */}
             <div className="col-lg-2 col-md-4">
               <label className="form-label">Mỗi trang</label>
               <select
@@ -656,7 +699,6 @@ const UsersPage = () => {
                 <SortableHeader label="Tên" field="name" sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
                 <SortableHeader label="Email" field="email" sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
                 <th scope="col">Vai trò</th>
-                <th scope="col">Phòng ban</th>
                 <SortableHeader label="Trạng thái" field="status" sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
                 <th scope="col">Điện thoại</th>
                 <th scope="col">Giới tính</th>
@@ -694,7 +736,6 @@ const UsersPage = () => {
                   <td>
                     <span className="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">{ROLE_LABELS[user.role] || user.role}</span>
                   </td>
-                  <td>{user.department}</td>
                   <td>
                     <span className={`badge ${STATUS_VARIANTS[user.status] || 'bg-secondary'}`}>
                       {STATUS_LABELS[user.status] || user.status}
@@ -706,15 +747,18 @@ const UsersPage = () => {
                   <td>{user.lastActive}</td>
                   <td className="text-end">
                     <div className="btn-group btn-group-sm">
-                      <button type="button" className="btn btn-outline-secondary" onClick={() => window.alert('Xem chi tiết người dùng')}>
-                        <i className="bi bi-eye" />
-                      </button>
                       <button type="button" className="btn btn-outline-secondary" onClick={() => handleOpenUserModal(user)}>
                         <i className="bi bi-pencil" />
                       </button>
-                      <button type="button" className="btn btn-outline-danger" onClick={() => handleDeleteUser(user)}>
-                        <i className="bi bi-trash" />
-                      </button>
+                      {user.status === 'active' ? (
+                        <button type="button" className="btn btn-outline-warning" onClick={() => handleToggleUserStatus(user)} title="Tạm ngưng">
+                          <i className="bi bi-pause-circle" />
+                        </button>
+                      ) : (
+                        <button type="button" className="btn btn-outline-success" onClick={() => handleToggleUserStatus(user)} title="Kích hoạt">
+                          <i className="bi bi-check-circle" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -750,7 +794,7 @@ const UsersPage = () => {
         </div>
       </div>
 
-      <div className="row g-4 mb-5">
+      {/* <div className="row g-4 mb-5">
         <div className="col-xl-8">
           <SectionCard title="Tăng trưởng người dùng">
             <Chart options={userGrowthOptions} series={[{ name: 'Người dùng mới', data: USER_GROWTH_SERIES }]} type="bar" height={260} />
@@ -771,24 +815,9 @@ const UsersPage = () => {
             </div>
           </SectionCard>
         </div>
-      </div>
+      </div> */}
 
-      <div className="row g-4">
-        <div className="col-xl-4">
-          <SectionCard title="Phòng ban">
-            {departmentStats.map(item => (
-              <div key={item.department} className="mb-3">
-                <div className="d-flex justify-content-between">
-                  <strong>{item.department}</strong>
-                  <span className="text-muted">{item.count} ({item.percentage}%)</span>
-                </div>
-                <div className="progress" style={{ height: 6 }}>
-                  <div className="progress-bar bg-primary" role="progressbar" style={{ width: `${item.percentage}%` }} />
-                </div>
-              </div>
-            ))}
-          </SectionCard>
-        </div>
+      {/* <div className="row g-4">
         <div className="col-xl-4">
           <SectionCard title="Hoạt động gần đây">
             <ul className="list-group list-group-flush">
@@ -807,26 +836,7 @@ const UsersPage = () => {
             </ul>
           </SectionCard>
         </div>
-        <div className="col-xl-4">
-          <SectionCard title="Thông báo hệ thống">
-            <ul className="list-group list-group-flush">
-              {SYSTEM_ALERTS.map(alert => (
-                <li key={alert.id} className="list-group-item px-0">
-                  <div className="d-flex justify-content-between">
-                    <div>
-                      <strong>{alert.title}</strong>
-                      <p className="mb-1 text-muted">{alert.message}</p>
-                    </div>
-                    <span className={`badge ${alert.type === 'warning' ? 'bg-warning text-dark' : alert.type === 'success' ? 'bg-success' : 'bg-info text-dark'}`}>
-                      {alert.time}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </SectionCard>
-        </div>
-      </div>
+      </div> */}
 
       {modalState.type === 'user' && (
         <UserModal show onClose={handleCloseModal} onSave={handleSaveUser} user={modalState.payload} />

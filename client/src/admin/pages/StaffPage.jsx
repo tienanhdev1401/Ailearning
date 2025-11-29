@@ -43,13 +43,31 @@ const mapServerStatus = (status) => {
   }
 };
 
+const mapClientStatusToServer = (status) => {
+  switch ((status || '').toLowerCase()) {
+    case 'active':
+      return 'VERIFIED';
+    case 'pending':
+      return 'PENDING';
+    case 'inactive':
+      return 'SUSPENDED';
+    default:
+      return 'VERIFIED';
+  }
+};
+
 const normalizeStaffMember = (user) => ({
   id: user.id,
   fullname: user.name || 'Chưa rõ tên',
   email: user.email || 'Chưa có email',
   status: mapServerStatus(user.status),
   phone: user.phone || '—',
-  joinedAt: user.startedAt || user.createdAt || new Date().toISOString()
+  joinedAt: user.startedAt || user.createdAt || new Date().toISOString(),
+  // Lưu thông tin đầy đủ để có thể update
+  role: user.role || 'staff',
+  avatarUrl: user.avatarUrl || null,
+  birthday: user.birthday || null,
+  gender: user.gender || null
 });
 
 const formatDate = (value) => {
@@ -102,27 +120,51 @@ const StaffPage = () => {
     });
   }, [staffMembers, search, statusFilter]);
 
-  const handleDelete = (member) => {
+  const handleDelete = async (member) => {
     if (!window.confirm(`Xóa nhân viên ${member.fullname}?`)) return;
-    setStaffMembers((prev) => prev.filter((item) => item.id !== member.id));
+    try {
+      await userService.deleteUser(member.id);
+      setStaffMembers((prev) => prev.filter((item) => item.id !== member.id));
+    } catch (deleteError) {
+      window.alert(deleteError.message || 'Không thể xóa nhân viên. Vui lòng thử lại.');
+    }
   };
 
-  const handleSave = (formValues, editingId) => {
+  const handleSave = async (formValues, editingId) => {
     if (editingId) {
-      setStaffMembers((prev) =>
-        prev.map((member) =>
-          member.id === editingId
-            ? {
-                ...member,
-                fullname: formValues.fullname,
-                email: formValues.email,
-                phone: formValues.phone,
-                status: formValues.status
-              }
-            : member
-        )
-      );
+      // Tìm staff member hiện tại để lấy thông tin đầy đủ
+      const currentMember = staffMembers.find(m => m.id === editingId);
+      if (!currentMember) {
+        window.alert('Không tìm thấy nhân viên để cập nhật');
+        return;
+      }
+
+      try {
+        const payload = {
+          name: formValues.fullname,
+          email: formValues.email,
+          role: currentMember.role || 'staff',
+          status: mapClientStatusToServer(formValues.status),
+          phone: formValues.phone?.trim() || null,
+          avatarUrl: currentMember.avatarUrl || null,
+          birthday: currentMember.birthday || null,
+          gender: currentMember.gender || null
+        };
+
+        const updatedUser = await userService.updateUser(editingId, payload);
+        const normalizedMember = normalizeStaffMember(updatedUser);
+        
+        setStaffMembers((prev) =>
+          prev.map((member) =>
+            member.id === editingId ? normalizedMember : member
+          )
+        );
+        setModalState({ open: false, payload: null });
+      } catch (updateError) {
+        window.alert(updateError.message || 'Không thể cập nhật nhân viên. Vui lòng thử lại.');
+      }
     } else {
+      // Tạo mới - chỉ cập nhật state local (có thể thêm API createUser sau)
       const nextId = Math.max(0, ...staffMembers.map((member) => member.id || 0)) + 1;
       setStaffMembers((prev) => [
         ...prev,
@@ -135,8 +177,8 @@ const StaffPage = () => {
           joinedAt: new Date().toISOString()
         }
       ]);
+      setModalState({ open: false, payload: null });
     }
-    setModalState({ open: false, payload: null });
   };
 
   return (
@@ -278,6 +320,7 @@ const StaffPage = () => {
 
 const StaffModal = ({ show, onClose, onSave, member }) => {
   const [form, setForm] = useState(emptyForm);
+  const [submitting, setSubmitting] = useState(false);
   const editingId = member?.id ?? null;
   const modalRoot = typeof document !== 'undefined' ? document.body : null;
 
@@ -293,6 +336,7 @@ const StaffModal = ({ show, onClose, onSave, member }) => {
       } else {
         setForm(emptyForm);
       }
+      setSubmitting(false);
     }
   }, [show, member]);
 
@@ -302,9 +346,15 @@ const StaffModal = ({ show, onClose, onSave, member }) => {
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    onSave(form, editingId);
+    if (submitting) return;
+    try {
+      setSubmitting(true);
+      await onSave(form, editingId);
+    } catch (error) {
+      setSubmitting(false);
+    }
   };
 
   return createPortal(
@@ -359,8 +409,10 @@ const StaffModal = ({ show, onClose, onSave, member }) => {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-outline-secondary" onClick={onClose}>Đóng</button>
-                <button type="submit" className="btn btn-primary">{editingId ? 'Cập nhật' : 'Thêm mới'}</button>
+                <button type="button" className="btn btn-outline-secondary" onClick={onClose} disabled={submitting}>Đóng</button>
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                  {submitting ? 'Đang lưu...' : (editingId ? 'Cập nhật' : 'Thêm mới')}
+                </button>
               </div>
             </form>
           </div>

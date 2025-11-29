@@ -10,11 +10,11 @@ const secondaryNav = [
 const makeUserNavItem = (role) => {
   if (role === 'admin') {
     return {
-      label: 'Users',
+      label: 'User',
       icon: 'bi-people',
       submenuId: 'users-management',
       children: [
-        { label: 'Users', icon: 'bi-people', path: '/admin/users' },
+        { label: 'Learner', icon: 'bi-people', path: '/admin/users' },
         { label: 'Staff', icon: 'bi-person-badge', path: '/admin/staff' }
       ]
     };
