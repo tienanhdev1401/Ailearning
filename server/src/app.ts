@@ -35,6 +35,8 @@ import { seedAiScenarios } from "./seeds/aiScenarios.seed";
 
 import roadmapEnrollementRoutes from './routes/roamapEnrollement.routes'
 
+import { startAllSchedulers } from './schedulers/index';
+
 
 
 const app = express();
@@ -88,6 +90,10 @@ AppDataSource.initialize().then(() => {
   seedAiScenarios().catch((error) =>
     console.error("Failed to seed AI chat scenarios", error)
   );
+
+  // Khởi động tất cả schedulers
+  startAllSchedulers();
+  
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log('TypeORM connected & synced');
