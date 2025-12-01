@@ -358,7 +358,7 @@ export default function SpeakingVideoPraticePage() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+      <div className="d-flex justify-content-center align-items-center bg-body text-body" style={{ height: "100vh" }}>
         <div className="spinner-border text-primary" style={{ width: "4rem", height: "4rem" }} role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
@@ -374,9 +374,12 @@ export default function SpeakingVideoPraticePage() {
     if (apiResult && Array.isArray(apiResult.words) && apiResult.words.length > 0) {
       // API returns words in order — map them
       return apiResult.words.map((w, i) => {
-        const color = w.label === 1 ? "#198754" : (w.label === 2 ? "#f59e0b" : "#dc3545"); // green, yellow, red
+        const colorClass =
+          w.label === 1 ? "text-success" :
+          w.label === 2 ? "text-warning" :
+          "text-danger";
         return (
-          <span key={i} style={{ color, fontWeight: 600, marginRight: 4 }}>
+          <span key={i} className={colorClass} style={{ fontWeight: 600, marginRight: 4 }}>
             {w.word}
           </span>
         );
@@ -400,7 +403,7 @@ export default function SpeakingVideoPraticePage() {
   };
 
   return (
-    <div className="container" style={{ maxWidth: "1400px", padding: "20px 100px" }}>
+    <div className="container bg-body text-body" style={{ maxWidth: "1400px", padding: "20px 100px" }}>
       {/* Breadcrumb */}
       <nav aria-label="breadcrumb">
         <ol className="breadcrumb">
@@ -413,7 +416,7 @@ export default function SpeakingVideoPraticePage() {
       <div className="row">
         {/* Video Section */}
         <div className="col-lg-8" style={{ maxHeight: 580, overflowY: "auto" }}>
-          <div className="card">
+          <div className="card bg-body border-0 shadow-sm">
             <div className="card-body">
               <h5 className="card-title">{lesson?.title || "Đang tải..."}</h5>
 
@@ -504,28 +507,28 @@ export default function SpeakingVideoPraticePage() {
                                 </div>
 
                                 {/* Điểm segment - nửa vòng tròn, đổi màu theo score */}
-                                {apiResult && typeof apiResult.overall_score === "number" && (() => {
+                        {apiResult && typeof apiResult.overall_score === "number" && (() => {
                                     const score = apiResult.overall_score;
                                     let bgColor = "#e9f5ff";
                                     let borderColor = "#007bff";
                                     let textColor = "#007bff";
 
                                     if (score < 40) { // dưới 40% => đỏ
-                                        bgColor = "#ffe5e5";
+                                        bgColor = "rgba(220,53,69,0.1)";
                                         borderColor = "#dc3545";
                                         textColor = "#dc3545";
                                     } else if (score >= 40 && score < 80) { // 40%-79% => vàng
-                                        bgColor = "#fff8e1";
+                                        bgColor = "rgba(255,193,7,0.12)";
                                         borderColor = "#ffc107";
-                                        textColor = "#856404";
+                                        textColor = "#ffc107";
                                     } else if (score >= 80 && score < 100) { // 80%-99% => xanh biển
-                                        bgColor = "#e7f3ff";
+                                        bgColor = "rgba(13,110,253,0.12)";
                                         borderColor = "#0d6efd";
                                         textColor = "#0d6efd";
                                     } else if (score === 100) { // 100% => xanh lá
-                                        bgColor = "#e8f5e9";
-                                        borderColor = "#28a745";
-                                        textColor = "#28a745";
+                                        bgColor = "rgba(25,135,84,0.12)";
+                                        borderColor = "#198754";
+                                        textColor = "#198754";
                                     }
 
                                     return (
@@ -607,7 +610,7 @@ export default function SpeakingVideoPraticePage() {
 
         {/* Transcript Section */}
         <div className="col-lg-4">
-          <div className="sidebar p-3 bg-light rounded">
+          <div className="sidebar p-3 bg-body-secondary rounded">
             <h5>Bản chép</h5>
             <div className="d-flex justify-content-between align-items-center mb-3">
               <span className="text-muted">Tiến độ: {progress}%</span>
@@ -617,27 +620,27 @@ export default function SpeakingVideoPraticePage() {
               </div>
             </div>
 
-            <div className="progress-container mb-3" style={{ height: 8, background: "#e9ecef", borderRadius: 4 }}>
-              <div className="progress-bar bg-primary" style={{ width: `${progress}%`, height: "100%" }}></div>
+            <div className="progress mb-3" style={{ height: 8 }}>
+              <div className="progress-bar bg-primary" style={{ width: `${progress}%` }}></div>
             </div>
 
             <div className="transcript-list" style={{ maxHeight: 450, overflowY: "auto" }}>
               {lesson && lesson.subtitles.map((s, index) => (
-                <div key={s.id ?? index} ref={(el) => (segmentRefs.current[index] = el)}
-                     className="transcript-item mb-3 p-3 rounded"
-                     style={{
-                       backgroundColor: index === currentSegment ? "#e3f2fd" : "#fff",
-                       boxShadow: "0 2px 5px rgba(0, 0, 0, 0.05)",
-                       borderLeft: `4px solid ${index === currentSegment ? "#1976d2" : "#0d6efd"}`,
-                       cursor: "pointer"
-                     }}
-                     onClick={() => {
-                       setCurrentSegment(index);
-                       updateWordsForSegment(index);
-                       setSegmentCompleted(false); setAutoPaused(false);
-                       const newTime = Number(s.second);
-                       seekToTime(newTime);
-                     }}>
+                <div
+                  key={s.id ?? index}
+                  ref={(el) => (segmentRefs.current[index] = el)}
+                  className={`transcript-item mb-3 p-3 rounded border-start border-4 ${
+                    index === currentSegment ? "bg-primary-subtle border-primary" : "bg-body border-primary"
+                  }`}
+                  style={{ cursor: "pointer", boxShadow: "0 2px 5px rgba(0,0,0,0.05)" }}
+                  onClick={() => {
+                    setCurrentSegment(index);
+                    updateWordsForSegment(index);
+                    setSegmentCompleted(false); setAutoPaused(false);
+                    const newTime = Number(s.second);
+                    seekToTime(newTime);
+                  }}
+                >
                   <div className="transcript-header d-flex justify-content-between mb-2 text-muted">
                     <span>#{s.index} {index === currentSegment && "👈 Current"}</span>
                     <i className="bi bi-pencil"></i>

@@ -571,7 +571,7 @@ export default function VideoPraticePage() {
   if (loading) {
     return (
       <div
-        className="d-flex justify-content-center align-items-center"
+        className="d-flex justify-content-center align-items-center bg-body text-body"
         style={{ height: "100vh" }}
       >
         <div
@@ -586,7 +586,7 @@ export default function VideoPraticePage() {
   }
 
   return (
-    <div className="container" style={{ maxWidth: "1400px", padding: "20px" }}>
+    <div className="container bg-body text-body" style={{ maxWidth: "1400px", padding: "20px" }}>
       {/* Breadcrumb */}
       <nav aria-label="breadcrumb">
         <ol className="breadcrumb">
@@ -601,7 +601,7 @@ export default function VideoPraticePage() {
       <div className="row">
         {/* Video Section */}
         <div className="col-lg-4">
-          <div className="card">
+          <div className="card bg-body border-0 shadow-sm">
             <div className="card-body">
               <h5 className="card-title">{lesson?.title || "Đang tải..."}</h5>
 
@@ -726,7 +726,7 @@ export default function VideoPraticePage() {
 
         {/* Transcription Section */}
         <div className="col-lg-5">
-          <div className="card">
+          <div className="card bg-body border-0 shadow-sm">
             <div className="card-body">
               <h5 className="card-title">Chép chính tả</h5>
               <p className="text-muted">Gõ những gì bạn nghe được:</p>
@@ -758,14 +758,15 @@ export default function VideoPraticePage() {
                       className="word-item d-flex flex-column align-items-center"
                     >
                       <div
-                        className="eye-icon d-flex align-items-center justify-content-center"
-                        style={{
-                          cursor: revealed[index] ? 'default' : 'pointer',
-                          width: 30,
-                          height: 30,
-                          borderRadius: "50%",
-                          backgroundColor: revealed[index] ? "#d4edda" : "#f1f3f5", // Green background when revealed
-                        }}
+                      className={
+                        "eye-icon d-flex align-items-center justify-content-center rounded-circle " +
+                        (revealed[index] ? "bg-success-subtle" : "bg-body-secondary")
+                      }
+                      style={{
+                        cursor: revealed[index] ? 'default' : 'pointer',
+                        width: 30,
+                        height: 30,
+                      }}
                         onClick={() => {
                           if (!revealed[index]) {
                             toggleWord(index);
@@ -780,17 +781,13 @@ export default function VideoPraticePage() {
                         )}
                       </div>
                       <div
-                        className={`word-chip mt-1 ${
-                          revealed[index] ? "revealed" : ""
-                        }`}
-                        style={{
-                          padding: "8px 15px",
-                          backgroundColor: revealed[index] ? "#d1e7ff" : "#fff",
-                          border: "1px solid #dee2e6",
-                          borderRadius: 20,
-                          minWidth: 80,
-                          textAlign: "center",
-                        }}
+                      className={
+                        "word-chip mt-1 px-3 py-2 rounded-pill border text-center " +
+                        (revealed[index] ? "bg-primary-subtle border-primary" : "bg-body border-secondary-subtle")
+                      }
+                      style={{
+                        minWidth: 80,
+                      }}
                       >
                         {display}
                       </div>
@@ -849,7 +846,7 @@ export default function VideoPraticePage() {
 
         {/* Transcript Section */}
         <div className="col-lg-3">
-          <div className="sidebar p-3 bg-light rounded">
+          <div className="sidebar p-3 bg-body-secondary rounded">
             <h5>Bản chép</h5>
             <div className="d-flex justify-content-between align-items-center mb-3">
               <span className="text-muted">Tiến độ: {progress}%</span>
@@ -863,18 +860,8 @@ export default function VideoPraticePage() {
               </div>
             </div>
 
-            <div
-              className="progress-container mb-3"
-              style={{
-                height: 8,
-                background: "#e9ecef",
-                borderRadius: 4,
-              }}
-            >
-              <div
-                className="progress-bar bg-primary"
-                style={{ width: `${progress}%`, height: "100%" }}
-              ></div>
+            <div className="progress mb-3" style={{ height: 8 }}>
+              <div className="progress-bar bg-primary" style={{ width: `${progress}%` }}></div>
             </div>
 
             <div className="transcript-list" style={{ maxHeight: 450, overflowY: "auto" }}>
@@ -883,13 +870,10 @@ export default function VideoPraticePage() {
             <div
             key={s.id ?? index}
                         ref={(el) => (segmentRefs.current[index] = el)}
-                        className="transcript-item mb-3 p-3 rounded"
-                        style={{
-                            backgroundColor: index === currentSegment ? "#e3f2fd" : "#fff",
-                            boxShadow: "0 2px 5px rgba(0, 0, 0, 0.05)",
-                            borderLeft: `4px solid ${index === currentSegment ? "#1976d2" : "#0d6efd"}`,
-                            cursor: "pointer",
-                        }}
+                        className={`transcript-item mb-3 p-3 rounded border-start border-4 ${
+                          index === currentSegment ? "bg-primary-subtle border-primary" : "bg-body border-primary"
+                        }`}
+                        style={{ cursor: "pointer", boxShadow: "0 2px 5px rgba(0,0,0,0.05)" }}
             onClick={() => {
               setCurrentSegment(index);
               updateWordsForSegment(index);
