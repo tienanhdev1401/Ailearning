@@ -83,17 +83,23 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       const res = await api.post('/auth/login', { email, password });
-      localStorage.setItem('accessToken', res.data.accessToken);
+      const accessToken = res.data.accessToken;
 
-      // Kiểm tra lần đầu xác nhận muticheck 
-      const firstConfirm = await checkFirstConfirm(res.data.accessToken, navigate);
+      localStorage.setItem('accessToken', accessToken);
+      const decoded = jwtDecode(accessToken);
+      const role = decoded.role;
+      // Điều hướng admin/staff đến dashboard
+      if (role === USER_ROLE.ADMIN || role === USER_ROLE.STAFF) {
+        navigate('/admin');
+        return;
+      }
+
+      const firstConfirm = await checkFirstConfirm(accessToken, navigate);
       if (firstConfirm) return;
 
-      const decoded = jwtDecode(res.data.accessToken);
-      const role = decoded.role;
-      if (role === USER_ROLE.ADMIN || role === USER_ROLE.STAFF) navigate('/dashboard');
-      else navigate('/');
-    } catch (err) {
+      // Điều hướng user
+      navigate('/');
+      } catch (err) {
       showErrorAlert(err);
     }
   };
@@ -104,15 +110,19 @@ const LoginPage = () => {
     const tokenFromGoogle = params.get('accessToken');
     if (tokenFromGoogle) {
       localStorage.setItem('accessToken', tokenFromGoogle);
+
+      const decoded = jwtDecode(tokenFromGoogle);
+      const role = decoded.role;
+      // Điều hướng admin/staff đến dashboard
+      if (role === USER_ROLE.ADMIN || role === USER_ROLE.STAFF) {
+        navigate('/admin');
+        return;
+      }
+
+      // Điều hướng user
       checkFirstConfirm(tokenFromGoogle, navigate).then((redirected) => {
         if (!redirected) {
-          const decoded = jwtDecode(tokenFromGoogle);
-          const role = decoded.role;
-          if (role === USER_ROLE.ADMIN || role === USER_ROLE.STAFF) {
-            navigate('/dashboard');
-          } else {
-            navigate('/');
-          }
+          navigate('/');
         }
       });
     }
