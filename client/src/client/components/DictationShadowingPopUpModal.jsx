@@ -12,24 +12,17 @@ const DictationShadowingPopUpModal = ({ lesson, onClose }) => {
       style={{ background: "rgba(0,0,0,0.45)", zIndex: 9999 }}
     >
       <div
-        className="bg-white p-4 rounded shadow-lg position-relative"
+        className="bg-body text-body p-4 rounded shadow-lg position-relative"
         style={{ width: "430px", height: "350px" }}
       >
         {/* ICON CLOSE (X) */}
         <button
           onClick={onClose}
-          className="position-absolute top-0 end-0 m-3"
+          className="position-absolute top-0 end-0 m-3 btn-close"
           style={{
-            background: "transparent",
-            border: "none",
-            fontSize: "22px",
-            fontWeight: "bold",
             cursor: "pointer",
-            color: "#555",
-            lineHeight: 1,
           }}
         >
-          ×
         </button>
 
         <h2
@@ -50,7 +43,7 @@ const DictationShadowingPopUpModal = ({ lesson, onClose }) => {
         <div className="d-flex justify-content-between gap-3">
           {/* MODE: DICTATION */}
           <div
-            className="border rounded p-3 text-center flex-fill shadow-sm"
+            className="border rounded p-3 text-center flex-fill shadow-sm bg-body-secondary bg-opacity-50"
             style={{ cursor: "pointer" }}
             onClick={() => navigate(`/video/${lesson.id}`)}
           >
@@ -64,7 +57,7 @@ const DictationShadowingPopUpModal = ({ lesson, onClose }) => {
 
           {/* MODE: SHADOWING */}
           <div
-            className="border rounded p-3 text-center flex-fill shadow-sm"
+            className="border rounded p-3 text-center flex-fill shadow-sm bg-body-secondary bg-opacity-50"
             style={{ cursor: "pointer" }}
             onClick={() => navigate(`/speak/${lesson.id}`)}
           >
