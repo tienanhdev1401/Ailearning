@@ -241,7 +241,7 @@ const RoadmapsPage = () => {
 
   // RENDER UI
   return (
-    <div>
+    <div className="bg-body text-body min-vh-100">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4 className="ms-5">Quản lý Roadmaps</h4>
         <button className="btn btn-primary me-2" onClick={openAdd}>
@@ -249,7 +249,7 @@ const RoadmapsPage = () => {
         </button>
       </div>
 
-      <div className="card mb-3">
+      <div className="card mb-3 bg-body border-0 shadow-sm">
         <div className="card-body">
           <div className="row g-2">
             <div className="col-md-4">
@@ -268,8 +268,8 @@ const RoadmapsPage = () => {
       </div>
 
       {/* LIST */}
-      <div className="card" style={{ border: isDarkMode ? "1px solid #ffffff" : "",}}>
-        <div className="card-body" >
+      <div className={`card bg-body shadow-sm ${isDarkMode ? 'border border-light' : 'border-0'}`}>
+        <div className="card-body">
           {loading ? (
             <div>Đang tải...</div>
           ) : error ? (
@@ -278,7 +278,7 @@ const RoadmapsPage = () => {
             <div className="row g-3" >
               {paginated.map(r => (
                 <div key={r.id} className="col-xl-3 col-lg-3 col-md-6 col-sm-12">
-                  <div className="card h-100" style={{ border: isDarkMode ? "1px solid #ffffff" : "",}}>
+                  <div className={`card h-100 bg-body ${isDarkMode ? 'border border-light' : 'border border-secondary-subtle'}`}>
                     <div className="card-body d-flex flex-column">
                       <h5 className="card-title text-truncate" title={r.levelName}>
                         {r.levelName}
@@ -406,18 +406,13 @@ const RoadmapsPage = () => {
 
                   {/* PREVIEW */}
                   {showPreview ? (
-                    <div
-                      style={{
-                        border: "1px solid #e9ecef",
-                        borderRadius: 6,
-                        padding: 12,
-                        background: "#fff",
-                        minHeight: "200px"
-                      }}
-                      dangerouslySetInnerHTML={{
-                        __html: form.overview || "<i>Không có nội dung</i>"
-                      }}
-                    />
+                  <div
+                    className="border rounded p-3 bg-body-secondary"
+                    style={{ minHeight: "200px" }}
+                    dangerouslySetInnerHTML={{
+                      __html: form.overview || "<i>Không có nội dung</i>"
+                    }}
+                  />
                   ) : (
                     <textarea
                       className="form-control"

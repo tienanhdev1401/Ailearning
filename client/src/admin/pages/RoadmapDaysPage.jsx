@@ -67,7 +67,6 @@ const RoadmapDaysPage = () => {
   const createDay = async () => {
     try {
       const body = {
-        roadmapId: Number(roadmapId),
         dayNumber: Number(form.dayNumber),
         description: form.description,
         condition: form.condition ? Number(form.condition) : undefined
