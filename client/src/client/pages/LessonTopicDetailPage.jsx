@@ -1,7 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import api from "../../api/api";
 import lessonTopicEnum from "../../enums/lessonTopic.enum";
+import {
+  fetchLessons,
+  resetTopicState,
+  selectLessons,
+} from "../../features/lessons/lessonsSlice";
 
 const LESSONS_PER_PAGE = 8;
 
@@ -16,6 +21,7 @@ const LEVELS = [
 ];
 
 const TopicDetailPage = () => {
+  const dispatch = useDispatch();
   const { topic: slug } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -25,63 +31,79 @@ const TopicDetailPage = () => {
     (Object.entries(lessonTopicEnum).find(([key, name]) => key === slug) || [])[1] ||
     slug;
 
-  const [lessons, setLessons] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState("latest");
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("All");
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-
-  const observer = useRef(null);
   const lastLessonRef = useRef(null);
 
-  const fetchLessons = async (reset = false) => {
-    if (loading || (!hasMore && !reset)) return;
-    setLoading(true);
+  const topicKey = slug || topicName;
+  const paramsKey = `${topicKey}|${sortBy}|${search}|${level}`;
 
-    try {
-      const res = await api.get("/lessons", {
-        params: {
-          topic_type: topicName,
-          sort: sortBy,
-          search: search || undefined,
-          level: level !== "All" ? level : undefined,
-          page: reset ? 1 : page,
-          limit: LESSONS_PER_PAGE,
-        },
-      });
+  const {
+    items: lessons,
+    page,
+    hasMore,
+    status,
+    loadingMore,
+    error,
+  } = useSelector((state) => selectLessons(state, topicKey));
 
-      const fetchedLessons = res.data.data || [];
-      setLessons(prev => (reset ? fetchedLessons : [...prev, ...fetchedLessons]));
-      setHasMore(fetchedLessons.length === LESSONS_PER_PAGE);
-      setPage(reset ? 2 : page + 1);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (!topicKey || !topicName) {
+      return;
     }
-  };
+
+    dispatch(resetTopicState({ topicKey, paramsKey }));
+    dispatch(
+      fetchLessons({
+        topicKey,
+        topicType: topicName,
+        sortBy,
+        search,
+        level,
+        page: 1,
+        limit: LESSONS_PER_PAGE,
+        paramsKey,
+      })
+    );
+  }, [dispatch, topicKey, topicName, sortBy, search, level, paramsKey]);
 
   useEffect(() => {
-    fetchLessons(true);
-    // eslint-disable-next-line
-  }, [topicName, sortBy, search, level]);
+    if (!hasMore || loadingMore || status === "loading") {
+      return;
+    }
 
-  useEffect(() => {
-    if (!lastLessonRef.current) return;
-    if (observer.current) observer.current.disconnect();
+    const target = lastLessonRef.current;
+    if (!target) {
+      return;
+    }
 
-    observer.current = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting && hasMore) fetchLessons();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry?.isIntersecting) {
+          observer.unobserve(entry.target);
+          dispatch(
+            fetchLessons({
+              topicKey,
+              topicType: topicName,
+              sortBy,
+              search,
+              level,
+              page,
+              limit: LESSONS_PER_PAGE,
+              paramsKey,
+            })
+          );
+        }
       },
       { threshold: 1 }
     );
 
-    observer.current.observe(lastLessonRef.current);
-    // eslint-disable-next-line
-  }, [lessons, hasMore]);
+    observer.observe(target);
+
+    return () => observer.disconnect();
+  }, [dispatch, hasMore, loadingMore, status, topicKey, topicName, sortBy, search, level, page, lessons.length, paramsKey]);
 
   return (
     <div className="bg-light min-vh-100 px-4 py-4">
@@ -267,7 +289,18 @@ const TopicDetailPage = () => {
           })}
         </div>
 
-        {loading && <div className="text-center mt-3">⏳ Đang tải thêm...</div>}
+        {status === "loading" && (
+          <div className="text-center mt-3">⏳ Đang tải dữ liệu...</div>
+        )}
+        {!lessons.length && status === "succeeded" && !loadingMore && !error && (
+          <div className="text-center mt-3">Không tìm thấy bài học phù hợp.</div>
+        )}
+        {loadingMore && (
+          <div className="text-center mt-3">⏳ Đang tải thêm...</div>
+        )}
+        {error && (
+          <div className="text-center mt-3 text-danger">{error}</div>
+        )}
       </div>
     </div>
   );
