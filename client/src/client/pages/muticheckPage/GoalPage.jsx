@@ -35,10 +35,11 @@ const GoalPage = () => {
   }, [selected]);
 
   return (
-    <div
-      className="container text-center py-5"
-      style={{ maxWidth: "600px", position: "relative" }}
-    >
+    <div className="min-vh-100 bg-white text-dark" data-bs-theme="light">
+      <div
+        className="container text-center py-5"
+        style={{ maxWidth: "600px", position: "relative" }}
+      >
       {/* Nút quay lại */}
       <button
         onClick={() => navigate("/welcome/reason")}
@@ -96,14 +97,15 @@ const GoalPage = () => {
         ))}
       </div>
 
-      <div className="mt-5">
-        <button
-          className="btn btn-primary px-4 py-2 rounded-pill fw-semibold"
-          disabled={!selected}
-          onClick={handleCommit}
-        >
-          Commit to daily goal
-        </button>
+        <div className="mt-5">
+          <button
+            className="btn btn-primary px-4 py-2 rounded-pill fw-semibold"
+            disabled={!selected}
+            onClick={handleCommit}
+          >
+            Commit to daily goal
+          </button>
+        </div>
       </div>
     </div>
   );

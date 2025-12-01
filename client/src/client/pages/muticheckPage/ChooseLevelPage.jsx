@@ -14,7 +14,7 @@ const ChooseLevelPage = () => {
     { icon: "🌟", label: "Proficient C2" }
   ];
 
-  // ✅ Lấy lại giá trị level từ sessionStorage nếu có
+  // Lấy lại giá trị level từ sessionStorage nếu có
   const [selected, setSelected] = useState(() => {
     const saved = sessionStorage.getItem("level");
     if (saved) {
@@ -25,24 +25,24 @@ const ChooseLevelPage = () => {
 
   const navigate = useNavigate();
 
-  // ✅ Khi chọn level, lưu tên (label) vào sessionStorage
+  // Khi chọn level, lưu tên (label) vào sessionStorage
   const handleSelect = (index) => {
     setSelected(index);
     sessionStorage.setItem("level", levels[index].label);
   };
 
-  // ✅ Gửi dữ liệu khi nhấn Finish
+  // Gửi dữ liệu khi nhấn Finish
   const handleFinish = async () => {
     const reason = sessionStorage.getItem("reason");
     const goal = sessionStorage.getItem("goal");
     const proficiency = sessionStorage.getItem("proficiency");
-    const level = sessionStorage.getItem("level"); // Lấy từ sessionStorage
+    const level = sessionStorage.getItem("level");
 
     const confirmData = {
       reason,
       goal,
       proficiency,
-      level,
+      level
     };
 
     try {
@@ -59,10 +59,14 @@ const ChooseLevelPage = () => {
   };
 
   return (
-    <div
-      className="container text-center py-5"
-      style={{ maxWidth: "700px", position: "relative" }}
-    >
+    <div className="min-vh-100 bg-white text-dark" data-bs-theme="light">
+      <div
+        className="container text-center py-5"
+        style={{
+          maxWidth: "700px",
+          position: "relative"
+        }}
+      >
       {/* Nút quay lại góc trên bên trái */}
       <button
         onClick={() => navigate("/welcome/proficiency")}
@@ -74,7 +78,7 @@ const ChooseLevelPage = () => {
           width: "50px",
           height: "50px",
           boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-          zIndex: 1000,
+          zIndex: 1000
         }}
       >
         <i className="bi bi-arrow-left fs-4 text-primary"></i>
@@ -111,18 +115,21 @@ const ChooseLevelPage = () => {
         ))}
       </div>
 
-      {/* Nút Finish */}
-      <div className="mt-5">
-        <button
-          className="btn btn-primary px-5 py-2 rounded-pill fw-semibold"
-          disabled={selected === null}
-          onClick={handleFinish}
-        >
-          Finish
-        </button>
+        {/* Nút Finish */}
+        <div className="mt-5">
+          <button
+            className="btn btn-primary px-5 py-2 rounded-pill fw-semibold"
+            disabled={selected === null}
+            onClick={handleFinish}
+          >
+            Finish
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
 export default ChooseLevelPage;
+
+

@@ -1,4 +1,4 @@
-import React, { useState , useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Button, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
@@ -32,7 +32,7 @@ export default function TopicPage() {
     { icon: "🧳", text: "Adventure" },
     { icon: "🐾", text: "Animals" },
     { icon: "🌦️", text: "Nature" },
-    { icon: "💰", text: "Finance" },
+    { icon: "💰", text: "Finance" }
   ];
 
   const topics = showMore ? allTopics : allTopics.slice(0, 8);
@@ -51,9 +51,13 @@ export default function TopicPage() {
   return (
     <Container
       fluid
-      className="min-vh-100 d-flex flex-column justify-content-center align-items-center bg-white text-center"
+      className="min-vh-100 d-flex flex-column justify-content-center align-items-center text-center bg-white text-dark"
+      data-bs-theme="light"
     >
-      <div className="container text-center py-5" style={{ maxWidth: "600px", position: "relative" }}>
+      <div
+        className="container text-center py-5"
+        style={{ maxWidth: "600px", position: "relative" }}
+      >
         {/* Icon quay lại góc trên màn hình */}
         <button
           onClick={() => navigate("/welcome/goal")}
@@ -65,14 +69,14 @@ export default function TopicPage() {
             width: "50px",
             height: "50px",
             boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-            zIndex: 1000,
+            zIndex: 1000
           }}
         >
           <i className="bi bi-arrow-left fs-4 text-primary"></i>
         </button>
 
         {/* Thanh tiến trình */}
-        <div className="progress mb-5" style={{ height: "8px"}}>
+        <div className="progress mb-5" style={{ height: "8px" }}>
           <div
             className="progress-bar bg-success"
             role="progressbar"
@@ -84,7 +88,7 @@ export default function TopicPage() {
         <h3 className="fw-semibold mb-2">
           What topics are you interested in?
         </h3>
-        <p className="text-secondary mb-4">
+        <p className="text-body-secondary mb-4">
           Choose the topics you want to focus on.
         </p>
 
@@ -101,7 +105,7 @@ export default function TopicPage() {
                 }`}
                 style={{
                   cursor: "pointer",
-                  transition: "all 0.25s ease",
+                  transition: "all 0.25s ease"
                 }}
               >
                 <div
@@ -110,7 +114,7 @@ export default function TopicPage() {
                     transform: selectedTopics.includes(t.text)
                       ? "scale(1.1)"
                       : "scale(1)",
-                    transition: "transform 0.2s ease",
+                    transition: "transform 0.2s ease"
                   }}
                 >
                   {t.icon}
@@ -170,3 +174,5 @@ export default function TopicPage() {
     </Container>
   );
 }
+
+

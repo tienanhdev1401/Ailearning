@@ -11,10 +11,11 @@ const FindLevelPage = () => {
   };
 
   return (
-    <div
-      className="container text-center py-5"
-      style={{ maxWidth: "700px", position: "relative" }}
-    >
+    <div className="min-vh-100 bg-white text-dark" data-bs-theme="light">
+      <div
+        className="container text-center py-5"
+        style={{ maxWidth: "700px", position: "relative" }}
+      >
       {/* Nút quay lại góc trên bên trái */}
       <button
         onClick={() => navigate("/welcome/proficiency")}
@@ -64,6 +65,7 @@ const FindLevelPage = () => {
         >
           Find my level
         </button>
+      </div>
       </div>
     </div>
   );

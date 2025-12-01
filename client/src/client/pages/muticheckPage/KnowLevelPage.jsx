@@ -34,10 +34,11 @@ const KnowLevelPage = () => {
 
 
   return (
-    <div
-      className="container text-center py-5"
-      style={{ maxWidth: "700px", position: "relative" }}
-    >
+    <div className="min-vh-100 bg-white text-dark" data-bs-theme="light">
+      <div
+        className="container text-center py-5"
+        style={{ maxWidth: "700px", position: "relative" }}
+      >
       {/* Nút quay lại góc trên bên trái */}
       <button
         onClick={() => navigate("/welcome/topic")}
@@ -109,14 +110,15 @@ const KnowLevelPage = () => {
 
 
       {/* Nút Continue */}
-      <div className="mt-5">
-        <button
-          className="btn btn-primary px-4 py-2 rounded-pill fw-semibold"
-          disabled={selected === null}
-          onClick={handleContinue}
-        >
-          Continue
-        </button>
+        <div className="mt-5">
+          <button
+            className="btn btn-primary px-4 py-2 rounded-pill fw-semibold"
+            disabled={selected === null}
+            onClick={handleContinue}
+          >
+            Continue
+          </button>
+        </div>
       </div>
     </div>
   );

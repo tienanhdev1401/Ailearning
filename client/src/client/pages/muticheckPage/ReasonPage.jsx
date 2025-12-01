@@ -29,7 +29,8 @@ export default function ReasonPage() {
   return (
     <Container
       fluid
-      className="min-vh-100 d-flex flex-column justify-content-center align-items-center bg-white text-center"
+      className="min-vh-100 d-flex flex-column justify-content-center align-items-center bg-white text-center text-dark"
+      data-bs-theme="light"
     >
       <div className="w-100" style={{ maxWidth: "700px" }}>
         {/* Thanh tiến trình */}
