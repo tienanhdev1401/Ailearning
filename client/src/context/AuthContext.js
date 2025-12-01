@@ -50,6 +50,10 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error("Không thể gọi API logout", err);
     } finally {
+      // Xóa access token khỏi localStorage
+      localStorage.removeItem("accessToken");
+
+      // Đặt state về null 
       setAccessToken(null);
       navigate("/login", { replace: true });
     }
