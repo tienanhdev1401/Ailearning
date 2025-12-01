@@ -39,7 +39,7 @@ const LessonTopiCPage = () => {
   };
 
   return (
-    <div className="bg-light min-vh-100 px-4 py-4">
+    <div className="bg-body text-body min-vh-100 px-4 py-4">
       <div className="container py-4" style={{ maxWidth: "1350px" }}>
         {/* TOPICS BUTTON LIST */}
         <div className="mb-5">
@@ -49,7 +49,7 @@ const LessonTopiCPage = () => {
               <button
                 key={slug}
                 className="btn btn-outline-secondary rounded-pill px-4 py-2"
-                style={{ fontSize: "16px", color: "#333", borderColor: "#1a1a2e", fontWeight: 550 }}
+                style={{ fontSize: "16px", fontWeight: 550 }}
                 onClick={() => handleNavigate(slug, topicName)}
               >
                 # {topicName}
@@ -62,7 +62,7 @@ const LessonTopiCPage = () => {
         {Object.entries(topicsData).map(([topicName, lessons]) => (
           <div className="mb-5" key={topicName}>
             <div className="d-flex justify-content-between align-items-center mb-4">
-              <h3 className="mb-0" style={{ color: "#333", fontSize: "1.8rem", fontWeight: 600 }}>
+              <h3 className="mb-0" style={{ fontSize: "1.8rem", fontWeight: 600 }}>
                 {topicName} <span className="text-muted fs-6">({lessons.length} bài học)</span>
               </h3>
               <button
@@ -107,7 +107,7 @@ const LessonTopiCPage = () => {
                     <div className="card-body d-flex flex-column" style={{ minHeight: "100px" }}>
                       <h6
                         className="card-title mb-2"
-                        style={{ fontSize: "16px", fontWeight: 550, color: "#1a1a2e" }}
+                        style={{ fontSize: "16px", fontWeight: 550 }}
                       >
                         {lesson.title}
                       </h6>
@@ -115,7 +115,7 @@ const LessonTopiCPage = () => {
                       {/* BADGES dưới đáy */}
                       <div className="mt-auto d-flex gap-3 flex-wrap">
                         <span
-                          className="badge rounded-pill bg-light text-dark d-flex align-items-center gap-1"
+                          className="badge rounded-pill bg-body-secondary text-body d-flex align-items-center gap-1"
                           style={{ padding: "4px 10px", fontSize: "16px", fontWeight: 500 }}
                         >
                           Dictation
@@ -123,7 +123,7 @@ const LessonTopiCPage = () => {
                         </span>
 
                         <span
-                          className="badge rounded-pill bg-light text-dark d-flex align-items-center gap-1"
+                          className="badge rounded-pill bg-body-secondary text-body d-flex align-items-center gap-1"
                           style={{ padding: "4px 10px", fontSize: "16px", fontWeight: 500 }}
                         >
                           Shadowing
