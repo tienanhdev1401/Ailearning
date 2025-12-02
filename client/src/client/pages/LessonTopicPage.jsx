@@ -1,36 +1,38 @@
 import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import "bootstrap/dist/css/bootstrap.min.css";
-import api from "../../api/api";
 import { useNavigate } from "react-router-dom";
 import lessonTopicEnum from "../../enums/lessonTopic.enum";
 import DictationShadowingPopUpModal from "../components/DictationShadowingPopUpModal";
+import { fetchTopicLessonOverview, selectTopicLessonOverviewState } from "../../features/lessons/topicLessonOverviewSlice";
 
 const LessonTopiCPage = () => {
-  const [topicsData, setTopicsData] = useState({});
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const { data: topicsData, status, error } = useSelector(selectTopicLessonOverviewState);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const navigate = useNavigate();
 
   // Lấy danh sách slug (key) và tên thật
   const topicEntries = Object.entries(lessonTopicEnum); // [ [slug, tên thật], ... ]
 
-  // Fetch data từ backend
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await api.get("/lessons/latest-per-type");
-        setTopicsData(res.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+    if (status === "idle") {
+      dispatch(fetchTopicLessonOverview());
+    }
+  }, [status, dispatch]);
 
-  if (loading) {
+  const hasData = topicsData && Object.keys(topicsData).length > 0;
+
+  if (status === "loading" && !hasData) {
     return <div className="text-center mt-5">⏳ Đang tải dữ liệu...</div>;
+  }
+
+  if (status === "failed" && !hasData) {
+    return (
+      <div className="text-center mt-5 text-danger">
+        Không thể tải danh sách chủ đề. {error}
+      </div>
+    );
   }
 
   const handleNavigate = (slug, topicName) => {
@@ -59,7 +61,7 @@ const LessonTopiCPage = () => {
         </div>
 
         {/* LOOP FROM API */}
-        {Object.entries(topicsData).map(([topicName, lessons]) => (
+        {Object.entries(topicsData || {}).map(([topicName, lessons]) => (
           <div className="mb-5" key={topicName}>
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h3 className="mb-0" style={{ fontSize: "1.8rem", fontWeight: 600 }}>
@@ -137,6 +139,12 @@ const LessonTopiCPage = () => {
             </div>
           </div>
         ))}
+
+        {status === "failed" && (
+          <div className="alert alert-warning mt-4" role="alert">
+            Không thể tải dữ liệu mới nhất: {error}
+          </div>
+        )}
       </div>
 
       {/* POPUP COMPONENT */}
