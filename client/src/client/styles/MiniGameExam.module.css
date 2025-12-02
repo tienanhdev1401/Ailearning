@@ -1,9 +1,9 @@
 .examContainer {
-  background: rgba(4, 20, 34, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--exam-surface);
+  border: 1px solid var(--exam-border);
   border-radius: 28px;
   padding: clamp(20px, 3.5vw, 36px);
-  color: #ffffff;
+  color: var(--exam-text);
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -31,13 +31,13 @@
 
 .examSubtitle {
   margin: 0;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--exam-muted);
   font-size: 14px;
 }
 
 .questionCard {
-  background: rgba(8, 32, 54, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--exam-card-bg);
+  border: 1px solid var(--exam-card-border);
   border-radius: 22px;
   padding: 18px;
   display: flex;
@@ -57,9 +57,9 @@
 }
 
 .optionButton {
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--exam-option-border);
   border-radius: 16px;
-  background: transparent;
+  background: var(--exam-option-bg);
   color: inherit;
   padding: 12px 16px;
   text-align: left;
@@ -68,23 +68,23 @@
 }
 
 .optionButton:hover:not(.optionDisabled) {
-  border-color: rgba(0, 255, 204, 0.8);
+  border-color: var(--exam-option-hover-border);
   transform: translateY(-1px);
 }
 
 .optionSelected {
-  border-color: rgba(0, 255, 204, 0.8);
-  background: rgba(0, 255, 204, 0.12);
+  border-color: var(--exam-option-selected-border);
+  background: var(--exam-option-selected-bg);
 }
 
 .optionCorrect {
-  border-color: rgba(97, 217, 107, 0.95);
-  background: rgba(65, 184, 131, 0.12);
+  border-color: var(--exam-option-correct-border);
+  background: var(--exam-option-correct-bg);
 }
 
 .optionWrong {
-  border-color: rgba(255, 99, 132, 0.9);
-  background: rgba(255, 99, 132, 0.12);
+  border-color: var(--exam-option-wrong-border);
+  background: var(--exam-option-wrong-bg);
 }
 
 .optionDisabled {
@@ -111,10 +111,10 @@
   padding: 12px 26px;
   font-weight: 700;
   font-size: 14px;
-  background: linear-gradient(120deg, #15f4c4, #00a8ff);
-  color: #041422;
+  background: var(--exam-primary-bg);
+  color: var(--exam-primary-text);
   cursor: pointer;
-  box-shadow: 0 12px 28px rgba(0, 255, 204, 0.3);
+  box-shadow: var(--exam-primary-shadow);
 }
 
 .primaryBtn:disabled {
@@ -124,41 +124,41 @@
 }
 
 .secondaryBtn {
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--exam-secondary-border);
   border-radius: 999px;
   padding: 12px 26px;
   font-weight: 600;
   font-size: 14px;
   background: transparent;
-  color: inherit;
+  color: var(--exam-secondary-text);
   cursor: pointer;
 }
 
 .scoreBadge {
   font-weight: 700;
   font-size: 15px;
-  color: rgba(0, 255, 204, 0.85);
+  color: var(--exam-score-pass);
 }
 
 .scoreBadgeFail {
-  color: rgba(255, 99, 132, 0.9);
+  color: var(--exam-score-fail);
 }
 
 .successBanner {
   padding: 14px 18px;
   border-radius: 18px;
-  background: rgba(65, 184, 131, 0.15);
-  border: 1px solid rgba(65, 184, 131, 0.35);
-  color: rgba(224, 255, 239, 0.95);
+  background: var(--exam-success-bg);
+  border: 1px solid var(--exam-success-border);
+  color: var(--exam-success-text);
   font-weight: 600;
 }
 
 .failBanner {
   padding: 14px 18px;
   border-radius: 18px;
-  background: rgba(255, 99, 132, 0.15);
-  border: 1px solid rgba(255, 99, 132, 0.35);
-  color: rgba(255, 210, 218, 0.95);
+  background: var(--exam-fail-bg);
+  border: 1px solid var(--exam-fail-border);
+  color: var(--exam-fail-text);
   font-weight: 600;
 }
 

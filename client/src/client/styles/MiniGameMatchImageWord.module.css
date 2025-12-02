@@ -1,10 +1,10 @@
 .gameContainer {
-  background: linear-gradient(135deg, rgba(4, 20, 34, 0.95), rgba(15, 45, 80, 0.95));
+  background: var(--match-surface);
   padding: 5%;
   display: flex;
   flex-direction: column;
   gap: 25px;
-  color: #f0f6fc;
+  color: var(--match-text);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   align-items: center;
   justify-content: center;
@@ -35,7 +35,7 @@
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 12px;
-  background: linear-gradient(120deg, #00ffcc, #00a8ff);
+  background: var(--match-prompt-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -43,24 +43,24 @@
 
 .progressBar {
   height: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--match-progress-base);
   border-radius: 999px;
   overflow: hidden;
   margin-bottom: 8px;
-  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--match-progress-shadow);
 }
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, #00ffcc, #00a8ff);
+  background: var(--match-progress-fill);
   border-radius: 999px;
   transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 0 12px rgba(0, 255, 204, 0.8);
+  box-shadow: 0 0 12px var(--match-progress-glow);
 }
 
 .progressText {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--match-progress-text);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -118,20 +118,20 @@
   align-items: center;
   gap: 12px;
   padding: 32px;
-  background: rgba(4, 20, 34, 0.98);
+  background: var(--match-feedback-surface);
   border-radius: 24px;
   border: 2px solid;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--match-feedback-shadow);
 }
 
 .feedbackSuccess .feedbackContent {
-  border-color: #00ffcc;
-  box-shadow: 0 0 30px rgba(0, 255, 204, 0.6);
+  border-color: var(--match-feedback-success-border);
+  box-shadow: var(--match-feedback-success-shadow);
 }
 
 .feedbackError .feedbackContent {
-  border-color: #ff6b6b;
-  box-shadow: 0 0 30px rgba(255, 107, 107, 0.6);
+  border-color: var(--match-feedback-error-border);
+  box-shadow: var(--match-feedback-error-shadow);
 }
 
 .feedbackIcon {
@@ -155,11 +155,11 @@
 }
 
 .feedbackSuccess .feedbackText {
-  color: #00ffcc;
+  color: var(--match-feedback-success-text);
 }
 
 .feedbackError .feedbackText {
-  color: #ff6b6b;
+  color: var(--match-feedback-error-text);
 }
 
 /* Images Grid */
@@ -191,30 +191,30 @@
 .imageCard {
   border-radius: 16px;
   overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid var(--match-card-border);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--match-card-bg);
   backdrop-filter: blur(10px);
   position: relative;
 }
 
 .imageCard:hover:not(.completed) {
-  border-color: rgba(0, 168, 255, 0.6);
+  border-color: var(--match-card-hover-border);
   transform: translateY(-6px);
-  box-shadow: 0 12px 30px rgba(0, 168, 255, 0.3);
+  box-shadow: var(--match-card-hover-shadow);
 }
 
 .imageCard.selected {
-  border-color: #00a8ff;
-  box-shadow: 0 0 20px rgba(0, 168, 255, 0.8);
+  border-color: var(--match-card-selected-border);
+  box-shadow: var(--match-card-selected-shadow);
   transform: scale(1.05);
 }
 
 .imageCard.completed {
-  border-color: #00ffcc;
-  background: rgba(0, 255, 204, 0.05);
-  box-shadow: inset 0 0 12px rgba(0, 255, 204, 0.2);
+  border-color: var(--match-card-completed-border);
+  background: var(--match-card-completed-bg);
+  box-shadow: var(--match-card-completed-shadow);
 }
 
 .imageWrapper {
@@ -254,7 +254,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 255, 204, 0.15);
+  background: var(--match-card-overlay);
   backdrop-filter: blur(4px);
   font-size: 32px;
   animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -292,10 +292,10 @@
 
 .wordButton {
   padding: 10px 16px;
-  background: linear-gradient(135deg, rgba(0, 255, 204, 0.1), rgba(0, 168, 255, 0.1));
-  border: 2px solid rgba(0, 168, 255, 0.4);
+  background: var(--match-word-bg);
+  border: 2px solid var(--match-word-border);
   border-radius: 10px;
-  color: #f0f6fc;
+  color: var(--match-word-color);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -305,10 +305,10 @@
 }
 
 .wordButton:hover:not(:disabled) {
-  border-color: #00a8ff;
-  background: linear-gradient(135deg, rgba(0, 255, 204, 0.2), rgba(0, 168, 255, 0.2));
+  border-color: var(--match-word-hover-border);
+  background: var(--match-word-hover-bg);
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 168, 255, 0.3);
+  box-shadow: var(--match-word-hover-shadow);
 }
 
 .wordButton:active:not(:disabled) {
@@ -316,16 +316,16 @@
 }
 
 .wordButton.wordSelected {
-  border-color: #00a8ff;
-  background: linear-gradient(135deg, rgba(0, 168, 255, 0.3), rgba(0, 168, 255, 0.4));
-  color: #00ffcc;
-  box-shadow: 0 0 20px rgba(0, 168, 255, 0.6);
+  border-color: var(--match-word-selected-border);
+  background: var(--match-word-selected-bg);
+  color: var(--match-word-selected-color);
+  box-shadow: var(--match-word-selected-shadow);
 }
 
 .wordButton.wordCompleted {
-  border-color: #00ffcc;
-  background: rgba(0, 255, 204, 0.15);
-  color: #00ffcc;
+  border-color: var(--match-word-completed-border);
+  background: var(--match-word-completed-bg);
+  color: var(--match-word-completed-color);
   cursor: not-allowed;
   opacity: 0.8;
 }
@@ -371,7 +371,7 @@
 .completionText {
   font-size: 24px;
   font-weight: 700;
-  background: linear-gradient(120deg, #00ffcc, #00a8ff);
+  background: var(--match-prompt-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -380,20 +380,20 @@
 
 .nextButton {
   padding: 12px 32px;
-  background: linear-gradient(120deg, #00ffcc, #00a8ff);
+  background: var(--match-next-bg);
   border: none;
   border-radius: 10px;
-  color: #041422;
+  color: var(--match-next-text);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 12px 30px rgba(0, 255, 204, 0.4);
+  box-shadow: var(--match-next-shadow);
 }
 
 .nextButton:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(0, 255, 204, 0.6);
+  box-shadow: var(--match-next-hover-shadow);
 }
 
 .nextButton:active {

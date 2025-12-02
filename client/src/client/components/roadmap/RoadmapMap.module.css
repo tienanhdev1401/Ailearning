@@ -130,7 +130,7 @@
 
 [data-theme="light"] .nodeCompleted .nodeDayTag,
 [data-theme="light"] .nodeCompleted .nodeNumber {
-    fill: #9a3412;
+    fill: #eee9e7;
 }
 
 .nodeLocked .nodeOuter {

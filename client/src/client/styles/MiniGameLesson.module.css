@@ -1,9 +1,9 @@
 .lessonContainer {
-  background: rgba(4, 20, 34, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--roadmap-lesson-surface);
+  border: 1px solid var(--roadmap-lesson-border);
   border-radius: 28px;
   padding: clamp(24px, 4vw, 40px);
-  color: #fff;
+  color: var(--roadmap-lesson-text);
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -25,17 +25,17 @@
 
 .lessonHint {
   margin: 0;
-  color: rgba(255, 255, 255, 0.68);
+  color: var(--roadmap-lesson-muted);
   font-size: 14px;
   line-height: 1.6;
 }
 
 .lessonBody {
   border-radius: 24px;
-  background: rgba(8, 32, 54, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--roadmap-lesson-body);
+  border: 1px solid var(--roadmap-lesson-body-border);
   padding: clamp(20px, 3vw, 32px);
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--roadmap-lesson-text);
   line-height: 1.75;
   font-size: 15px;
 }
@@ -50,6 +50,7 @@
 
 .lessonBody :global(p) {
   margin: 12px 0;
+  color: var(--roadmap-lesson-text);
 }
 
 .lessonBody :global(ul),
