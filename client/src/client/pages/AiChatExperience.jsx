@@ -65,6 +65,22 @@ const AiChatExperience = () => {
   const audioElementRef = useRef(null);
   const hasAutoplayedIntroRef = useRef(false);
 
+  const formatMessageTime = useCallback((value) => {
+    if (!value) {
+      return "";
+    }
+    const parsed = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return "";
+    }
+    const hoChiMinhOffsetMs = 14 * 60 * 60 * 1000;
+    const shiftedTimestamp = parsed.getTime() + hoChiMinhOffsetMs;
+    const shifted = new Date(shiftedTimestamp);
+    const hours = shifted.getUTCHours().toString().padStart(2, "0");
+    const minutes = shifted.getUTCMinutes().toString().padStart(2, "0");
+    return `${hours}:${minutes}`;
+  }, []);
+
   const recomputeAutoScroll = useCallback(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
@@ -633,7 +649,7 @@ const AiChatExperience = () => {
         <div key={message.id} className={`${styles.messageRow} ${styles.system}`}>
           <div className={styles.systemBubble}>{message.content}</div>
           <div className={styles.messageMeta}>
-            {new Date(message.createdAt).toLocaleTimeString()}
+            {formatMessageTime(message.createdAt)}
           </div>
         </div>
       );
@@ -671,7 +687,7 @@ const AiChatExperience = () => {
           </div>
         </div>
         <div className={styles.messageMeta}>
-          {isUser ? "Bạn" : "AelanG AI"} · {new Date(message.createdAt).toLocaleTimeString()}
+          {isUser ? "Bạn" : "AelanG AI"} · {formatMessageTime(message.createdAt)}
         </div>
       </div>
     );
