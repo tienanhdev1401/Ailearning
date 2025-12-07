@@ -10,6 +10,7 @@ const Header = () => {
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [chatEnabled, setChatEnabled] = useState(true);
 
     const { isDarkMode, toggleTheme } = useContext(ThemeContext);
 
@@ -24,6 +25,11 @@ const Header = () => {
         if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
         return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
     };
+
+    useEffect(() => {
+        const stored = localStorage.getItem("supportChatEnabled");
+        setChatEnabled(stored !== "false");
+    }, []);
 
     /** Load User Info */
     useEffect(() => {
@@ -56,6 +62,13 @@ const Header = () => {
         { label: "Ngữ Pháp", icon: "📝", path: "/grammar" },
         { label: "Lộ Trình", icon: "🗺️", path: "/roadmaps" },
     ];
+
+    const handleToggleChat = () => {
+        const next = !chatEnabled;
+        setChatEnabled(next);
+        localStorage.setItem("supportChatEnabled", next ? "true" : "false");
+        window.dispatchEvent(new CustomEvent("support-chat-toggle", { detail: { enabled: next } }));
+    };
 
     return (
         <header className={styles.header}>
@@ -143,6 +156,13 @@ const Header = () => {
                                 {/* Notification toggle */}
                                 <div className={styles.settingsItem}>
                                     🔕 Tắt thông báo
+                                </div>
+
+                                <div
+                                    className={styles.settingsItem}
+                                    onClick={handleToggleChat}
+                                >
+                                    {chatEnabled ? "🔕 Tắt chat hỗ trợ" : "🔔 Bật chat hỗ trợ"}
                                 </div>
                             </div>
                         )}

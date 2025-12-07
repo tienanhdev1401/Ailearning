@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import styles from "./SupportChatWidget.module.css";
 import { SupportChatService } from "../services/supportChatService";
 import { createSupportChatSocket } from "../utils/supportChatSocket";
@@ -60,6 +61,30 @@ const SupportChatWidget = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [historyError, setHistoryError] = useState(null);
   const [deletingConversationId, setDeletingConversationId] = useState(null);
+  const [isEnabled, setIsEnabled] = useState(true);
+
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("supportChatEnabled");
+    if (stored === "false") {
+      setIsEnabled(false);
+    }
+
+    const handleToggle = (event) => {
+      if (typeof event?.detail?.enabled === "boolean") {
+        const enabled = event.detail.enabled;
+        setIsEnabled(enabled);
+        if (!enabled) {
+          setIsOpen(false);
+        }
+      }
+    };
+
+    window.addEventListener("support-chat-toggle", handleToggle);
+    return () => window.removeEventListener("support-chat-toggle", handleToggle);
+  }, []);
 
   const socketRef = useRef(null);
   const hasLoadedSessionRef = useRef(false);
@@ -381,6 +406,10 @@ const SupportChatWidget = () => {
     return statusLabelMap[current] ?? "";
   }, [conversation?.status]);
 
+  if (!isEnabled) {
+    return null;
+  }
+
   return (
     <div className={styles.widgetContainer}>
       {isOpen && (
@@ -526,10 +555,12 @@ const SupportChatWidget = () => {
         </div>
       )}
 
-      <button type="button" className={styles.fab} onClick={toggleWidget}>
-        <span>Trợ lý</span>
-        {unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}
-      </button>
+      {!isAdminRoute && (
+        <button type="button" className={styles.fab} onClick={toggleWidget}>
+          <span>Trợ lý</span>
+          {unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}
+        </button>
+      )}
     </div>
   );
 };
