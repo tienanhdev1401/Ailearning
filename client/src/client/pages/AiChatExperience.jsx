@@ -54,7 +54,6 @@ const AiChatExperience = () => {
   const [loadingSpeechId, setLoadingSpeechId] = useState(null);
   const [playingSpeechId, setPlayingSpeechId] = useState(null);
 
-  const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const shouldAutoScrollRef = useRef(true);
   const socketRef = useRef(null);
@@ -324,6 +323,12 @@ const AiChatExperience = () => {
     };
   }, [recomputeAutoScroll]);
 
+  const scrollMessagesToBottom = useCallback((behavior = "auto") => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior });
+  }, []);
+
   useEffect(() => {
     const currentCount = messages.length;
     const previousCount = prevMessageCountRef.current;
@@ -331,13 +336,13 @@ const AiChatExperience = () => {
 
     if (hasNewMessage && shouldAutoScrollRef.current) {
       const behavior = previousCount <= 1 ? "auto" : "smooth";
-      messagesEndRef.current?.scrollIntoView({ behavior });
+      scrollMessagesToBottom(behavior);
       shouldAutoScrollRef.current = true;
     }
 
     prevMessageCountRef.current = currentCount;
     recomputeAutoScroll();
-  }, [messages, recomputeAutoScroll]);
+  }, [messages, recomputeAutoScroll, scrollMessagesToBottom]);
 
   useEffect(() => {
     return () => {
@@ -822,7 +827,6 @@ const AiChatExperience = () => {
 
           <div className={styles.messages} ref={messagesContainerRef}>
             {messages.map((message) => renderMessage(message))}
-            <div ref={messagesEndRef} />
           </div>
 
           {mode === AI_CONVERSATION_MODE.TEXT && (

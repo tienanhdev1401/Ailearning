@@ -7,6 +7,8 @@ import { UserProgress } from "./userProgress";
 import { UserConfirm } from "./userconfirm";
 import { AiScenario } from "./aiScenario";
 import { AiConversation } from "./aiConversation";
+import { SupportConversation } from "./supportConversation";
+import { SupportMessage } from "./supportMessage";
 import USER_GENDER from "../enums/userGender.enum";
 import USER_STATUS from "../enums/userStatus.enum";
 
@@ -86,6 +88,15 @@ export class User {
 
   @OneToMany(() => AiConversation, (conversation) => conversation.user)
   aiConversations!: AiConversation[];
+
+  @OneToMany(() => SupportConversation, (conversation) => conversation.customer)
+  supportConversations!: SupportConversation[];
+
+  @OneToMany(() => SupportConversation, (conversation) => conversation.assignee)
+  assignedSupportConversations!: SupportConversation[];
+
+  @OneToMany(() => SupportMessage, (message) => message.sender)
+  supportMessages!: SupportMessage[];
 
   @CreateDateColumn()
   startedAt!: Date;

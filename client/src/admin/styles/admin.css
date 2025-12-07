@@ -1530,14 +1530,16 @@
 
 .messages-page .conversation-item {
 	display: flex;
-	align-items: center;
-	gap: 1rem;
+	flex-direction: column;
+	justify-content: space-between;
+	min-height: 110px;
 	padding: 1rem 1.5rem;
 	border-bottom: 1px solid rgba(var(--bs-border-color-rgb), 0.5);
 	cursor: pointer;
 	color: var(--messages-text);
 	text-decoration: none;
 	transition: var(--transition-base);
+	width: 100%;
 }
 
 .messages-page .conversation-item:hover {
@@ -1603,6 +1605,7 @@
 	align-items: center;
 	font-size: 0.75rem;
 	color: var(--messages-text-muted);
+	width: 100%;
 }
 
 .messages-page .conversation-footer .unread-badge {

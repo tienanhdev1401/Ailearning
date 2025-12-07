@@ -38,21 +38,23 @@ import LessonTopicPage from "./client/pages/LessonTopicPage";
 import TopicDetailPage from "./client/pages/LessonTopicDetailPage";
 import USER_ROLE from "./enums/userRole.enum";
 import ActivityManagerPage from "./admin/pages/ActivityManagerPage.jsx";
-import TawkChat from "./component/TawkChat";
+import SupportChatWidget from "./component/SupportChatWidget";
 
 function App() {
   return (
     <>
-      <TawkChat />
+      <SupportChatWidget />
       <Routes>
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <ClientLayout><HomePage /></ClientLayout>
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <ClientLayout>
+                <HomePage />
+              </ClientLayout>
+            </ProtectedRoute>
+          }
+        />
       <Route
         path="/grammar"
         element={
@@ -229,7 +231,7 @@ function App() {
       />
 
       <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
-    </Routes>
+      </Routes>
     </>
   );
 }
