@@ -9,6 +9,8 @@ import ExamMiniGame from "./ExamMiniGame";
 import TrueFalseMiniGame from "./TrueFalseMiniGame";
 import TypingChallengeMiniGame from "./TypingChallengeMiniGame";
 
+import { Editor } from "@tinymce/tinymce-react";
+
 const MiniGameList = ({ activityId, onRefresh }) => {
 	const [minigames, setMinigames] = useState([]);
 	const [loading, setLoading] = useState(false);
@@ -239,38 +241,53 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 					)}
 
 					{type === "lesson" && (
-            <div>
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <label className="form-label mb-0">Content (HTML)</label>
+					<div>
+						<div className="d-flex justify-content-between align-items-center mb-2">
+							<label className="form-label mb-0">Content</label>
 
-                {/* Nút chuyển chế độ */}
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-primary"
-                  onClick={() => setShowPreview(!showPreview)}
-                >
-                  {showPreview ? "Chỉnh sửa" : "Xem trước"}
-                </button>
-              </div>
+							<button
+								type="button"
+								className={`btn btn-sm ${showPreview ? "btn-primary" : "btn-outline-secondary"}`}
+								onClick={() => setShowPreview(!showPreview)}
+							>
+								{showPreview ? "Chỉnh sửa" : "Xem trước"}
+							</button>
+						</div>
 
-              {/* Một vùng duy nhất, đổi giữa textarea và preview */}
-              {!showPreview ? (
-                <textarea
-                  className="form-control"
-                  rows={10}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder=""
-                />
-              ) : (
-                <div
-                  className="p-3 border rounded"
-                  style={{ background: "#f8f9fa", minHeight: 120 }}
-                  dangerouslySetInnerHTML={{ __html: content }}
-                />
-              )}
-            </div>
-          )}
+						{/* EDITOR */}
+						{!showPreview ? (
+							<Editor
+								apiKey="5h1mny4wdy7lwto04bpgonbbj9ymfa8bmjxmmjiee045hxq7"
+								value={content}
+								init={{
+									height: 350,
+									menubar: false,
+									plugins: "lists table paste link image code",
+									toolbar:
+										"undo redo | bold italic underline | bullist numlist | table | link image | alignleft aligncenter alignright | code",
+
+									// Auto clean Word formatting
+									paste_data_images: false,
+									paste_as_text: false,
+									paste_webkit_styles: "bold italic underline",
+									paste_merge_formats: true,
+									paste_convert_word_fake_lists: true,
+									paste_retain_style_properties: "color font-size",
+
+									content_style:
+										"body { font-family: Arial, sans-serif; font-size: 14px; background: transparent; }",
+								}}
+								onEditorChange={(val) => setContent(val)}
+							/>
+						) : (
+							<div
+								className="p-3 border rounded"
+								style={{ background: "#f8f9fa", minHeight: 120 }}
+								dangerouslySetInnerHTML={{ __html: content }}
+							/>
+						)}
+					</div>
+				)}
 
 					{type === "sentence_builder" && (
 						<div>
