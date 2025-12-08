@@ -5,6 +5,8 @@ import api from '../../api/api';
 import { useParams } from "react-router-dom";
 import successSound from "../sounds/success.mp3";
 
+import lessonService from "../services/lessonService";
+
 
 export default function VideoPraticePage() {
   // Lay lessonId từ URL param
@@ -167,7 +169,7 @@ export default function VideoPraticePage() {
         setLoading(true);
 
         // Fetch lesson with subtitles from database
-        const lessonRes = await api.get(`/lessons/${lessonId}`);
+        const lessonRes = await lessonService.getLessonApi(lessonId);
         const lessonData = lessonRes.data.lesson;
 
         // Convert database subtitles to the format expected by current UI

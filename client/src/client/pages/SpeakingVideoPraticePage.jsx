@@ -1,12 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+
 import RecordRTC from "recordrtc";
 import api from '../../api/api';
 
 import successSound from "../sounds/success.mp3";
+import { useParams } from "react-router-dom";
+import lessonService from "../services/lessonService";
 
 export default function SpeakingVideoPraticePage() {
+  // Lay lessonId từ URL param
+  const { lessonId } = useParams();
+
   const [lesson, setLesson] = useState(null);
   const [words, setWords] = useState([]);
   const [revealedMap, setRevealedMap] = useState([]);
@@ -100,7 +106,7 @@ export default function SpeakingVideoPraticePage() {
     async function fetchLessonData() {
       try {
         setLoading(true);
-        const lessonRes = await api.get('/lessons/1');
+        const lessonRes = await lessonService.getLessonApi(lessonId);
         const lessonData = lessonRes.data.lesson;
         const subtitles = (lessonData.subtitles || []).map((sub, index) => ({
           index: index + 1,
