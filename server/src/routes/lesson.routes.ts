@@ -6,6 +6,7 @@ import validateRequest from "../middlewares/validateRequest.middleware";
 import createLessonValidation from "../validations/createLessonValidation";
 import validateDto from "../middlewares/validateRequest.middleware";
 import { CreateLessonDto } from "../dto/request/CreateLessonDto";
+import { UpdateLessonDto } from "../dto/request/UpdateLessonDto";
 
 const router = express.Router();
 
@@ -131,6 +132,45 @@ router.get("/:id", LessonController.getLessonById);
  */
 // DELETE /lessons/:id -> lấy lesson theo id
 router.delete("/:id", LessonController.deleteLesson);
+
+
+/**
+ * @swagger
+ * /api/lessons/{id}:
+ *   put:
+ *     summary: Cập nhật lesson theo id
+ *     tags: [Lessons]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID của lesson
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateLessonDto'
+ *     responses:
+ *       200:
+ *         description: Cập nhật lesson thành công
+ *       400:
+ *         description: Lỗi dữ liệu đầu vào
+ *       404:
+ *         description: Không tìm thấy lesson
+ *       500:
+ *         description: Lỗi server
+ */
+// PUT /lessons/:id -> update lesson (srt_file optional)
+router.put(
+  "/:id",
+  upload.single("srt_file"),
+  attachFileToBody("srt_file"),
+  validateDto(UpdateLessonDto),
+  LessonController.updateLesson
+);
 
 
 

@@ -3,6 +3,7 @@ import LessonService from "../services/lesson.service";
 import ApiError from "../utils/ApiError";
 import { Request, Response, NextFunction } from "express";
 import { CreateLessonDto } from "../dto/request/CreateLessonDto";
+import { UpdateLessonDto } from "../dto/request/UpdateLessonDto";
 import { plainToInstance } from "class-transformer";
 
 class LessonController {
@@ -11,6 +12,7 @@ class LessonController {
       const createLessonDto = plainToInstance(CreateLessonDto, req.body);
       const file = req.file;
 
+      // For creation, SRT file is required
       if (!file) {
         throw new ApiError(HttpStatusCode.BadRequest, "No SRT file uploaded");
       }
@@ -27,36 +29,36 @@ class LessonController {
   }
 
   static async getAllLessons(req: Request, res: Response, next: NextFunction) {
-  try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
 
-    const search = (req.query.search as string) || undefined;
-    const topic_type = (req.query.topic_type as string) || undefined;
-    const level = (req.query.level as string) || undefined;
+      const search = (req.query.search as string) || undefined;
+      const topic_type = (req.query.topic_type as string) || undefined;
+      const level = (req.query.level as string) || undefined;
 
-    const sort = (req.query.sort as string) as
-      | "latest"
-      | "oldest"
-      | "views"
-      | "least_views"
-      | "longest"
-      | "shortest" || "latest";
+      const sort = (req.query.sort as string) as
+        | "latest"
+        | "oldest"
+        | "views"
+        | "least_views"
+        | "longest"
+        | "shortest" || "latest";
 
-    const lessons = await LessonService.getAllLessons(
-      page,
-      limit,
-      search,
-      topic_type,
-      level,
-      sort
-    );
+      const lessons = await LessonService.getAllLessons(
+        page,
+        limit,
+        search,
+        topic_type,
+        level,
+        sort
+      );
 
-    return res.status(HttpStatusCode.Ok).json(lessons);
-  } catch (error) {
-    next(error);
+      return res.status(HttpStatusCode.Ok).json(lessons);
+    } catch (error) {
+      next(error);
+    }
   }
-}
 
   static async getLatestLessonsPerType(req: Request, res: Response, next: NextFunction) {
     try {
@@ -95,6 +97,27 @@ class LessonController {
       });
     } catch (err) {
       next(err);
+    }
+  }
+
+  static async updateLesson(req: Request & { file?: any }, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        throw new ApiError(HttpStatusCode.BadRequest, "Missing lesson id");
+      }
+
+      const updateDto = plainToInstance(UpdateLessonDto, req.body);
+      const file = req.file;
+
+      const result = await LessonService.updateLesson(Number(id), {
+        ...updateDto,
+        srtPath: file ? file.path : undefined,
+      });
+
+      return res.status(HttpStatusCode.Ok).json(result);
+    } catch (error) {
+      next(error);
     }
   }
 }

@@ -41,7 +41,7 @@ import { LessonLevel } from "../../enums/lessonLevel.enum";
  *         srt_file:
  *           type: string
  *           format: binary
- *           description: File phụ đề (.srt)
+ *           description: File phụ đề (.srt) (required)
  */
 
 export class SrtFileDto {
@@ -70,7 +70,6 @@ export class CreateLessonDto {
   @IsEnum(LessonLevel, { message: "Level không hợp lệ" })
   @IsNotEmpty({ message: "Level không được để trống" })
   level!: LessonLevel;
-
 
   @ValidateNested()
   @Type(() => SrtFileDto)

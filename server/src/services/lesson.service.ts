@@ -9,7 +9,7 @@ import { parseTimeToSeconds,secondsToMinuteSecond  } from "../utils/time";
 import { LessonLevel } from "../enums/lessonLevel.enum";
 
 interface CreateLessonInput extends CreateLessonDto {
-  srtPath: string;
+  srtPath?: string;
 }
 
 class LessonService {
@@ -35,27 +35,30 @@ class LessonService {
         });
       await queryRunner.manager.save(lesson);
 
-      // 2. Parse SRT
-      const { default: SrtParser } = await import("srt-parser-2"); 
-      const parser = new SrtParser();
-      const srtData = fs.readFileSync(dto.srtPath, "utf-8");
-      const srtArray = parser.fromSrt(srtData);
+      // 2. If SRT provided, parse and save subtitles; otherwise leave subtitles empty
+      let subtitles: any[] = [];
+      if (dto.srtPath) {
+        const { default: SrtParser } = await import("srt-parser-2"); 
+        const parser = new SrtParser();
+        const srtData = fs.readFileSync(dto.srtPath, "utf-8");
+        const srtArray = parser.fromSrt(srtData);
 
-      if (!srtArray.length) {
-        throw new ApiError(HttpStatusCode.BadRequest, "Error in parse SRT file");
-      }
+        if (!srtArray.length) {
+          throw new ApiError(HttpStatusCode.BadRequest, "Error in parse SRT file");
+        }
 
-      const subtitles = srtArray.map((item: any) => {
-        const sub = subtitleRepo.create({
-          lesson: lesson,
-          start_time: item.startTime,
-          end_time: item.endTime,
-          full_text: item.text,
+        subtitles = srtArray.map((item: any) => {
+          const sub = subtitleRepo.create({
+            lesson: lesson,
+            start_time: item.startTime,
+            end_time: item.endTime,
+            full_text: item.text,
+          });
+          return sub;
         });
-        return sub;
-      });
 
-      await queryRunner.manager.save(subtitles);
+        await queryRunner.manager.save(subtitles);
+      }
 
       await queryRunner.commitTransaction();
 
@@ -66,8 +69,7 @@ class LessonService {
     } finally {
       await queryRunner.release();
       if (dto.srtPath && fs.existsSync(dto.srtPath)) {
-        console.log("Xóa file tạm:", dto.srtPath);
-        fs.unlinkSync(dto.srtPath);
+        try { fs.unlinkSync(dto.srtPath); } catch (e) {}
       }
     }
   }
@@ -113,6 +115,7 @@ class LessonService {
     qb = qb.select([
       "lesson.id",
       "lesson.title",
+      "lesson.video_url",
       "lesson.thumbnail_url",
       "lesson.topic_type",
       "lesson.level",
@@ -176,6 +179,7 @@ class LessonService {
         return {
           id: lesson.id,
           title: lesson.title,
+          video_url: lesson.video_url,
           thumbnail_url: lesson.thumbnail_url,
           topic_type: lesson.topic_type,
           level: lesson.level,
@@ -215,7 +219,7 @@ class LessonService {
       // Lấy 4 lesson mới nhất của mỗi topic  
       const lessons = await lessonRepo.find({
         where: { topic_type: topic },
-        select: ["id", "title", "thumbnail_url", "topic_type", "views", "level"],
+        select: ["id", "title", "thumbnail_url", "topic_type", "views", "level", "video_url"],
         order: { id: "DESC" }, // mới nhất
         take: 4,               // lấy đúng 4 cái
       });
@@ -238,6 +242,7 @@ class LessonService {
           return {
             id: lesson.id,
             title: lesson.title,
+            video_url: lesson.video_url,
             thumbnail_url: lesson.thumbnail_url,
             topic_type: lesson.topic_type,
             views: lesson.views,
@@ -307,6 +312,72 @@ class LessonService {
       throw err;
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  // Update lesson and optionally replace subtitles from provided srtPath
+  static async updateLesson(id: number, dto: { title?: string; video_url?: string; thumbnail_url?: string; topic_type?: any; level?: any; srtPath?: string }) {
+    const lessonRepo = AppDataSource.getRepository(Lesson);
+    const subtitleRepo = AppDataSource.getRepository(Subtitle);
+
+    const queryRunner = AppDataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const lesson = await lessonRepo.findOne({ where: { id } });
+      if (!lesson) {
+        throw new ApiError(HttpStatusCode.NotFound, "Lesson not found");
+      }
+
+      // Update allowed fields
+      if (typeof dto.title !== "undefined") lesson.title = dto.title;
+      if (typeof dto.video_url !== "undefined") lesson.video_url = dto.video_url;
+      if (typeof dto.thumbnail_url !== "undefined") lesson.thumbnail_url = dto.thumbnail_url;
+      if (typeof dto.topic_type !== "undefined") lesson.topic_type = dto.topic_type;
+      if (typeof dto.level !== "undefined") lesson.level = dto.level;
+
+      await queryRunner.manager.save(lesson);
+
+      // If new SRT provided, replace subtitles
+      if (dto.srtPath) {
+        // delete existing subtitles
+        await queryRunner.manager.delete(Subtitle, { lesson: { id } });
+
+        // parse srt and create new subtitles
+        const { default: SrtParser } = await import("srt-parser-2");
+        const parser = new SrtParser();
+        const srtData = fs.readFileSync(dto.srtPath, "utf-8");
+        const srtArray = parser.fromSrt(srtData);
+
+        const newSubs = srtArray.map((item: any) => {
+          return subtitleRepo.create({
+            lesson: lesson,
+            start_time: item.startTime,
+            end_time: item.endTime,
+            full_text: item.text,
+          });
+        });
+
+        if (newSubs.length) {
+          await queryRunner.manager.save(newSubs);
+        }
+      }
+
+      await queryRunner.commitTransaction();
+
+      // reload lesson with subtitles
+      const updated = await lessonRepo.findOne({ where: { id }, relations: ["subtitles"] });
+
+      return { lesson: updated };
+    } catch (err: any) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+      if (dto.srtPath && fs.existsSync(dto.srtPath)) {
+        try { fs.unlinkSync(dto.srtPath); } catch (e) {}
+      }
     }
   }
 }

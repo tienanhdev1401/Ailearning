@@ -37,8 +37,10 @@ import ProfilePage from "./client/pages/ProfilePage";
 import LessonTopicPage from "./client/pages/LessonTopicPage";
 import TopicDetailPage from "./client/pages/LessonTopicDetailPage";
 import USER_ROLE from "./enums/userRole.enum";
-import ActivityManagerPage from "./admin/pages/ActivityManagerPage.jsx";
+import ActivityManagerPage from "./admin/pages/ActivityManagerPage";
 import SupportChatWidget from "./component/SupportChatWidget";
+
+import LessonManagerPage from "./admin/pages/LessonManagerPage";
 
 function App() {
   return (
@@ -199,6 +201,15 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
             <AdminLayout><CalendarPage /></AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/lessons"
+        element={
+          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+            <AdminLayout><LessonManagerPage /></AdminLayout>
           </ProtectedRoute>
         }
       />
