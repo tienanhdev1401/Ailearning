@@ -3,6 +3,8 @@ import api from '../../api/api';
 import { useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../../context/ThemeContext';
 
+import { Editor } from '@tinymce/tinymce-react';
+
 const DEFAULT_ITEMS_PER_PAGE = 8;
 
 const emptyForm = {
@@ -375,55 +377,34 @@ const RoadmapsPage = () => {
                       setForm(f => ({ ...f, description: e.target.value }))
                     }
                   />
-                </div>
 
-                <div className="mb-3">
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <h6 className="mb-0">Overview</h6>
+                 <label className="form-label pt-3">Over view</label>
+                  <Editor
+                    apiKey="5h1mny4wdy7lwto04bpgonbbj9ymfa8bmjxmmjiee045hxq7" 
+                    value={form.overview}
+                    init={{
+                      height: 300,
+                      menubar: false,
+                      plugins: 'lists table paste link image code',
+                      toolbar:
+                        'undo redo | bold italic underline | bullist numlist | table | link image | alignleft aligncenter alignright | code',
 
-                    <div className="btn-group" role="group" aria-label="view-mode">
-                      <button
-                        type="button"
-                        className={`btn btn-sm ${
-                          showPreview ? "btn-primary" : "btn-outline-secondary"
-                        }`}
-                        onClick={() => setShowPreview(true)}
-                      >
-                        Xem
-                      </button>
+                      // Auto clean Word formatting
+                      paste_data_images: false,
+                      paste_as_text: false,
+                      paste_webkit_styles: "bold italic underline",
+                      paste_merge_formats: true,
+                      paste_convert_word_fake_lists: true,
+                      paste_retain_style_properties: "color font-size",
 
-                      <button
-                        type="button"
-                        className={`btn btn-sm ${
-                          !showPreview ? "btn-primary" : "btn-outline-secondary"
-                        }`}
-                        onClick={() => setShowPreview(false)}
-                      >
-                        Dán HTML
-                      </button>
-                    </div>
-                  </div>
+                      content_style:
+                        "body { font-family: Arial, sans-serif; font-size: 14px; background: transparent; }"
+                    }}
 
-                  {/* PREVIEW */}
-                  {showPreview ? (
-                  <div
-                    className="border rounded p-3 bg-body-secondary"
-                    style={{ minHeight: "200px" }}
-                    dangerouslySetInnerHTML={{
-                      __html: form.overview || "<i>Không có nội dung</i>"
+                    onEditorChange={(content) => {
+                      setForm((f) => ({ ...f, overview: content }));
                     }}
                   />
-                  ) : (
-                    <textarea
-                      className="form-control"
-                      rows={6}
-                      value={form.overview}
-                      onChange={e =>
-                        setForm(f => ({ ...f, overview: e.target.value }))
-                      }
-                      placeholder="<p>...</p>"
-                    />
-                  )}
                 </div>
               </div>
 
