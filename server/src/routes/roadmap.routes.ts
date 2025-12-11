@@ -8,6 +8,9 @@ import validateDto from "../middlewares/validateRequest.middleware";
 import { CreateRoadmapDto } from "../dto/request/CreateRoadMapDTO";
 import { UpdateRoadmapDto } from "../dto/request/UpdateRoadMapDTO";
 import { CreateDayDto } from "../dto/request/CreateDayDTO";
+import RoadmapReviewController from "../controllers/roadmapReview.controller";
+import { CreateRoadmapReviewDto } from "../dto/request/CreateRoadmapReviewDTO";
+import { UpdateRoadmapReviewDto } from "../dto/request/UpdateRoadmapReviewDTO";
 
 const router = express.Router();
 
@@ -182,6 +185,31 @@ router.post(
   validateDto(CreateDayDto),
   verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
   DayController.addDayToRoadmap
+);
+
+router.get(
+  "/:roadmapId/reviews",
+  RoadmapReviewController.getRoadmapReviews
+);
+
+router.post(
+  "/:roadmapId/reviews",
+  verifyTokenAndRole(),
+  validateDto(CreateRoadmapReviewDto),
+  RoadmapReviewController.createRoadmapReview
+);
+
+router.patch(
+  "/:roadmapId/reviews/:reviewId",
+  verifyTokenAndRole(),
+  validateDto(UpdateRoadmapReviewDto),
+  RoadmapReviewController.updateRoadmapReview
+);
+
+router.delete(
+  "/:roadmapId/reviews/:reviewId",
+  verifyTokenAndRole(),
+  RoadmapReviewController.deleteRoadmapReview
 );
 
 /**

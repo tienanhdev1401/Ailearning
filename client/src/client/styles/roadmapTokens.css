@@ -12,6 +12,12 @@
   --roadmap-reward: #facc15;
   --roadmap-layer-shadow: 0 25px 75px rgba(0, 0, 0, 0.55);
   --roadmap-drawer-shadow: 0 -8px 30px rgba(0, 0, 0, 0.3);
+  --roadmap-border-strong: rgba(255, 255, 255, 0.28);
+  --roadmap-border-soft: rgba(255, 255, 255, 0.12);
+  --roadmap-surface-veil: rgba(255, 255, 255, 0.04);
+  --roadmap-surface-veil-strong: rgba(255, 255, 255, 0.08);
+  --roadmap-review-text: rgba(255, 255, 255, 0.85);
+  --roadmap-placeholder: rgba(226, 244, 255, 0.6);
   --roadmap-lesson-surface: rgba(4, 20, 34, 0.96);
   --roadmap-lesson-border: rgba(255, 255, 255, 0.12);
   --roadmap-lesson-body: rgba(8, 32, 54, 0.9);
@@ -213,6 +219,12 @@
   --roadmap-reward: #eab308;
   --roadmap-layer-shadow: 0 18px 42px rgba(15, 23, 42, 0.12);
   --roadmap-drawer-shadow: 0 -6px 24px rgba(15, 23, 42, 0.08);
+  --roadmap-border-strong: rgba(15, 23, 42, 0.18);
+  --roadmap-border-soft: rgba(15, 23, 42, 0.1);
+  --roadmap-surface-veil: rgba(15, 23, 42, 0.04);
+  --roadmap-surface-veil-strong: rgba(15, 23, 42, 0.08);
+  --roadmap-review-text: rgba(15, 23, 42, 0.85);
+  --roadmap-placeholder: rgba(71, 85, 105, 0.55);
   --roadmap-lesson-surface: rgba(255, 255, 255, 0.98);
   --roadmap-lesson-border: rgba(15, 23, 42, 0.08);
   --roadmap-lesson-body: rgba(236, 244, 255, 0.9);

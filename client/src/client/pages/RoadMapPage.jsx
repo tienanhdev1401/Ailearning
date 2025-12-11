@@ -5,6 +5,7 @@ import styles from '../styles/RoadmapPage.module.css';
 import '../styles/roadmapTokens.css';
 import RoadmapMap from '../components/roadmap/RoadmapMap';
 import MiniGameRenderer from '../components/MiniGame/MiniGameRender';
+import RoadmapReviewPanel from '../components/roadmap/RoadmapReviewPanel';
 import useCurrentUser from '../hooks/useCurrentUser';
 
 const classNames = (...parts) => parts.filter(Boolean).join(' ');
@@ -334,6 +335,7 @@ const RoadMapPage = () => {
   const [publicRoadmapCache, setPublicRoadmapCache] = useState(null);
   const [interactionNotice, setInteractionNotice] = useState('');
   const [overviewOpen, setOverviewOpen] = useState(false);
+  const [reviewsOpen, setReviewsOpen] = useState(false);
   const noticeTimerRef = useRef(null);
 
   const hydratePublicRoadmap = useCallback(async () => {
@@ -746,6 +748,12 @@ const RoadMapPage = () => {
   const closeOverview = useCallback(() => {
     setOverviewOpen(false);
   }, []);
+  const openReviews = useCallback(() => {
+    setReviewsOpen(true);
+  }, []);
+  const closeReviews = useCallback(() => {
+    setReviewsOpen(false);
+  }, []);
 
   useEffect(() => {
     if (!overviewOpen) return undefined;
@@ -759,6 +767,19 @@ const RoadMapPage = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [overviewOpen, closeOverview]);
+
+  useEffect(() => {
+    if (!reviewsOpen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        closeReviews();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [reviewsOpen, closeReviews]);
 
 
   const mapNodes = useMemo(() => {
@@ -865,6 +886,9 @@ const RoadMapPage = () => {
               )}
               <button className={styles.ctaGhost} type="button" onClick={openOverview}>
                 Giới thiệu lộ trình
+              </button>
+              <button className={styles.ctaSecondary} type="button" onClick={openReviews}>
+                Đánh giá & bình luận
               </button>
             </div>
           </div>
@@ -1000,6 +1024,13 @@ const RoadMapPage = () => {
             <div className={styles.overviewContent} dangerouslySetInnerHTML={{ __html: overviewHtml }} />
           </div>
         </div>
+      )}
+      {reviewsOpen && (
+        <RoadmapReviewPanel
+          roadmapId={roadmap?.id}
+          roadmapTitle={roadmap?.levelName ? `${roadmap.levelName} Roadmap` : roadmap?.title || 'Lộ trình'}
+          onClose={closeReviews}
+        />
       )}
       {selectedDay && (
         <ActivityDrawer

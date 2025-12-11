@@ -9,6 +9,7 @@ import { AiScenario } from "./aiScenario";
 import { AiConversation } from "./aiConversation";
 import { SupportConversation } from "./supportConversation";
 import { SupportMessage } from "./supportMessage";
+import { RoadmapReview } from "./roadmapReview";
 import USER_GENDER from "../enums/userGender.enum";
 import USER_STATUS from "../enums/userStatus.enum";
 
@@ -97,6 +98,10 @@ export class User {
 
   @OneToMany(() => SupportMessage, (message) => message.sender)
   supportMessages!: SupportMessage[];
+
+  @OneToMany(() => RoadmapReview, (review) => review.user)
+  roadmapReviews!: RoadmapReview[];
+
 
   @CreateDateColumn()
   startedAt!: Date;

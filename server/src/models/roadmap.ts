@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { Day } from "./day";
 import { RoadmapEnrollment } from "./roadmapEnrollment";
+import { RoadmapReview } from "./roadmapReview";
 
 @Entity({ name: "roadmaps" })
 export class Roadmap {
@@ -21,6 +22,9 @@ export class Roadmap {
 
   @OneToMany(() => RoadmapEnrollment, (enroll) => enroll.roadmap)
   enrollments!: RoadmapEnrollment[];
+
+  @OneToMany(() => RoadmapReview, (review) => review.roadmap)
+  reviews!: RoadmapReview[];
 
   @CreateDateColumn()
   startedAt!: Date;
