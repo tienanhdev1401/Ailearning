@@ -31,9 +31,9 @@ export class RoadmapReview {
   @Column({ type: "text", nullable: false })
   comment!: string;
 
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: "created_at", nullable: true })
   createdAt!: Date;
 
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ name: "updated_at", nullable: true })
   updatedAt!: Date;
 }
