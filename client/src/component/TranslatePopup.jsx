@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { HighlightContext } from "../context/HighlightContext";
+import { ThemeContext } from "../context/ThemeContext";
 
 const TranslatePopup = () => {
   const { selectedText, setSelectedText, mousePos, enablePopup } =
@@ -8,6 +9,7 @@ const TranslatePopup = () => {
   const [translation, setTranslation] = useState("");
   const [synonyms, setSynonyms] = useState([]);
   const [phonetic, setPhonetic] = useState("");
+  const { isDarkMode } = useContext(ThemeContext);
 
   useEffect(() => {
     if (!selectedText || !enablePopup) return;
@@ -74,6 +76,18 @@ const TranslatePopup = () => {
 
   if (!enablePopup || !selectedText) return null;
 
+  const bg = isDarkMode
+    ? "rgba(18,18,18,0.78)"
+    : "rgba(255,255,255,0.85)";
+  const border = isDarkMode
+    ? "1px solid rgba(255,255,255,0.06)"
+    : "1px solid rgba(0,0,0,0.08)";
+  const textColor = isDarkMode ? "#E6E7E8" : "#0B1220";
+  const secondaryText = isDarkMode ? "rgba(230,231,232,0.78)" : "rgba(11,18,32,0.75)";
+  const panelInnerBg = isDarkMode ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.55)";
+  const panelInnerBorder = isDarkMode ? "1px solid rgba(255,255,255,0.04)" : "1px solid rgba(255,255,255,0.3)";
+  const buttonBg = isDarkMode ? "#2563eb" : "rgba(0,0,0,0.75)";
+  const buttonHover = isDarkMode ? "#1e4fd6" : "black";
   return (
     <div
       style={{
@@ -85,9 +99,9 @@ const TranslatePopup = () => {
         // Glassmorphism UI
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
-        background: "rgba(255,255,255,0.6)",
+        background: bg,
         borderRadius: 20,
-        border: "1px solid rgba(255,255,255,0.35)",
+        border: border,
         padding: "18px 20px",
         width: 260,
 
@@ -97,7 +111,7 @@ const TranslatePopup = () => {
       }}
     >
       {/* Từ khóa */}
-      <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
+      <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4, color: textColor }}>
         {selectedText}
       </div>
 
@@ -106,7 +120,7 @@ const TranslatePopup = () => {
         <div
           style={{
             fontSize: 14,
-            opacity: 0.7,
+            color: secondaryText,
             marginBottom: 8,
             fontStyle: "italic",
           }}
@@ -116,7 +130,7 @@ const TranslatePopup = () => {
       )}
 
       {/* Nghĩa */}
-      <div style={{ fontSize: 15, marginBottom: 12, opacity: 0.9 }}>
+      <div style={{ fontSize: 15, marginBottom: 12, color: textColor }}>
         → {translation}
       </div>
 
@@ -126,14 +140,14 @@ const TranslatePopup = () => {
           style={{
             marginTop: 6,
             padding: "10px 12px",
-            background: "rgba(255,255,255,0.55)",
+            background: panelInnerBg,
             borderRadius: 14,
-            border: "1px solid rgba(255,255,255,0.3)",
+            border: panelInnerBorder,
           }}
         >
-          <div style={{ fontWeight: 600, marginBottom: 4 }}>Đồng nghĩa</div>
+          <div style={{ fontWeight: 600, marginBottom: 4, color: textColor }}>Đồng nghĩa</div>
 
-          <div style={{ fontSize: 14, opacity: 0.85, lineHeight: 1.4 }}>
+          <div style={{ fontSize: 14, color: secondaryText, lineHeight: 1.4 }}>
             {synonyms.join(", ")}
           </div>
         </div>
@@ -145,19 +159,17 @@ const TranslatePopup = () => {
         style={{
           marginTop: 14,
           padding: "6px 18px",
-          background: "rgba(0,0,0,0.75)",
+          background: buttonBg,
           color: "white",
           border: "none",
           borderRadius: 14,
           cursor: "pointer",
           fontSize: 14,
           width: "100%",
-          transition: "0.2s",
+          transition: "0.12s ease",
         }}
-        onMouseEnter={(e) => (e.target.style.background = "black")}
-        onMouseLeave={(e) =>
-          (e.target.style.background = "rgba(0,0,0,0.75)")
-        }
+        onMouseEnter={(e) => (e.target.style.background = buttonHover)}
+        onMouseLeave={(e) => (e.target.style.background = buttonBg)}
       >
         Đóng
       </button>
