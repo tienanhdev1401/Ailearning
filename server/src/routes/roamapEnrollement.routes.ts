@@ -9,6 +9,12 @@ router.post("/enroll", RoadmapEnrollmentController.enrollUser);
 // Lấy danh sách roadmap mà người dùng đã đăng ký
 router.get("/user/:userId", RoadmapEnrollmentController.getUserEnrollments);
 
+// Lấy roadmap đang được chọn (active) của user
+router.get("/user/:userId/active", RoadmapEnrollmentController.getActiveEnrollment);
+
+// Chọn hoặc chuyển roadmap (tùy chọn reset tiến trình)
+router.post("/user/:userId/select", RoadmapEnrollmentController.selectRoadmap);
+
 // Cập nhật trạng thái học (status) của enrollment
 router.put("/:id/status", RoadmapEnrollmentController.updateStatus);
 

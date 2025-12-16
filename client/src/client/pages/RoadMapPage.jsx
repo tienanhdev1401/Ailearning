@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/api';
 import styles from '../styles/RoadmapPage.module.css';
 import '../styles/roadmapTokens.css';
@@ -306,6 +306,7 @@ const PAGE_LIMIT = 15;
 
 const RoadMapPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { userId, loading: userLoading } = useCurrentUser();
   const isAuthenticated = Boolean(userId);
 
@@ -336,6 +337,12 @@ const RoadMapPage = () => {
   const [interactionNotice, setInteractionNotice] = useState('');
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [reviewsOpen, setReviewsOpen] = useState(false);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [switcherLoading, setSwitcherLoading] = useState(false);
+  const [switchPrompt, setSwitchPrompt] = useState(null);
+  const [availableRoadmaps, setAvailableRoadmaps] = useState([]);
+  const [userEnrollments, setUserEnrollments] = useState([]);
+  const [switching, setSwitching] = useState(false);
   const noticeTimerRef = useRef(null);
 
   const hydratePublicRoadmap = useCallback(async () => {
@@ -486,13 +493,13 @@ const RoadMapPage = () => {
     showNotice,
   ]);
 
-  const handleEnroll = async () => {
+  const handleEnroll = async ({ restart = false } = {}) => {
     if (!isAuthenticated) return;
     setEnrolling(true);
     try {
-      await api.post(`/roadmap_enrollments/enroll`, {
-        userId,
+      await api.post(`/roadmap_enrollments/user/${userId}/select`, {
         roadmapId: Number(id),
+        restart,
       });
       setEnrolled(true);
       const roadmapRes = await api.get(`/roadmaps/${id}`);
@@ -500,6 +507,7 @@ const RoadMapPage = () => {
       await fetchUserDayStatuses(userId, { page: 1, append: false });
     } catch (error) {
       console.error(error);
+      showNotice('Không thể kích hoạt lộ trình. Thử lại sau nhé.');
     } finally {
       setEnrolling(false);
     }
@@ -755,6 +763,128 @@ const RoadMapPage = () => {
     setReviewsOpen(false);
   }, []);
 
+  const enrollmentMap = useMemo(() => {
+    const map = new Map();
+    (userEnrollments || []).forEach((enrollment) => {
+      if (enrollment?.roadmap?.id) {
+        map.set(enrollment.roadmap.id, enrollment);
+      }
+    });
+    return map;
+  }, [userEnrollments]);
+
+  const loadSwitcherData = useCallback(async () => {
+    if (!isAuthenticated) return;
+    setSwitcherLoading(true);
+    try {
+      const [roadmapsRes, enrollmentsRes] = await Promise.all([
+        api.get('/roadmaps?page=1&limit=50'),
+        api.get(`/roadmap_enrollments/user/${userId}`),
+      ]);
+      setAvailableRoadmaps(Array.isArray(roadmapsRes.data?.data) ? roadmapsRes.data.data : []);
+      setUserEnrollments(Array.isArray(enrollmentsRes.data) ? enrollmentsRes.data : []);
+    } catch (error) {
+      console.error('Không tải được danh sách lộ trình', error);
+      showNotice('Không tải được danh sách lộ trình, thử lại nhé.');
+    } finally {
+      setSwitcherLoading(false);
+    }
+  }, [isAuthenticated, showNotice, userId]);
+
+  const openSwitcher = useCallback(() => {
+    if (!isAuthenticated) {
+      showNotice('Đăng nhập để chọn lộ trình cá nhân.');
+      return;
+    }
+    setSwitcherOpen(true);
+    loadSwitcherData();
+  }, [isAuthenticated, loadSwitcherData, showNotice]);
+
+  const closeSwitcher = useCallback(() => {
+    setSwitcherOpen(false);
+    setSwitchPrompt(null);
+  }, []);
+
+  const handleSelectRoadmap = useCallback(
+    async (candidate) => {
+      if (!candidate) return;
+      if (!userId) {
+        showNotice('Bạn cần đăng nhập để chọn lộ trình.');
+        return;
+      }
+      if (candidate.id === roadmap?.id) {
+        closeSwitcher();
+        return;
+      }
+
+      setSwitching(true);
+      try {
+        const check = await api.get(`/roadmap_enrollments/user/${userId}/roadmap/${candidate.id}`);
+        const payload = check?.data || {};
+        const hasEnrollment = payload?.hasEnrollment;
+        const hasProgress = payload?.progressSummary?.hasProgress;
+        const status = payload?.status;
+
+        if (!hasEnrollment) {
+          await api.post(`/roadmap_enrollments/user/${userId}/select`, {
+            roadmapId: candidate.id,
+            restart: false,
+          });
+          closeSwitcher();
+          navigate(`/roadmaps/${candidate.id}/days`, { replace: true });
+          return;
+        }
+
+        if (status === 'active') {
+          closeSwitcher();
+          navigate(`/roadmaps/${candidate.id}/days`, { replace: true });
+          return;
+        }
+
+        if (hasProgress) {
+          setSwitcherOpen(false);
+          setSwitchPrompt({ roadmap: candidate, summary: payload.progressSummary });
+          return;
+        }
+
+        await api.post(`/roadmap_enrollments/user/${userId}/select`, {
+          roadmapId: candidate.id,
+          restart: false,
+        });
+        closeSwitcher();
+        navigate(`/roadmaps/${candidate.id}/days`, { replace: true });
+      } catch (error) {
+        console.error('Không đổi được lộ trình', error);
+        showNotice('Không thể đổi lộ trình lúc này.');
+      } finally {
+        setSwitching(false);
+      }
+    },
+    [closeSwitcher, navigate, roadmap?.id, showNotice, userId]
+  );
+
+  const confirmSwitchPrompt = useCallback(
+    async (restart) => {
+      if (!switchPrompt?.roadmap || !userId) return;
+      setSwitching(true);
+      try {
+        await api.post(`/roadmap_enrollments/user/${userId}/select`, {
+          roadmapId: switchPrompt.roadmap.id,
+          restart,
+        });
+        setSwitchPrompt(null);
+        closeSwitcher();
+        navigate(`/roadmaps/${switchPrompt.roadmap.id}/days`, { replace: true });
+      } catch (error) {
+        console.error('Không đổi được lộ trình', error);
+        showNotice('Không thể đổi lộ trình lúc này.');
+      } finally {
+        setSwitching(false);
+      }
+    },
+    [closeSwitcher, navigate, showNotice, switchPrompt, userId]
+  );
+
   useEffect(() => {
     if (!overviewOpen) return undefined;
     const handleKeyDown = (event) => {
@@ -866,10 +996,22 @@ const RoadMapPage = () => {
 
   return (
     <div className={styles.page}>
-      <div className={classNames(styles.assetPlaceholder, styles.assetFloating, styles.assetA)}>A</div>
-      <div className={classNames(styles.assetPlaceholder, styles.assetFloating, styles.assetB)}>B</div>
       <section className={styles.shell}>
         <header className={styles.header}>
+          <div className={styles.headerTopRow}>
+            {isAuthenticated && (
+              <button
+                className={styles.switchButton}
+                type="button"
+                onClick={openSwitcher}
+                disabled={switching || switcherLoading}
+                aria-label="Chọn lại lộ trình"
+                title="Chọn lại lộ trình"
+              >
+                ⟳ Đổi lộ trình
+              </button>
+            )}
+          </div>
           <div className={styles.headerIntro}>
             <h1 className={styles.headerTitle}>{roadmap.levelName + ' Roadmap' || 'Roadmap'}</h1>
             <p className={styles.headerDescription}>{roadmap.description || ''}</p>
@@ -1004,6 +1146,100 @@ const RoadMapPage = () => {
           </aside>
         </section>
       </section>
+          {switcherOpen && (
+            <div className={classNames(styles.drawerOverlay, styles.centerOverlay)} onClick={closeSwitcher}>
+              <div
+                className={classNames(styles.popupShell, styles.switcherPopup)}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <header className={styles.overviewHeader}>
+                  <div>
+                    <h3 className={styles.overviewTitle}>Chọn lộ trình khác</h3>
+                    <p className={styles.popupSubtitle}>Tiến trình hiện tại được giữ nguyên. Bạn có thể quay lại bất cứ lúc nào.</p>
+                  </div>
+                  <button className={styles.closeBtn} type="button" onClick={closeSwitcher} aria-label="Đóng chọn lộ trình">
+                    ×
+                  </button>
+                </header>
+                {switcherLoading ? (
+                  <p className={styles.nodeDescription}>Đang tải danh sách lộ trình...</p>
+                ) : (
+                  <div className={styles.switcherList}>
+                    {availableRoadmaps.map((item) => {
+                      const isCurrent = item.id === roadmap?.id && enrolled;
+                      const enrollmentRecord = enrollmentMap.get(item.id);
+                      const statusLabel = isCurrent
+                        ? 'Đang học'
+                        : enrollmentRecord
+                        ? 'Đã học trước'
+                        : 'Mới';
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className={classNames(
+                            styles.switcherCard,
+                            isCurrent && styles.switcherCardActive
+                          )}
+                          onClick={() => handleSelectRoadmap(item)}
+                          disabled={switching}
+                        >
+                          <div className={styles.switcherCardHeader}>
+                            <div>
+                              <p className={styles.mapLabel}>{item.levelName || 'Lộ trình'}</p>
+                              <h4 className={styles.switcherTitle}>{item.displayName || item.title || 'Roadmap'}</h4>
+                            </div>
+                            <span className={styles.switcherStatus}>{statusLabel}</span>
+                          </div>
+                          <p className={styles.switcherDescription}>
+                            {item.description || 'Lộ trình học tập được thiết kế cân bằng giữa lý thuyết và thực hành.'}
+                          </p>
+                        </button>
+                      );
+                    })}
+                    {!availableRoadmaps.length && (
+                      <p className={styles.nodeDescription}>Chưa có lộ trình nào để lựa chọn.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          {switchPrompt && (
+            <div className={classNames(styles.drawerOverlay, styles.centerOverlay)} onClick={() => setSwitchPrompt(null)}>
+              <div className={classNames(styles.popupShell, styles.switchPrompt)} onClick={(event) => event.stopPropagation()}>
+                <header className={styles.overviewHeader}>
+                  <div>
+                    <h3 className={styles.overviewTitle}>Chào mừng trở lại</h3>
+                    <p className={styles.popupSubtitle}>
+                      Bạn đã học tới ngày {switchPrompt.summary?.lastCompletedDay || switchPrompt.summary?.lastTouchedDay || 1} của {switchPrompt.roadmap?.displayName || switchPrompt.roadmap?.title || 'lộ trình'}. Muốn tiếp tục hay bắt đầu lại từ đầu?
+                    </p>
+                  </div>
+                  <button className={styles.closeBtn} type="button" onClick={() => setSwitchPrompt(null)} aria-label="Đóng thông báo">
+                    ×
+                  </button>
+                </header>
+                <div className={styles.switchPromptActions}>
+                  <button
+                    className={styles.primaryBtn}
+                    type="button"
+                    onClick={() => confirmSwitchPrompt(false)}
+                    disabled={switching}
+                  >
+                    Tiếp tục
+                  </button>
+                  <button
+                    className={styles.secondaryBtn}
+                    type="button"
+                    onClick={() => confirmSwitchPrompt(true)}
+                    disabled={switching}
+                  >
+                    Bắt đầu lại từ ngày 1
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
       {overviewOpen && hasOverview && (
         <div className={styles.drawerOverlay} onClick={closeOverview}>
           <div

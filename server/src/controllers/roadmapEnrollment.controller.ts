@@ -56,4 +56,27 @@ export class RoadmapEnrollmentController {
       next(error);
     }
   }
+
+  static async getActiveEnrollment(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { userId } = req.params;
+      const result = await RoadmapEnrollmentService.getActiveEnrollment(Number(userId));
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async selectRoadmap(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { userId } = req.params;
+      const { roadmapId, restart } = req.body;
+      const result = await RoadmapEnrollmentService.setActiveRoadmap(Number(userId), Number(roadmapId), {
+        restart: Boolean(restart),
+      });
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

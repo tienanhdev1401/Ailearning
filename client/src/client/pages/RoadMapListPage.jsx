@@ -2,11 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/api';
 import styles from '../styles/RoadmapListPage.module.css';
+import useCurrentUser from '../hooks/useCurrentUser';
 
 const RoadmapListPage = () => {
   const [roadmaps, setRoadmaps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('Tất cả');
+  const [checkingActiveRoadmap, setCheckingActiveRoadmap] = useState(true);
+  const { userId, loading: userLoading } = useCurrentUser();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,6 +25,31 @@ const RoadmapListPage = () => {
     };
     fetchRoadmaps();
   }, []);
+
+  useEffect(() => {
+    const checkActive = async () => {
+      if (userLoading) return;
+      if (!userId) {
+        setCheckingActiveRoadmap(false);
+        return;
+      }
+
+      try {
+        const res = await api.get(`/roadmap_enrollments/user/${userId}/active`);
+        const activeRoadmapId = res.data?.enrollment?.roadmap?.id || res.data?.roadmap_enrollement?.roadmap?.id;
+        if (activeRoadmapId) {
+          navigate(`/roadmaps/${activeRoadmapId}/days`, { replace: true });
+          return;
+        }
+      } catch (error) {
+        console.error('Không kiểm tra được lộ trình đang theo học', error);
+      }
+
+      setCheckingActiveRoadmap(false);
+    };
+
+    checkActive();
+  }, [navigate, userId, userLoading]);
 
   const categories = useMemo(() => {
     const collected = roadmaps
@@ -45,6 +73,14 @@ const RoadmapListPage = () => {
       : 'Mới';
     return { dayLabel, updated };
   };
+
+  if (checkingActiveRoadmap || userLoading) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.loadingGate}>Đang kiểm tra lộ trình của bạn...</div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>

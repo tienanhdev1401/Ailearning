@@ -1,7 +1,7 @@
 :root {
   --roadmap-bg: #19212b;
   --roadmap-gradient: linear-gradient(135deg, #19212b 0%, #1a2f3f 55%, #0f1923 100%);
-  --roadmap-surface: rgba(18, 32, 46, 0.9);
+  --roadmap-surface: rgba(18, 32, 46, 0.98);
   --roadmap-text: #e0f2ff;
   --roadmap-muted: #96a8bb;
   --roadmap-path: rgba(0, 255, 204, 0.45);
