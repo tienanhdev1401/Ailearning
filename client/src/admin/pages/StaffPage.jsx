@@ -119,16 +119,6 @@ const StaffPage = () => {
     });
   }, [staffMembers, search, statusFilter]);
 
-  const handleDelete = async (member) => {
-    if (!window.confirm(`Xóa nhân viên ${member.fullname}?`)) return;
-    try {
-      await userService.deleteUser(member.id);
-      setStaffMembers((prev) => prev.filter((item) => item.id !== member.id));
-    } catch (deleteError) {
-      window.alert(deleteError.message || 'Không thể xóa nhân viên. Vui lòng thử lại.');
-    }
-  };
-
   const handleSave = async (formValues, editingId) => {
     if (editingId) {
       // Tìm staff member hiện tại để lấy thông tin đầy đủ

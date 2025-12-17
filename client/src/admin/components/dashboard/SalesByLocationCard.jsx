@@ -3,7 +3,7 @@ import ReactApexChart from 'react-apexcharts';
 
 const SalesByLocationCard = ({ data }) => {
   const chartData = useMemo(() => ([{
-    name: 'Sales',
+    name: 'Enrollments',
     data: data.map((entry) => ({ x: entry.name, y: entry.value }))
   }]), [data]);
 
@@ -39,7 +39,7 @@ const SalesByLocationCard = ({ data }) => {
   return (
     <div className="card">
       <div className="card-header">
-        <h5 className="card-title mb-0">Sales by Location</h5>
+        <h5 className="card-title mb-0">Enrollments by Roadmap</h5>
       </div>
       <div className="card-body">
         <ReactApexChart options={options} series={chartData} type="treemap" height={400} />

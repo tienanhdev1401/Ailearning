@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "../styles/ProfilePage.module.css";
 import userService from "../../services/userService";
+import api from "../../api/api";
 import LoadingSpinner from "../../component/LoadingSpinner";
 import { useAuth } from "../../context/AuthContext";
 import Cropper from "react-easy-crop";
@@ -28,7 +30,13 @@ const ProfilePage = () => {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [pendingAvatarUrl, setPendingAvatarUrl] = useState("");
   const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
+  const [activeRoadmapState, setActiveRoadmapState] = useState({
+    loading: true,
+    data: null,
+    error: "",
+  });
   const { logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     let isMounted = true;
@@ -118,6 +126,13 @@ const ProfilePage = () => {
     MALE: "Nam",
     FEMALE: "Nữ",
     OTHER: "Khác",
+  };
+
+  const enrollmentStatusLabels = {
+    active: "Đang học",
+    paused: "Tạm dừng",
+    completed: "Hoàn thành",
+    dropped: "Đã huỷ",
   };
 
   const statusLabels = {
@@ -399,6 +414,93 @@ const ProfilePage = () => {
     }
   };
 
+  const fetchActiveRoadmap = useCallback(async () => {
+    if (!profile?.id) {
+      setActiveRoadmapState({ loading: false, data: null, error: "" });
+      return;
+    }
+
+    setActiveRoadmapState((prev) => ({ ...prev, loading: true, error: "" }));
+
+    try {
+      const response = await api.get(`/roadmap_enrollments/user/${profile.id}/active`);
+      const payload = response.data || {};
+      const enrollment = payload.enrollment || payload.roadmap_enrollement || null;
+      const roadmap =
+        payload.roadmap ||
+        enrollment?.roadmap ||
+        payload.roadmap_enrollement?.roadmap ||
+        null;
+      const progressSummary = payload.progressSummary || payload.progress_summary || null;
+      const hasActive = payload.hasActive ?? Boolean(enrollment || roadmap);
+
+      setActiveRoadmapState({
+        loading: false,
+        data: { enrollment, roadmap, progressSummary, hasActive },
+        error: "",
+      });
+    } catch (err) {
+      setActiveRoadmapState({
+        loading: false,
+        data: null,
+        error: err?.message || "Không thể tải lộ trình đang học",
+      });
+    }
+  }, [profile?.id]);
+
+  useEffect(() => {
+    fetchActiveRoadmap();
+  }, [fetchActiveRoadmap]);
+
+  const activeRoadmap = activeRoadmapState.data;
+
+  const activeRoadmapMeta = useMemo(() => {
+    if (!activeRoadmap?.roadmap) return null;
+    const summary = activeRoadmap.progressSummary || {};
+    const totalDays =
+      Number(summary.totalDays) ||
+      activeRoadmap.roadmap.totalDays ||
+      activeRoadmap.roadmap.days?.length ||
+      0;
+    const completedDays = Number(summary.lastCompletedDay) || 0;
+    const lastTouchedDay = Number(summary.lastTouchedDay) || 0;
+    const resumeDay = Number(summary.resumeDay) || (lastTouchedDay ? lastTouchedDay + 1 : 1);
+    const percent = totalDays > 0 ? Math.min(100, Math.round((completedDays / totalDays) * 100)) : 0;
+    const startedAt = activeRoadmap.enrollment?.started_at || activeRoadmap.enrollment?.startedAt || null;
+
+    return {
+      totalDays,
+      completedDays,
+      lastTouchedDay,
+      resumeDay,
+      percent,
+      startedAt,
+    };
+  }, [activeRoadmap]);
+
+  const roadmapStartedAt = useMemo(() => {
+    if (!activeRoadmapMeta?.startedAt) return "Chưa cập nhật";
+    try {
+      return new Intl.DateTimeFormat("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }).format(new Date(activeRoadmapMeta.startedAt));
+    } catch (err) {
+      console.error("Không thể định dạng ngày bắt đầu lộ trình", err);
+      return "Chưa cập nhật";
+    }
+  }, [activeRoadmapMeta?.startedAt]);
+
+  const handleContinueRoadmap = useCallback(() => {
+    const roadmapId = activeRoadmap?.roadmap?.id;
+    if (roadmapId) {
+      navigate(`/roadmaps/${roadmapId}/days`);
+      return;
+    }
+    navigate("/roadmaps");
+  }, [activeRoadmap?.roadmap?.id, navigate]);
+
   if (isLoading) {
     return (
       <div className={styles.loadingState}>
@@ -446,7 +548,6 @@ const ProfilePage = () => {
             </div>
             <div className={styles.heroActions}>
               <div className={styles.heroActionGroup}>
-                <button className={styles.primaryBtn}>Tiếp tục học ngay</button>
                 <button className={styles.secondaryBtn} onClick={handleOpenEdit}>
                   Chỉnh sửa hồ sơ
                 </button>
@@ -514,6 +615,83 @@ const ProfilePage = () => {
         </aside>
 
         <main className={styles.main}>
+          <article className={styles.card}>
+            <header className={styles.cardHeader}>
+              <h2>Lộ trình đang học</h2>
+              {!activeRoadmapState.loading && activeRoadmap?.hasActive && (
+                <button className={styles.linkBtn} onClick={handleContinueRoadmap}>
+                  Đi tới lộ trình
+                </button>
+              )}
+            </header>
+            <div className={styles.cardBody}>
+              {activeRoadmapState.loading ? (
+                <div className={styles.roadmapLoading}>Đang tải lộ trình của bạn...</div>
+              ) : activeRoadmapState.error ? (
+                <div className={styles.roadmapError}>
+                  <span>{activeRoadmapState.error}</span>
+                  <button className={styles.linkBtn} onClick={fetchActiveRoadmap}>
+                    Thử lại
+                  </button>
+                </div>
+              ) : !activeRoadmap?.hasActive ? (
+                <div className={styles.roadmapEmpty}>
+                  <div>
+                    <strong>Bạn chưa chọn lộ trình học</strong>
+                    <p>Chọn ngay một lộ trình để bắt đầu theo dõi tiến độ của bạn.</p>
+                  </div>
+                  <button className={styles.primaryBtn} onClick={handleContinueRoadmap}>
+                    Chọn lộ trình
+                  </button>
+                </div>
+              ) : (
+                <div className={styles.roadmapSummary}>
+                  <div className={styles.roadmapHeaderRow}>
+                    <div>
+                      <p className={styles.roadmapEyebrow}>Lộ trình hiện tại</p>
+                      <h3 className={styles.roadmapTitle}>
+                        {activeRoadmap?.roadmap?.displayName ||
+                          activeRoadmap?.roadmap?.title ||
+                          activeRoadmap?.roadmap?.levelName ||
+                          "Lộ trình"}
+                      </h3>
+                      <div className={styles.roadmapMeta}>
+                        <span className={styles.roadmapChip}>{activeRoadmap?.roadmap?.levelName || "Đang cập nhật"}</span>
+                        <span className={`${styles.roadmapChip} ${styles.roadmapChipMuted}`}>
+                          {enrollmentStatusLabels[activeRoadmap?.enrollment?.status] || "Đang cập nhật"}
+                        </span>
+                        <span className={`${styles.roadmapChip} ${styles.roadmapChipMuted}`}>
+                          Bắt đầu {roadmapStartedAt}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {activeRoadmapMeta ? (
+                    <div className={styles.roadmapProgressBlock}>
+                      <div className={styles.progressLabel}>
+                        <span>
+                          {activeRoadmapMeta.totalDays > 0
+                            ? `Đã hoàn thành ${activeRoadmapMeta.completedDays} / ${activeRoadmapMeta.totalDays} ngày`
+                            : "Lộ trình chưa có ngày học"}
+                        </span>
+                        <span>{activeRoadmapMeta.percent}%</span>
+                      </div>
+                      <div className={styles.progressBar}>
+                        <div
+                          className={styles.progressFill}
+                          style={{ width: `${activeRoadmapMeta.percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={styles.roadmapEmpty}>Không tìm thấy dữ liệu tiến độ.</div>
+                  )}
+                </div>
+              )}
+            </div>
+          </article>
+
           <article className={styles.card}>
             <header className={styles.cardHeader}>
               <h2>Thống kê học tập</h2>

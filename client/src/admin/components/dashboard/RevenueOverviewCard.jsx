@@ -45,7 +45,7 @@ const RevenueOverviewCard = ({ dataset }) => {
         labels: filteredData.map((point) => point.label),
         datasets: [
           {
-            label: 'Revenue',
+            label: 'AI Conversations',
             data: filteredData.map((point) => point.revenue),
             borderColor: 'rgb(99, 102, 241)',
             backgroundColor: 'rgba(99, 102, 241, 0.1)',
@@ -57,7 +57,7 @@ const RevenueOverviewCard = ({ dataset }) => {
             pointRadius: 5
           },
           {
-            label: 'Profit',
+            label: 'Resolved Tickets',
             data: filteredData.map((point) => point.profit),
             borderColor: 'rgb(16, 185, 129)',
             backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -92,7 +92,7 @@ const RevenueOverviewCard = ({ dataset }) => {
             borderColor: 'rgba(255, 255, 255, 0.1)',
             borderWidth: 1,
             callbacks: {
-              label: (context) => `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`
+              label: (context) => `${context.dataset.label}: ${context.parsed.y.toLocaleString()}`
             }
           }
         },
@@ -105,7 +105,7 @@ const RevenueOverviewCard = ({ dataset }) => {
             beginAtZero: true,
             grid: { color: 'rgba(148, 163, 184, 0.2)' },
             ticks: {
-              callback: (value) => `$${value.toLocaleString()}`
+              callback: (value) => value.toLocaleString()
             },
             border: { display: false }
           }
@@ -121,7 +121,7 @@ const RevenueOverviewCard = ({ dataset }) => {
   return (
     <div className="card h-100">
       <div className="card-header d-flex justify-content-between align-items-center">
-        <h5 className="card-title mb-0">Revenue Overview</h5>
+        <h5 className="card-title mb-0">Usage Overview</h5>
         <div className="btn-group btn-group-sm" role="group">
           {PERIODS.map((option) => (
             <button

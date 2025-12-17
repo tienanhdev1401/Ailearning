@@ -1,94 +1,83 @@
 import { useEffect, useMemo, useState } from 'react';
+import dashboardService from '../services/dashboardService';
 import {
-  activityFeed,
+  activityFeed as mockActivityFeed,
   generateOrderStatus,
   generateRecentOrders,
   generateRevenueSeries,
   generateStatsCards,
   generateUserGrowthSeries,
-  salesByLocation,
-  storageUsage
+  salesByLocation as mockSales,
+  storageUsage as mockStorage
 } from '../data/dashboardData';
 
-const clampValue = (value, min = 0) => (value < min ? min : value);
-
-const formatStatsValue = (card) => {
-  if (card.label === 'Revenue') return Math.max(20000, card.value);
-  if (card.label === 'Total Users') return Math.max(1000, card.value);
-  if (card.label === 'Avg. Response') return Math.max(1, card.value);
-  return Math.max(100, card.value);
+const fallbackData = {
+  statsCards: generateStatsCards(),
+  revenueDataset: (() => {
+    const series = generateRevenueSeries();
+    return {
+      labels: series.map((s) => s.label),
+      revenue: series.map((s) => s.revenue),
+      profit: series.map((s) => s.profit)
+    };
+  })(),
+  userGrowthDataset: (() => {
+    const series = generateUserGrowthSeries();
+    return {
+      labels: series.map((s) => s.label),
+      data: series.map((s) => s.value)
+    };
+  })(),
+  orderStatusDataset: (() => {
+    const status = generateOrderStatus();
+    return {
+      labels: ['Completed', 'Processing', 'Pending', 'Cancelled'],
+      data: [status.completed, status.processing, status.pending, status.cancelled]
+    };
+  })(),
+  recentOrders: generateRecentOrders(),
+  activityFeed: mockActivityFeed,
+  storageUsage: mockStorage,
+  salesByLocation: mockSales
 };
 
 export const useDashboardData = () => {
-  const [statsCards, setStatsCards] = useState(generateStatsCards());
-  const [revenueSeries, setRevenueSeries] = useState(generateRevenueSeries());
-  const [userGrowth, setUserGrowth] = useState(generateUserGrowthSeries());
-  const [orderStatus] = useState(generateOrderStatus());
-  const [recentOrders, setRecentOrders] = useState(generateRecentOrders());
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [data, setData] = useState(fallbackData);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const statsWithFormattedValues = useMemo(() => (
-    statsCards.map(card => ({
-      ...card,
-      value: formatStatsValue(card)
-    }))
-  ), [statsCards]);
+  const loadDashboard = async () => {
+    try {
+      setLoading(true);
+      const result = await dashboardService.getOverview();
+      setData({ ...fallbackData, ...result });
+      setError(null);
+    } catch (err) {
+      setError(err?.message || 'Không thể tải dashboard');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setIsUpdating(true);
-      setStatsCards(prev => prev.map(card => {
-        const deltaValue = card.label === 'Avg. Response'
-          ? parseFloat((Math.random() * 0.6 - 0.3).toFixed(2))
-          : Math.floor(Math.random() * 300) - 120;
-        const nextValue = card.label === 'Avg. Response'
-          ? parseFloat((card.value + deltaValue).toFixed(1))
-          : card.value + deltaValue;
-        const deltaPercentage = `${deltaValue >= 0 ? '+' : ''}${(Math.random() * 8 - 2).toFixed(1)}%`;
-
-        return {
-          ...card,
-          value: clampValue(nextValue, card.label === 'Avg. Response' ? 0.5 : 0),
-          delta: deltaPercentage,
-          deltaVariant: deltaValue >= 0 ? 'text-success' : 'text-danger'
-        };
-      }));
-
-      setRevenueSeries(generateRevenueSeries());
-      setUserGrowth(generateUserGrowthSeries());
-      setRecentOrders(generateRecentOrders());
-
-      setTimeout(() => setIsUpdating(false), 600);
-    }, 30000);
-
+    loadDashboard();
+    const interval = setInterval(loadDashboard, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  const revenueDataset = useMemo(() => ({
-    labels: revenueSeries.map(item => item.label),
-    revenue: revenueSeries.map(item => item.revenue),
-    profit: revenueSeries.map(item => item.profit)
-  }), [revenueSeries]);
-
-  const userGrowthDataset = useMemo(() => ({
-    labels: userGrowth.map(point => point.label),
-    data: userGrowth.map(point => point.value)
-  }), [userGrowth]);
-
-  const orderStatusDataset = useMemo(() => ({
-    labels: ['Completed', 'Processing', 'Pending', 'Cancelled'],
-    data: [orderStatus.completed, orderStatus.processing, orderStatus.pending, orderStatus.cancelled]
-  }), [orderStatus]);
+  const statsCards = useMemo(() => data.statsCards, [data.statsCards]);
 
   return {
-    activityFeed,
-    isUpdating,
-    orderStatusDataset,
-    recentOrders,
-    revenueDataset,
-    salesByLocation,
-    statsCards: statsWithFormattedValues,
-    storageUsage,
-    userGrowthDataset
+    activityFeed: data.activityFeed,
+    orderStatusDataset: data.orderStatusDataset,
+    recentOrders: data.recentOrders,
+    revenueDataset: data.revenueDataset,
+    salesByLocation: data.salesByLocation,
+    statsCards,
+    storageUsage: data.storageUsage,
+    userGrowthDataset: data.userGrowthDataset,
+    loading,
+    error,
+    refresh: loadDashboard
   };
 };

@@ -1,15 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import Chart from 'react-apexcharts';
 import userService from '../../services/userService';
-import {
-  ACTIVE_RATE_SERIES,
-  INITIAL_USERS,
-  RECENT_USER_ACTIVITIES,
-  SYSTEM_ALERTS,
-  USER_GROWTH_CATEGORIES,
-  USER_GROWTH_SERIES
-} from '../data/users';
+import { INITIAL_USERS } from '../data/users';
 
 const ROLE_LABELS = {
   admin: 'Quản trị viên',
@@ -35,14 +27,6 @@ const STATUS_OPTIONS = [
   { value: 'active', label: 'Hoạt động' },
   { value: 'inactive', label: 'Ngưng' },
   { value: 'banned', label: 'Bị cấm' }
-];
-
-const ROLE_OPTIONS = [
-  { value: 'all', label: 'Tất cả vai trò' },
-  { value: 'admin', label: 'Quản trị viên' },
-  { value: 'staff', label: 'Nhân viên' },
-  { value: 'user', label: 'Học viên' },
-  { value: 'guest', label: 'Khách' }
 ];
 
 const GENDER_LABELS = {
@@ -165,7 +149,6 @@ const UsersPage = () => {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [roleFilter, setRoleFilter] = useState('all');
   const [sortField, setSortField] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -200,27 +183,6 @@ const UsersPage = () => {
     };
   }, [loadUsers]);
 
-  const stats = useMemo(() => {
-    const total = users.length;
-    const active = users.filter(u => u.status === 'active').length;
-    const banned = users.filter(u => u.status === 'banned').length;
-    const inactive = users.filter(u => u.status === 'inactive').length;
-    const now = new Date();
-    const newThisMonth = users.filter(u => {
-      if (!u.joinedAt) return false;
-      const joined = new Date(u.joinedAt);
-      return Number.isFinite(joined.getTime()) && joined.getMonth() === now.getMonth() && joined.getFullYear() === now.getFullYear();
-    }).length;
-    return {
-      total,
-      active,
-      banned,
-      inactive,
-      newThisMonth,
-      activePercentage: total ? Math.round((active / total) * 100) : 0
-    };
-  }, [users]);
-
   const filteredUsers = useMemo(() => {
     const lowered = search.trim().toLowerCase();
     return users.filter(user => {
@@ -229,10 +191,9 @@ const UsersPage = () => {
         user.name.toLowerCase().includes(lowered) ||
         user.email.toLowerCase().includes(lowered);
       const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-      const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-      return matchesQuery && matchesStatus && matchesRole;
+      return matchesQuery && matchesStatus;
     });
-  }, [users, search, statusFilter, roleFilter]);
+  }, [users, search, statusFilter]);
 
   const sortedUsers = useMemo(() => {
     const copy = [...filteredUsers];
@@ -277,58 +238,6 @@ const UsersPage = () => {
     }
     return [...new Set(rangeWithDots)];
   }, [currentPage, totalPages]);
-
-  const roleDistribution = useMemo(() => {
-    const counts = users.reduce((acc, user) => {
-      const key = user.role || 'user';
-      acc[key] = (acc[key] || 0) + 1;
-      return acc;
-    }, {});
-    const entries = Object.keys(counts);
-    if (!entries.length) {
-      return { labels: ['Chưa có dữ liệu'], series: [1] };
-    }
-    const labels = entries.map(role => ROLE_LABELS[role] || role);
-    const series = entries.map(role => counts[role]);
-    return { labels, series };
-  }, [users]);
-
-  const sparklineOptions = useMemo(() => ({
-    chart: { type: 'line', height: 50, sparkline: { enabled: true } },
-    stroke: { curve: 'smooth', width: 2 },
-    colors: ['#10b981'],
-    tooltip: { enabled: false }
-  }), []);
-
-  const userGrowthOptions = useMemo(() => ({
-    chart: {
-      type: 'bar',
-      height: 250,
-      toolbar: { show: false },
-      parentHeightOffset: 0
-    },
-    plotOptions: {
-      bar: { borderRadius: 4, columnWidth: '60%' }
-    },
-    xaxis: {
-      categories: USER_GROWTH_CATEGORIES,
-      axisBorder: { show: false },
-      axisTicks: { show: false }
-    },
-    yaxis: { show: false },
-    dataLabels: { enabled: false },
-    grid: { show: false },
-    colors: ['#6366f1']
-  }), []);
-
-  const roleDistributionOptions = useMemo(() => ({
-    chart: { type: 'donut', height: 220 },
-    labels: roleDistribution.labels,
-    legend: { show: false },
-    dataLabels: { enabled: false },
-    colors: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#0ea5e9'],
-    plotOptions: { pie: { donut: { size: '70%' } } }
-  }), [roleDistribution]);
 
   const toggleSort = (field) => {
     setCurrentPage(1);
@@ -398,17 +307,6 @@ const UsersPage = () => {
     }
   };
 
-  const handleDeleteUser = async (user) => {
-    if (!window.confirm(`Xóa ${user.name}?`)) return;
-    try {
-      await userService.deleteUser(user.id);
-      setUsers(prev => prev.filter(item => item.id !== user.id));
-      setSelectedIds(prev => prev.filter(id => id !== user.id));
-    } catch (deleteError) {
-      window.alert(deleteError.message || 'Không thể xóa người dùng. Vui lòng thử lại.');
-    }
-  };
-
   const handleToggleUserStatus = async (user) => {
     const newStatus = user.status === 'active' ? 'inactive' : 'active';
     const serverStatus = mapClientStatusToServer(newStatus);
@@ -475,8 +373,6 @@ const UsersPage = () => {
       }
       return;
     } else {
-      const nextId = Math.max(0, ...users.map(u => u.id || 0)) + 1;
-      const now = new Date().toISOString();
       // Create via API to match Staff behavior. Validate client-side before call.
       const errors = [];
       const pw = form.password;
@@ -867,36 +763,6 @@ const UsersPage = () => {
     </div>
   );
 };
-
-const StatsCard = ({ title, value, subtitle, iconClass, variant }) => (
-  <div className="col-xl-3 col-lg-6">
-    <div className="card h-100">
-      <div className="card-body p-3 p-lg-4">
-        <div className="d-flex align-items-center">
-          <div className={`stats-icon bg-${variant} bg-opacity-10 text-${variant} me-3`}>
-            <i className={`bi ${iconClass}`} />
-          </div>
-          <div>
-            <h6 className="mb-0 text-muted">{title}</h6>
-            <h3 className="mb-0">{value}</h3>
-            <small className="text-muted">{subtitle}</small>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const SectionCard = ({ title, children }) => (
-  <div className="card h-100">
-    <div className="card-body">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5 className="mb-0">{title}</h5>
-      </div>
-      {children}
-    </div>
-  </div>
-);
 
 const SortableHeader = ({ label, field, sortField, sortDirection, onSort }) => (
   <th scope="col" role="button" onClick={() => onSort(field)}>

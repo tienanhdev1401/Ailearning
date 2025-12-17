@@ -17,7 +17,10 @@ const DashboardPage = () => {
     salesByLocation,
     statsCards,
     storageUsage,
-    userGrowthDataset
+    userGrowthDataset,
+    loading,
+    error,
+    refresh
   } = useDashboardData();
 
   return (
@@ -32,8 +35,12 @@ const DashboardPage = () => {
             <i className="bi bi-plus-lg me-2" />
             New Item
           </button>
-          <button type="button" className="btn btn-outline-secondary" title="Refresh data">
-            <i className="bi bi-arrow-clockwise" />
+          <button type="button" className="btn btn-outline-secondary" title="Refresh data" onClick={refresh}>
+            {loading ? (
+              <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+            ) : (
+              <i className="bi bi-arrow-clockwise" />
+            )}
           </button>
           <button type="button" className="btn btn-outline-secondary" title="Export data">
             <i className="bi bi-download" />
@@ -45,6 +52,12 @@ const DashboardPage = () => {
       </div>
 
       <StatsGrid stats={statsCards} />
+
+      {error && (
+        <div className="alert alert-warning" role="alert">
+          {error}
+        </div>
+      )}
 
       <div className="row g-4 mb-4">
         <div className="col-lg-8">
