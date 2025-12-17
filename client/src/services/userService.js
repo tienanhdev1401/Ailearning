@@ -105,6 +105,16 @@ const userService = {
         }
     },
 
+    createUser: async (payload) => {
+        try {
+            const response = await api.post('/users', payload);
+            return response.data;
+        } catch (error) {
+            const errorMessage = extractErrorMessage(error, 'Không thể tạo người dùng');
+            throw new Error(errorMessage);
+        }
+    },
+
     deleteUser: async (userId) => {
         try {
             const response = await api.delete(`/users/${userId}`);

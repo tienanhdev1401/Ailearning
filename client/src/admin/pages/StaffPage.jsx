@@ -4,40 +4,39 @@ import userService from '../../services/userService';
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Hoạt động' },
-  { value: 'pending', label: 'Chờ duyệt' },
-  { value: 'inactive', label: 'Ngưng' }
+  { value: 'inactive', label: 'Ngưng' },
+  { value: 'banned', label: 'Bị cấm' }
 ];
 
 const STATUS_VARIANTS = {
   active: 'bg-success',
-  pending: 'bg-warning text-dark',
-  inactive: 'bg-secondary'
+  inactive: 'bg-secondary',
+  banned: 'bg-danger text-white'
 };
 
 const STATUS_LABELS = {
   active: 'Hoạt động',
-  pending: 'Chờ duyệt',
-  inactive: 'Ngưng'
+  inactive: 'Ngưng',
+  banned: 'Bị cấm'
 };
 
 const emptyForm = {
   fullname: '',
   email: '',
   phone: '',
-  status: 'active'
+  status: 'active',
+  password: '',
+  authProvider: 'local'
 };
 
 const mapServerStatus = (status) => {
   switch ((status || '').toUpperCase()) {
-    case 'VERIFIED':
     case 'ACTIVE':
       return 'active';
-    case 'UNVERIFIED':
-    case 'PENDING':
-      return 'pending';
-    case 'SUSPENDED':
     case 'INACTIVE':
       return 'inactive';
+    case 'BANNED':
+      return 'banned';
     default:
       return 'active';
   }
@@ -46,13 +45,13 @@ const mapServerStatus = (status) => {
 const mapClientStatusToServer = (status) => {
   switch ((status || '').toLowerCase()) {
     case 'active':
-      return 'VERIFIED';
-    case 'pending':
-      return 'PENDING';
+      return 'ACTIVE';
     case 'inactive':
-      return 'SUSPENDED';
+      return 'INACTIVE';
+    case 'banned':
+      return 'BANNED';
     default:
-      return 'VERIFIED';
+      return 'ACTIVE';
   }
 };
 
@@ -61,7 +60,7 @@ const normalizeStaffMember = (user) => ({
   fullname: user.name || 'Chưa rõ tên',
   email: user.email || 'Chưa có email',
   status: mapServerStatus(user.status),
-  phone: user.phone || '—',
+  phone: user.phone || null,
   joinedAt: user.startedAt || user.createdAt || new Date().toISOString(),
   // Lưu thông tin đầy đủ để có thể update
   role: user.role || 'staff',
@@ -164,20 +163,72 @@ const StaffPage = () => {
         window.alert(updateError.message || 'Không thể cập nhật nhân viên. Vui lòng thử lại.');
       }
     } else {
-      // Tạo mới - chỉ cập nhật state local (có thể thêm API createUser sau)
-      const nextId = Math.max(0, ...staffMembers.map((member) => member.id || 0)) + 1;
-      setStaffMembers((prev) => [
-        ...prev,
-        {
-          id: nextId,
-          fullname: formValues.fullname,
-          email: formValues.email,
-          phone: formValues.phone || '—',
-          status: formValues.status,
-          joinedAt: new Date().toISOString()
+      // Tạo mới: kiểm tra client-side để thỏa validation server
+      try {
+        // server-side expects certain required fields only
+        const errors = [];
+        const pw = formValues.password;
+        const auth = (formValues.authProvider || '').toString();
+
+        if (typeof pw === 'undefined' || pw === null || String(pw).trim() === '') {
+          errors.push('Mật khẩu không được để trống');
+        } else if (typeof pw !== 'string') {
+          errors.push('Mật khẩu phải là chuỗi ký tự');
+        } else if (pw.length < 6) {
+          errors.push('Mật khẩu phải có ít nhất 6 ký tự');
         }
-      ]);
-      setModalState({ open: false, payload: null });
+
+        if (!['local', 'google'].includes(auth)) {
+          errors.push('AuthProvider chỉ có thể là: local, google');
+        }
+
+        if (errors.length > 0) {
+          window.alert(errors.join('\n'));
+          return;
+        }
+
+        // Only send allowed fields to backend to avoid "property X should not exist" errors
+        const payload = {
+          name: formValues.fullname,
+          email: formValues.email,
+          role: 'staff',
+          password: String(formValues.password),
+          authProvider: formValues.authProvider || 'local'
+        };
+
+        const created = await userService.createUser(payload);
+        const normalized = normalizeStaffMember(created);
+        setStaffMembers((prev) => [normalized, ...prev]);
+        setModalState({ open: false, payload: null });
+      } catch (createError) {
+        window.alert(createError.message || 'Không thể tạo nhân viên. Vui lòng thử lại.');
+        throw createError;
+      }
+    }
+  };
+
+  const handleToggleStaffStatus = async (member) => {
+    const newStatus = member.status === 'active' ? 'inactive' : 'active';
+    const serverStatus = mapClientStatusToServer(newStatus);
+
+    try {
+      const payload = {
+        name: member.fullname,
+        email: member.email,
+        role: member.role || 'staff',
+        status: serverStatus,
+        phone: member.phone || null,
+        avatarUrl: member.avatarUrl || null,
+        birthday: member.birthday || null,
+        gender: member.gender || null
+      };
+
+      const updatedUser = await userService.updateUser(member.id, payload);
+      const normalizedMember = normalizeStaffMember(updatedUser);
+
+      setStaffMembers((prev) => prev.map((m) => (m.id === member.id ? normalizedMember : m)));
+    } catch (err) {
+      window.alert(err.message || 'Không thể cập nhật trạng thái nhân viên. Vui lòng thử lại.');
     }
   };
 
@@ -271,7 +322,7 @@ const StaffPage = () => {
                 <tr key={member.id}>
                   <td className="fw-semibold">{member.fullname}</td>
                   <td>{member.email}</td>
-                  <td>{member.phone}</td>
+                  <td>{member.phone || '—'}</td>
                   <td>{formatDate(member.joinedAt)}</td>
                   <td>
                     <span className={`badge ${STATUS_VARIANTS[member.status] || 'bg-secondary'}`}>
@@ -287,13 +338,25 @@ const StaffPage = () => {
                       >
                         <i className="bi bi-pencil" />
                       </button>
-                      <button
-                        type="button"
-                        className="btn btn-outline-danger"
-                        onClick={() => handleDelete(member)}
-                      >
-                        <i className="bi bi-trash" />
-                      </button>
+                      {member.status === 'active' ? (
+                        <button
+                          type="button"
+                          className="btn btn-outline-warning"
+                          onClick={() => handleToggleStaffStatus(member)}
+                          title="Tạm ngưng"
+                        >
+                          <i className="bi bi-pause-circle" />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn btn-outline-success"
+                          onClick={() => handleToggleStaffStatus(member)}
+                          title="Kích hoạt"
+                        >
+                          <i className="bi bi-check-circle" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -330,8 +393,10 @@ const StaffModal = ({ show, onClose, onSave, member }) => {
         setForm({
           fullname: member.fullname,
           email: member.email,
-          phone: member.phone === '—' ? '' : member.phone,
-          status: member.status
+          phone: member.phone || '',
+          status: member.status,
+          password: '',
+          authProvider: member.authProvider || 'local'
         });
       } else {
         setForm(emptyForm);
@@ -388,6 +453,24 @@ const StaffModal = ({ show, onClose, onSave, member }) => {
                       onChange={handleChange('email')}
                       required
                     />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label">Mật khẩu</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      value={form.password}
+                      onChange={handleChange('password')}
+                      placeholder={editingId ? 'Để trống nếu không đổi mật khẩu' : ''}
+                      required={!editingId}
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label">Auth Provider</label>
+                    <select className="form-select" value={form.authProvider} onChange={handleChange('authProvider')}>
+                      <option value="local">local</option>
+                      <option value="google">google</option>
+                    </select>
                   </div>
                   <div className="col-12">
                     <label className="form-label">Điện thoại</label>
