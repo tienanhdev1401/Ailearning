@@ -46,7 +46,7 @@ export class User {
   @Column({
     type: "enum",
     enum: USER_STATUS,
-    default: USER_STATUS.UNVERIFIED,
+    default: USER_STATUS.ACTIVE,
   })
   status!: USER_STATUS;
 

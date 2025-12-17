@@ -121,10 +121,9 @@ const ProfilePage = () => {
   };
 
   const statusLabels = {
-    VERIFIED: "Đã xác thực",
-    UNVERIFIED: "Chưa xác thực",
-    PENDING: "Đang chờ duyệt",
-    SUSPENDED: "Tạm khoá",
+    ACTIVE: 'Hoạt động',
+    INACTIVE: 'Ngưng',
+    BANNED: 'Bị cấm'
   };
 
   const formattedBirthday = useMemo(() => {
