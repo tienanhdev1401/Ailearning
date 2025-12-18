@@ -266,7 +266,7 @@ const RoadmapReviewPanel = ({ roadmapId, roadmapTitle, onClose }) => {
       <div className={styles.reviewPanel} onClick={(event) => event.stopPropagation()}>
         <header className={styles.reviewHeader}>
           <div>
-            <p className={styles.reviewEyebrow}>Phản hồi của học viên</p>
+            <p className>Phản hồi của học viên</p>
             <h3 className={styles.reviewTitle}>{roadmapTitle || 'Lộ trình'}</h3>
             <p className={styles.reviewSubtitle}>
               Đọc cảm nhận từ cộng đồng và chia sẻ trải nghiệm của bạn để giúp khóa học tốt hơn.

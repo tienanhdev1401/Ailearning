@@ -18,10 +18,12 @@ const DashboardPage = () => {
     statsCards,
     storageUsage,
     userGrowthDataset,
-    loading,
+    // loading,
     error,
-    refresh
+    // refresh
   } = useDashboardData();
+
+
 
   return (
     <div className="container-fluid p-4 p-lg-5">
@@ -31,7 +33,7 @@ const DashboardPage = () => {
           <p className="text-muted mb-0">Welcome back! Here's what's happening.</p>
         </div>
         <div className="d-flex gap-2 flex-wrap">
-          <button type="button" className="btn btn-primary">
+          {/* <button type="button" className="btn btn-primary">
             <i className="bi bi-plus-lg me-2" />
             New Item
           </button>
@@ -47,7 +49,7 @@ const DashboardPage = () => {
           </button>
           <button type="button" className="btn btn-outline-secondary" title="Settings">
             <i className="bi bi-gear" />
-          </button>
+          </button> */}
         </div>
       </div>
 

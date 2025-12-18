@@ -998,24 +998,14 @@ const RoadMapPage = () => {
     <div className={styles.page}>
       <section className={styles.shell}>
         <header className={styles.header}>
-          <div className={styles.headerTopRow}>
-            {isAuthenticated && (
-              <button
-                className={styles.switchButton}
-                type="button"
-                onClick={openSwitcher}
-                disabled={switching || switcherLoading}
-                aria-label="Chọn lại lộ trình"
-                title="Chọn lại lộ trình"
-              >
-                ⟳ Đổi lộ trình
-              </button>
-            )}
-          </div>
-          <div className={styles.headerIntro}>
-            <h1 className={styles.headerTitle}>{roadmap.levelName + ' Roadmap' || 'Roadmap'}</h1>
-            <p className={styles.headerDescription}>{roadmap.description || ''}</p>
-            <div className={styles.ctaRow}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+            <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+              <div className={styles.headerIntro} style={{ marginTop: 20 }}>
+                <h2 className={styles.headerTitle} style={{ marginTop: 0, wordBreak: 'break-word' }}>
+                  {roadmap?.levelName ? `${roadmap.levelName} Roadmap` : 'Roadmap'}
+                </h2>
+                <p className={styles.headerDescription}>{roadmap.description || ''}</p>
+                <div className={styles.ctaRow}>
               {!enrolled && (
                 <button className={styles.ctaPrimary} onClick={handleEnroll} disabled={enrolling}>
                   {enrolling ? 'Đang ghi danh...' : 'Bắt đầu ngay'}
@@ -1032,6 +1022,22 @@ const RoadMapPage = () => {
               <button className={styles.ctaSecondary} type="button" onClick={openReviews}>
                 Đánh giá & bình luận
               </button>
+            </div>
+          </div>
+          </div>
+            <div style={{ flex: '0 0 auto' }}>
+              {isAuthenticated && (
+                <button
+                  className={styles.switchButton}
+                  type="button"
+                  onClick={openSwitcher}
+                  disabled={switching || switcherLoading}
+                  aria-label="Chọn lại lộ trình"
+                  title="Chọn lại lộ trình"
+                >
+                  ⟳ Đổi lộ trình
+                </button>
+              )}
             </div>
           </div>
           <div className={styles.statGrid}>

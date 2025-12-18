@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 
 const DROPDOWN_HIDE_DELAY = 120;
 
@@ -43,6 +44,16 @@ const AdminHeader = ({ theme, onThemeToggle, searchIndex = [] }) => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
+
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.error('Logout thất bại', err);
+    }
+  };
 
   const handleFullscreenToggle = async () => {
     try {
@@ -178,8 +189,8 @@ const AdminHeader = ({ theme, onThemeToggle, searchIndex = [] }) => {
               </button>
               {userMenuOpen && (
                 <ul className="dropdown-menu dropdown-menu-end show">
-                  <li><Link className="dropdown-item" to="/profile" onClick={() => setUserMenuOpen(false)}><i className="bi bi-person me-2" />Profile</Link></li>
-                  <li><Link className="dropdown-item" to="/settings" onClick={() => setUserMenuOpen(false)}><i className="bi bi-gear me-2" />Settings</Link></li>
+                  {/* <li><Link className="dropdown-item" to="/profile" onClick={() => setUserMenuOpen(false)}><i className="bi bi-person me-2" />Profile</Link></li>
+                  <li><Link className="dropdown-item" to="/settings" onClick={() => setUserMenuOpen(false)}><i className="bi bi-gear me-2" />Settings</Link></li> */}
                   <li><hr className="dropdown-divider" /></li>
                   <li>
                     <button
@@ -187,7 +198,7 @@ const AdminHeader = ({ theme, onThemeToggle, searchIndex = [] }) => {
                       className="dropdown-item"
                       onClick={() => {
                         setUserMenuOpen(false);
-                        navigate('/logout');
+                        handleLogout();
                       }}
                     >
                       <i className="bi bi-box-arrow-right me-2" />Logout
