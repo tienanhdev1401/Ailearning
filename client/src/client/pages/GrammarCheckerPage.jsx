@@ -1,22 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { diffWords } from 'diff';
 import styles from '../styles/GrammarCheckerPage.module.css'; // Import CSS Module
 import api from '../../api/api';
+import { ThemeContext } from '../../context/ThemeContext';
 
 const GrammarCheckerPage = () => {
+  const { isDarkMode } = useContext(ThemeContext);
   const [inputTexts, setInputTexts] = useState([""]);
   const [results, setResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingIndex, setLoadingIndex] = useState(-1);
-  const [darkMode, setDarkMode] = useState(false);
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
-
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
 
   // Load history from localStorage on component mount
   useEffect(() => {
@@ -29,19 +25,6 @@ const GrammarCheckerPage = () => {
       saveHistoryToStorage(history);
     }
   }, [history]);
-
-  // Apply dark mode styles to the document body
-  useEffect(() => {
-    if (darkMode) {
-      document.body.style.backgroundColor = '#1a202c';
-    } else {
-      document.body.style.backgroundColor = '#f8f9fa';
-    }
-    return () => {
-      // Khi rời khỏi trang, reset lại màu nền về mặc định
-      document.body.style.backgroundColor = '';
-    };
-  }, [darkMode]);
 
   const updateCounts = (text) => {
     const charCount = text.length;
@@ -74,7 +57,7 @@ const GrammarCheckerPage = () => {
     
     return diffs.map((part, index) => {
       if (part.removed) {
-        return `<span class="${styles['highlight-error']} ${darkMode ? styles.dark : ''}">${part.value}</span>`;
+        return `<span class="${styles['highlight-error']} ${isDarkMode ? styles.dark : ''}">${part.value}</span>`;
       } else if (!part.added) {
         return part.value;
       }
@@ -87,7 +70,7 @@ const GrammarCheckerPage = () => {
     
     return diffs.map((part, index) => {
       if (part.added) {
-        return `<span class="${styles['highlight-correction']} ${darkMode ? styles.dark : ''}">${part.value}</span>`;
+        return `<span class="${styles['highlight-correction']} ${isDarkMode ? styles.dark : ''}">${part.value}</span>`;
       } else if (!part.removed) {
         return part.value;
       }
@@ -265,9 +248,9 @@ const GrammarCheckerPage = () => {
   return (
     <div style={{
       fontFamily: 'Arial, sans-serif',
-      backgroundColor: darkMode ? '#1a202c' : '#f8f9fa',
+      backgroundColor: isDarkMode ? '#1a202c' : '#f8f9fa',
       margin: 0,
-      color: darkMode ? '#e2e8f0' : '#333',
+      color: isDarkMode ? '#e2e8f0' : '#333',
       display: 'flex',
       justifyContent: 'center',
       padding: '20px 10px',
@@ -275,11 +258,11 @@ const GrammarCheckerPage = () => {
       width: '100%',
     }}>
       <div 
-        className={`${styles['grammar-checker-container']} ${darkMode ? styles.dark : ''}`}
+        className={`${styles['grammar-checker-container']} ${isDarkMode ? styles.dark : ''}`}
         aria-label="Grammar Checker Application"
       >
         <header className={styles['grammar-checker-header']}>
-          <h1 className={`${styles['grammar-checker-title']} ${darkMode ? styles.dark : ''}`}>
+          <h1 className={`${styles['grammar-checker-title']} ${isDarkMode ? styles.dark : ''}`}>
              Grammar Checker AI
           </h1>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -287,34 +270,18 @@ const GrammarCheckerPage = () => {
               type="button"
               onClick={() => setShowHistory(!showHistory)}
               aria-label="Toggle history"
-              className={`${styles['btn-base']} ${styles['history-toggle-button']} ${darkMode ? styles.dark : ''}`}
+              className={`${styles['btn-base']} ${styles['history-toggle-button']} ${isDarkMode ? styles.dark : ''}`}
             >
               <span>📚</span> History
-            </button>
-            <button
-              type="button"
-              onClick={toggleDarkMode}
-              aria-label={`Switch to ${darkMode ? 'light' : 'dark'} mode`}
-              className={`${styles['btn-base']} ${styles['dark-mode-toggle-button']} ${darkMode ? styles.dark : ''}`}
-            >
-              {darkMode ? (
-                <>
-                  <span>☀️</span> Light
-                </>
-              ) : (
-                <>
-                  <span>🌙</span> Dark
-                </>
-              )}
             </button>
           </div>
         </header>
 
         <section aria-labelledby="check-grammar-title">
-          <h2 id="check-grammar-title" className={`${styles['check-grammar-title']} ${darkMode ? styles.dark : ''}`}>
+          <h2 id="check-grammar-title" className={`${styles['check-grammar-title']} ${isDarkMode ? styles.dark : ''}`}>
              AI-Powered Grammar Correction
           </h2>
-          <p className={`${styles['check-grammar-description']} ${darkMode ? styles.dark : ''}`}>
+          <p className={`${styles['check-grammar-description']} ${isDarkMode ? styles.dark : ''}`}>
             Transform your writing with advanced AI technology. Simply paste your text and watch as our intelligent system identifies and corrects grammar mistakes in real-time.
           </p>
           
@@ -324,9 +291,9 @@ const GrammarCheckerPage = () => {
               const isProcessing = loadingIndex === index;
               
               return (
-                <div key={index} className={`${styles['input-group']} ${darkMode ? styles.dark : ''}`}>
+                <div key={index} className={`${styles['input-group']} ${isDarkMode ? styles.dark : ''}`}>
                   <div className={styles['input-header']}>
-                    <label className={`${styles['check-grammar-input-label']} ${darkMode ? styles.dark : ''}`}>
+                    <label className={`${styles['check-grammar-input-label']} ${isDarkMode ? styles.dark : ''}`}>
                       Text #{index + 1}
                       <span style={{ color: '#d33', marginLeft: '4px' }}>*</span>
                     </label>
@@ -335,7 +302,7 @@ const GrammarCheckerPage = () => {
                         <button
                           type="button"
                           onClick={() => removeInput(index)}
-                          className={`${styles['btn-base']} ${styles['remove-input-btn']} ${darkMode ? styles.dark : ''}`}
+                          className={`${styles['btn-base']} ${styles['remove-input-btn']} ${isDarkMode ? styles.dark : ''}`}
                           title="Remove this input"
                         >
                           🗑️
@@ -345,7 +312,7 @@ const GrammarCheckerPage = () => {
                         type="button"
                         onClick={() => handleSingleSubmit(index)}
                         disabled={!text.trim() || isProcessing}
-                        className={`${styles['btn-base']} ${styles['single-check-btn']} ${darkMode ? styles.dark : ''}`}
+                        className={`${styles['btn-base']} ${styles['single-check-btn']} ${isDarkMode ? styles.dark : ''}`}
                         title="Check this text only"
                       >
                         {isProcessing ? (
@@ -370,14 +337,14 @@ const GrammarCheckerPage = () => {
                     value={text}
                     onChange={(e) => updateInputText(index, e.target.value)}
                     disabled={isLoading}
-                    className={`${styles['check-grammar-grammar-input']} ${darkMode ? styles.dark : ''}`}
+                    className={`${styles['check-grammar-grammar-input']} ${isDarkMode ? styles.dark : ''}`}
                   />
                   
                   <div className={styles['input-stats']}>
                     <span>Characters: {charCount}</span>
                     <span>Words: {wordCount}</span>
                     {results[index] && (
-                      <span className={`${styles['error-count']} ${darkMode ? styles.dark : ''}`}>
+                      <span className={`${styles['error-count']} ${isDarkMode ? styles.dark : ''}`}>
                         Errors: {results[index].errorCount}
                       </span>
                     )}
@@ -390,7 +357,7 @@ const GrammarCheckerPage = () => {
               <button
                 type="button"
                 onClick={addNewInput}
-                className={`${styles['btn-base']} ${styles['add-input-btn']} ${darkMode ? styles.dark : ''}`}
+                className={`${styles['btn-base']} ${styles['add-input-btn']} ${isDarkMode ? styles.dark : ''}`}
                 disabled={isLoading}
               >
                 ➕ Add Another Text
@@ -401,7 +368,7 @@ const GrammarCheckerPage = () => {
                 onClick={handleSubmit}
                 aria-label="Check All Grammar"
                 disabled={isLoading || inputTexts.every(text => !text.trim())}
-                className={`${styles['btn-base']} ${styles['grammar-checker-submit-button']} ${darkMode ? styles.dark : ''}`}
+                className={`${styles['btn-base']} ${styles['grammar-checker-submit-button']} ${isDarkMode ? styles.dark : ''}`}
               >
                 {isLoading ? (
                   <>
@@ -422,7 +389,7 @@ const GrammarCheckerPage = () => {
         {showResults && results.some(result => result) && (
           <>
             <section aria-live="polite" aria-atomic="true" aria-label="Results">
-              <h3 className={`${styles['results-title']} ${darkMode ? styles.dark : ''}`}>
+                <h3 className={`${styles['results-title']} ${isDarkMode ? styles.dark : ''}`}>
                  Grammar Check Results
               </h3>
               
@@ -430,28 +397,28 @@ const GrammarCheckerPage = () => {
                 if (!result) return null;
                 
                 return (
-                  <div key={index} className={`${styles['result-item']} ${darkMode ? styles.dark : ''}`}>
+                  <div key={index} className={`${styles['result-item']} ${isDarkMode ? styles.dark : ''}`}>
                     <div className={styles['result-header']}>
                       <h4>Result #{index + 1}</h4>
                       <div className={styles['result-actions']}>
-                        <span className={`${styles['error-badge']} ${darkMode ? styles.dark : ''}`}>
+                        <span className={`${styles['error-badge']} ${isDarkMode ? styles.dark : ''}`}>
                           {result.errorCount} errors found
                         </span>
                         <button 
                           type="button" 
                           onClick={() => copyToClipboard(result.corrected)}
                           title="Copy corrected text to clipboard"
-                          className={`${styles['grammar-checker-copy-button']} ${darkMode ? styles.dark : ''}`}>
+                          className={`${styles['grammar-checker-copy-button']} ${isDarkMode ? styles.dark : ''}`}>
                           📋 Copy
                         </button>
                       </div>
                     </div>
                     
                     <div className={styles['result-content']}>
-                      <div className={`${styles['corrected-text']} ${darkMode ? styles.dark : ''}`}>
+                      <div className={`${styles['corrected-text']} ${isDarkMode ? styles.dark : ''}`}>
                         <h5>Corrected Text:</h5>
                         <div 
-                          className={darkMode ? styles.dark : ''}
+                          className={isDarkMode ? styles.dark : ''}
                           dangerouslySetInnerHTML={{ __html: highlightCorrections(result.original, result.corrected) }} 
                         />
                       </div>
@@ -460,7 +427,7 @@ const GrammarCheckerPage = () => {
                         <div className={styles['original-section']}>
                           <h5>Original:</h5>
                           <div 
-                            className={`${styles['grammar-checker-original-text']} ${darkMode ? styles.dark : ''}`}
+                            className={`${styles['grammar-checker-original-text']} ${isDarkMode ? styles.dark : ''}`}
                             dangerouslySetInnerHTML={{ __html: result.highlighted }}
                           />
                         </div>
@@ -468,10 +435,10 @@ const GrammarCheckerPage = () => {
                         <div className={styles['corrected-section']}>
                           <h5>Corrected:</h5>
                           <div 
-                            className={`${styles['grammar-checker-2-corrected-text']} ${darkMode ? styles.dark : ''}`}
+                            className={`${styles['grammar-checker-2-corrected-text']} ${isDarkMode ? styles.dark : ''}`}
                           >
                             <div 
-                              className={darkMode ? styles.dark : ''}
+                              className={isDarkMode ? styles.dark : ''}
                               dangerouslySetInnerHTML={{ __html: highlightCorrections(result.original, result.corrected) }}
                             />
                           </div>
@@ -483,8 +450,8 @@ const GrammarCheckerPage = () => {
               })}
               
               <div className={styles['results-summary']}>
-                <div className={`${styles['grammar-checker-error-analysis']} ${darkMode ? styles.dark : ''}`}>
-                  Total Errors: <span style={{ fontWeight: '700', fontSize: '1.4rem', color: darkMode ? '#d6bcfa' : '#78350f' }}>
+                <div className={`${styles['grammar-checker-error-analysis']} ${isDarkMode ? styles.dark : ''}`}>
+                  Total Errors: <span style={{ fontWeight: '700', fontSize: '1.4rem', color: isDarkMode ? '#d6bcfa' : '#78350f' }}>
                     {results.reduce((total, result) => total + (result?.errorCount || 0), 0)}
                   </span>
                 </div>
@@ -494,7 +461,7 @@ const GrammarCheckerPage = () => {
             <button 
               type="button" 
               onClick={resetForm}
-              className={`${styles['btn-base']} ${styles['grammar-checker-reset-button']} ${darkMode ? styles.dark : ''}`}
+                className={`${styles['btn-base']} ${styles['grammar-checker-reset-button']} ${isDarkMode ? styles.dark : ''}`}
             >
                Start New Check
             </button>
@@ -503,14 +470,14 @@ const GrammarCheckerPage = () => {
 
         {/* History Sidebar */}
         {showHistory && (
-          <div className={`${styles['history-sidebar']} ${darkMode ? styles.dark : ''}`}>
+          <div className={`${styles['history-sidebar']} ${isDarkMode ? styles.dark : ''}`}>
             <div className={styles['history-header']}>
               <h3>📚 Check History</h3>
               <div className={styles['history-actions']}>
                 {history.length > 0 && (
                   <button 
                     onClick={clearHistory}
-                    className={`${styles['clear-history-btn']} ${darkMode ? styles.dark : ''}`}
+                    className={`${styles['clear-history-btn']} ${isDarkMode ? styles.dark : ''}`}
                     title="Clear all history"
                   >
                     🗑️ Clear All
@@ -518,7 +485,7 @@ const GrammarCheckerPage = () => {
                 )}
                 <button 
                   onClick={() => setShowHistory(false)}
-                  className={`${styles['close-history-btn']} ${darkMode ? styles.dark : ''}`}
+                  className={`${styles['close-history-btn']} ${isDarkMode ? styles.dark : ''}`}
                   title="Close history"
                 >
                   ✕
@@ -528,7 +495,7 @@ const GrammarCheckerPage = () => {
             
             <div className={styles['history-content']}>
               {history.length === 0 ? (
-                <div className={`${styles['history-empty']} ${darkMode ? styles.dark : ''}`}>
+                <div className={`${styles['history-empty']} ${isDarkMode ? styles.dark : ''}`}>
                   <span>📝</span>
                   <p>No history yet</p>
                   <small>Your grammar checks will appear here</small>
@@ -536,7 +503,7 @@ const GrammarCheckerPage = () => {
               ) : (
                 <div className={styles['history-list']}>
                   {history.map((item) => (
-                    <div key={item.id} className={`${styles['history-item']} ${darkMode ? styles.dark : ''}`}>
+                    <div key={item.id} className={`${styles['history-item']} ${isDarkMode ? styles.dark : ''}`}>
                       <div className={styles['history-item-header']}>
                         <span className={styles['history-timestamp']}>
                           {new Date(item.timestamp).toLocaleDateString('en-US', {
@@ -547,12 +514,12 @@ const GrammarCheckerPage = () => {
                           })}
                         </span>
                         <div className={styles['history-item-actions']}>
-                          <span className={`${styles['error-badge']} ${darkMode ? styles.dark : ''}`}>
+                          <span className={`${styles['error-badge']} ${isDarkMode ? styles.dark : ''}`}>
                             {item.errorCount} errors
                           </span>
                           <button
                             onClick={() => deleteHistoryItem(item.id)}
-                            className={`${styles['delete-item-btn']} ${darkMode ? styles.dark : ''}`}
+                            className={`${styles['delete-item-btn']} ${isDarkMode ? styles.dark : ''}`}
                             title="Delete this item"
                           >
                             🗑️
@@ -564,7 +531,7 @@ const GrammarCheckerPage = () => {
                       </div>
                       <button
                         onClick={() => loadFromHistory(item)}
-                        className={`${styles['btn-base']} ${styles['load-history-btn']} ${darkMode ? styles.dark : ''}`}
+                        className={`${styles['btn-base']} ${styles['load-history-btn']} ${isDarkMode ? styles.dark : ''}`}
                       >
                         📄 Load This Check
                       </button>

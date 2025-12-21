@@ -20,6 +20,24 @@ const formatErrors = (errors: ValidationError[]): string => {
 
 const validateDto = (dtoClass: any) => {
   return async (req: Request, res: Response, next: NextFunction) => {
+    const isJoiSchema =
+      dtoClass && (typeof dtoClass.validate === "function" || typeof dtoClass.validateAsync === "function");
+
+    if (isJoiSchema) {
+      try {
+        const validated = await dtoClass.validateAsync(req.body, {
+          abortEarly: false,
+          allowUnknown: false,
+          stripUnknown: true,
+        });
+        req.body = validated;
+        return next();
+      } catch (err: any) {
+        const messages = err?.details?.map((d: any) => d.message).filter(Boolean).join("\n") || err.message;
+        return next(new ApiError(HttpStatusCode.BadRequest, messages));
+      }
+    }
+
     const dtoObject = dtoClass.fromPlain
       ? dtoClass.fromPlain(req.body)
       : plainToInstance(dtoClass, req.body);
@@ -27,7 +45,7 @@ const validateDto = (dtoClass: any) => {
     const errors: ValidationError[] = await validate(dtoObject, {
       whitelist: true,
       forbidNonWhitelisted: true,
-      stopAtFirstError: false, 
+      stopAtFirstError: false,
       validationError: { target: false },
     });
 
