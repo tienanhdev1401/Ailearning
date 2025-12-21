@@ -65,6 +65,7 @@ const SupportChatWidget = () => {
 
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const isLoginRoute = location.pathname.startsWith("/login");
 
   useEffect(() => {
     const stored = localStorage.getItem("supportChatEnabled");
@@ -406,7 +407,7 @@ const SupportChatWidget = () => {
     return statusLabelMap[current] ?? "";
   }, [conversation?.status]);
 
-  if (!isEnabled) {
+  if (!isEnabled || isLoginRoute) {
     return null;
   }
 

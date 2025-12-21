@@ -7,6 +7,7 @@ import {
   resetTopicState,
   selectLessons,
 } from "../../features/lessons/lessonsSlice";
+import DictationShadowingPopUpModal from "../components/DictationShadowingPopUpModal";
 
 const LESSONS_PER_PAGE = 8;
 
@@ -35,6 +36,7 @@ const TopicDetailPage = () => {
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("All");
   const lastLessonRef = useRef(null);
+  const [selectedLesson, setSelectedLesson] = useState(null);
 
   const topicKey = slug || topicName;
   const paramsKey = `${topicKey}|${sortBy}|${search}|${level}`;
@@ -181,7 +183,11 @@ const TopicDetailPage = () => {
 
             return (
               <div key={lesson.id} className="col-12 col-md-6 col-lg-3" ref={isLast ? lastLessonRef : null}>
-                <div className="card h-100 shadow-sm position-relative">
+                <div
+                  className="card h-100 shadow-sm position-relative"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setSelectedLesson(lesson)}
+                >
                   <div className="position-relative">
                     <img
                       src={lesson.thumbnail_url}
@@ -232,6 +238,10 @@ const TopicDetailPage = () => {
         {loadingMore && <div className="text-center mt-3">⏳ Đang tải thêm...</div>}
         {error && <div className="text-center mt-3 text-danger">{error}</div>}
       </div>
+      <DictationShadowingPopUpModal
+        lesson={selectedLesson}
+        onClose={() => setSelectedLesson(null)}
+      />
     </div>
   );
 };
