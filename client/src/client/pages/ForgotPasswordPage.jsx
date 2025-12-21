@@ -128,7 +128,7 @@ const ForgotPasswordPage = () => {
 
         {/* Cột phải */}
         <div className={styles.rightPane}>
-          <h2 className="text-center mb-4">Đặt lại mật khẩu</h2>
+          <h3 className="text-center text-dark fw-bold">Đặt lại mật khẩu</h3>
           <form className={styles.form} onSubmit={handleSendOtp}>
             <label className={styles.fieldLabel} htmlFor="email">
               Email
