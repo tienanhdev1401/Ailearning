@@ -1,9 +1,9 @@
 const dashboardNav = { label: 'Dashboard', icon: 'bi-speedometer2', path: '/admin' };
 
 const secondaryNav = [
-  { label: 'Reports', icon: 'bi-file-earmark-text', path: '/admin/reports' },
-  { label: 'Tawk Chat', icon: 'bi-chat-dots', path: '/admin/messages' },
-  { label: 'Calendar', icon: 'bi-calendar-event', path: '/admin/calendar' },
+  // { label: 'Reports', icon: 'bi-file-earmark-text', path: '/admin/reports' },
+  { label: 'Chat', icon: 'bi-chat-dots', path: '/admin/messages' },
+  // { label: 'Calendar', icon: 'bi-calendar-event', path: '/admin/calendar' },
   { label: 'Roadmap', icon: 'bi-map', path: '/admin/roadmaps' },
   { label: 'Video Lesson', icon: 'bi-youtube', path: '/admin/lessons' },
 ];
@@ -26,9 +26,9 @@ const makeUserNavItem = (role) => {
 
 const baseSearchIndex = [
   { title: 'Dashboard', path: '/admin', type: 'Page' },
-  { title: 'Reports', path: '/admin/reports', type: 'Page' },
-  { title: 'Tawk Chat', path: '/admin/messages', type: 'Page' },
-  { title: 'Calendar', path: '/admin/calendar', type: 'Page' },
+  // { title: 'Reports', path: '/admin/reports', type: 'Page' },
+  { title: 'Chat', path: '/admin/messages', type: 'Page' },
+  // { title: 'Calendar', path: '/admin/calendar', type: 'Page' },
   { title: 'Roadmaps', path: '/admin/roadmaps', type: 'Page' },
   { title: 'Video Lessons', path: '/admin/lessons', type: 'Page' }
 ];

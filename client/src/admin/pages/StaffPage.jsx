@@ -85,6 +85,11 @@ const StaffPage = () => {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [sortField, setSortField] = useState('fullname');
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [selectedIds, setSelectedIds] = useState([]);
   const [modalState, setModalState] = useState({ open: false, payload: null });
 
   const loadStaff = useCallback(async () => {
@@ -118,6 +123,50 @@ const StaffPage = () => {
       return matchesKeyword && matchesStatus;
     });
   }, [staffMembers, search, statusFilter]);
+
+  const sortedStaff = useMemo(() => {
+    const copy = [...filteredStaff];
+    copy.sort((a, b) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+      if (sortField === 'joinedAt') {
+        aVal = new Date(aVal);
+        bVal = new Date(bVal);
+      }
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return copy;
+  }, [filteredStaff, sortDirection, sortField]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedStaff.length / itemsPerPage));
+
+  const paginatedStaff = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return sortedStaff.slice(start, start + itemsPerPage);
+  }, [currentPage, itemsPerPage, sortedStaff]);
+
+  const paginationRange = useMemo(() => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i += 1) {
+      range.push(i);
+    }
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, '...');
+    } else {
+      rangeWithDots.push(1);
+    }
+    rangeWithDots.push(...range);
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push('...', totalPages);
+    } else if (totalPages > 1) {
+      rangeWithDots.push(totalPages);
+    }
+    return [...new Set(rangeWithDots)];
+  }, [currentPage, totalPages]);
 
   const handleSave = async (formValues, editingId) => {
     if (editingId) {
@@ -222,6 +271,67 @@ const StaffPage = () => {
     }
   };
 
+  const toggleSort = (field) => {
+    setCurrentPage(1);
+    setSortField(field);
+    setSortDirection(prev => (sortField === field ? (prev === 'asc' ? 'desc' : 'asc') : 'asc'));
+  };
+
+  const toggleSelectAll = (checked) => {
+    const pageIds = paginatedStaff.map(member => member.id);
+    if (checked) {
+      setSelectedIds(prev => [...new Set([...prev, ...pageIds])]);
+    } else {
+      setSelectedIds(prev => prev.filter(id => !pageIds.includes(id)));
+    }
+  };
+
+  const toggleSelectOne = (memberId) => {
+    setSelectedIds(prev => (prev.includes(memberId) ? prev.filter(id => id !== memberId) : [...prev, memberId]));
+  };
+
+  const handleBulkAction = async (action) => {
+    if (!selectedIds.length) {
+      window.alert('Vui lòng chọn ít nhất một nhân viên.');
+      return;
+    }
+    if (action === 'delete') {
+      if (!window.confirm(`Bạn có chắc muốn xóa ${selectedIds.length} nhân viên đã chọn?`)) return;
+      try {
+        // Giả sử userService có deleteUser
+        await Promise.all(selectedIds.map(id => userService.deleteUser(id)));
+        setStaffMembers(prev => prev.filter(m => !selectedIds.includes(m.id)));
+        setSelectedIds([]);
+      } catch (err) {
+        window.alert(err.message || 'Không thể xóa nhân viên.');
+      }
+    } else {
+      const newStatus = action === 'activate' ? 'active' : 'inactive';
+      const serverStatus = mapClientStatusToServer(newStatus);
+      try {
+        await Promise.all(selectedIds.map(id => {
+          const member = staffMembers.find(m => m.id === id);
+          if (!member) return Promise.resolve();
+          const payload = {
+            name: member.fullname,
+            email: member.email,
+            role: member.role || 'staff',
+            status: serverStatus,
+            phone: member.phone || null,
+            avatarUrl: member.avatarUrl || null,
+            birthday: member.birthday || null,
+            gender: member.gender || null
+          };
+          return userService.updateUser(id, payload);
+        }));
+        setStaffMembers(prev => prev.map(m => selectedIds.includes(m.id) ? { ...m, status: newStatus } : m));
+        setSelectedIds([]);
+      } catch (err) {
+        window.alert(err.message || 'Không thể cập nhật trạng thái.');
+      }
+    }
+  };
+
   return (
     <div className="container-fluid p-4 p-lg-5">
       <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-5">
@@ -286,6 +396,17 @@ const StaffPage = () => {
               </select>
             </div>
           </div>
+          <div className="d-flex flex-wrap gap-2 mt-4">
+            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => handleBulkAction('activate')}>
+              <i className="bi bi-check-circle me-1" />Kích hoạt
+            </button>
+            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => handleBulkAction('deactivate')}>
+              <i className="bi bi-pause-circle me-1" />Tạm ngưng
+            </button>
+            {selectedIds.length > 0 && (
+              <span className="badge bg-primary align-self-center">{selectedIds.length} nhân viên đã chọn</span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -294,22 +415,38 @@ const StaffPage = () => {
           <table className="table align-middle mb-0">
             <thead>
               <tr>
-                <th scope="col">Họ tên</th>
-                <th scope="col">Email</th>
+                <th scope="col" style={{ width: 48 }}>
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={paginatedStaff.length > 0 && paginatedStaff.every(member => selectedIds.includes(member.id))}
+                    onChange={(event) => toggleSelectAll(event.target.checked)}
+                  />
+                </th>
+                <SortableHeader label="Họ tên" field="fullname" sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
+                <SortableHeader label="Email" field="email" sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
                 <th scope="col">Điện thoại</th>
-                <th scope="col">Ngày tham gia</th>
-                <th scope="col">Trạng thái</th>
+                <SortableHeader label="Ngày tham gia" field="joinedAt" sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
+                <SortableHeader label="Trạng thái" field="status" sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
                 <th scope="col" className="text-end">Thao tác</th>
               </tr>
             </thead>
             <tbody>
-              {filteredStaff.length === 0 && !loading && (
+              {paginatedStaff.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={6} className="text-center py-5 text-muted">Chưa có nhân viên nào.</td>
+                  <td colSpan={7} className="text-center py-5 text-muted">Chưa có nhân viên nào.</td>
                 </tr>
               )}
-              {filteredStaff.map((member) => (
+              {paginatedStaff.map((member) => (
                 <tr key={member.id}>
+                  <td>
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={selectedIds.includes(member.id)}
+                      onChange={() => toggleSelectOne(member.id)}
+                    />
+                  </td>
                   <td className="fw-semibold">{member.fullname}</td>
                   <td>{member.email}</td>
                   <td>{member.phone || '—'}</td>
@@ -354,8 +491,31 @@ const StaffPage = () => {
             </tbody>
           </table>
         </div>
-        <div className="card-footer text-muted">
-          Tổng cộng {filteredStaff.length} nhân viên
+        <div className="card-footer d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+          <small className="text-muted">Hiển thị {paginatedStaff.length} / {sortedStaff.length} nhân viên</small>
+          <ul className="pagination mb-0">
+            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+              <button className="page-link" type="button" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
+                &laquo;
+              </button>
+            </li>
+            {paginationRange.map((page, index) => (
+              <li key={`${page}-${index}`} className={`page-item ${page === currentPage ? 'active' : ''} ${page === '...' ? 'disabled' : ''}`}>
+                {page === '...' ? (
+                  <span className="page-link">&hellip;</span>
+                ) : (
+                  <button className="page-link" type="button" onClick={() => setCurrentPage(page)}>
+                    {page}
+                  </button>
+                )}
+              </li>
+            ))}
+            <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+              <button className="page-link" type="button" onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}>
+                &raquo;
+              </button>
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -496,5 +656,16 @@ const StaffModal = ({ show, onClose, onSave, member }) => {
     modalRoot
   );
 };
+
+const SortableHeader = ({ label, field, sortField, sortDirection, onSort }) => (
+  <th scope="col" role="button" onClick={() => onSort(field)}>
+    <span className="d-inline-flex align-items-center">
+      {label}
+      {sortField === field && (
+        <i className={`bi ms-1 ${sortDirection === 'asc' ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`} />
+      )}
+    </span>
+  </th>
+);
 
 export default StaffPage;

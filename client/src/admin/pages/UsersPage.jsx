@@ -42,8 +42,6 @@ const GENDER_OPTIONS = [
   { value: 'OTHER', label: 'Khác' }
 ];
 
-const ITEMS_PER_PAGE_OPTIONS = [5, 10, 25];
-
 const emptyForm = {
   firstName: '',
   lastName: '',
@@ -152,7 +150,7 @@ const UsersPage = () => {
   const [sortField, setSortField] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const itemsPerPage = 10;
   const [selectedIds, setSelectedIds] = useState([]);
   const [modalState, setModalState] = useState({ type: null, payload: null });
 
@@ -338,9 +336,9 @@ const UsersPage = () => {
     setModalState({ type: 'user', payload: user });
   };
 
-  const handleOpenImportModal = () => {
-    setModalState({ type: 'import', payload: null });
-  };
+  // const handleOpenImportModal = () => {
+  //   setModalState({ type: 'import', payload: null });
+  // };
 
   const handleCloseModal = () => {
     setModalState({ type: null, payload: null });
@@ -416,29 +414,29 @@ const UsersPage = () => {
     }
   };
 
-  const handleExport = () => {
-    const headers = ['ID', 'Name', 'Email', 'Role', 'Status','Phone', 'Join Date', 'Last Active'];
-    const rows = sortedUsers.map(user => [
-      user.id,
-      user.name,
-      user.email,
-      user.role,
-      user.status,
-      user.phone,
-      formatDate(user.joinedAt),
-      user.lastActive
-    ]);
-    const csvContent = [headers, ...rows]
-      .map(row => row.map(value => `"${value ?? ''}"`).join(','))
-      .join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'users-export.csv';
-    link.click();
-    URL.revokeObjectURL(url);
-  };
+  // const handleExport = () => {
+  //   const headers = ['ID', 'Name', 'Email', 'Role', 'Status','Phone', 'Join Date', 'Last Active'];
+  //   const rows = sortedUsers.map(user => [
+  //     user.id,
+  //     user.name,
+  //     user.email,
+  //     user.role,
+  //     user.status,
+  //     user.phone,
+  //     formatDate(user.joinedAt),
+  //     user.lastActive
+  //   ]);
+  //   const csvContent = [headers, ...rows]
+  //     .map(row => row.map(value => `"${value ?? ''}"`).join(','))
+  //     .join('\n');
+  //   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  //   const url = URL.createObjectURL(blob);
+  //   const link = document.createElement('a');
+  //   link.href = url;
+  //   link.download = 'users-export.csv';
+  //   link.click();
+  //   URL.revokeObjectURL(url);
+  // };
 
   const isAllSelected = paginatedUsers.length > 0 && paginatedUsers.every(user => selectedIds.includes(user.id));
 
@@ -450,11 +448,14 @@ const UsersPage = () => {
           <p className="text-muted mb-0">Theo dõi vai trò, trạng thái và hoạt động người dùng.</p>
         </div>
         <div className="d-flex flex-wrap gap-2">
-          <button type="button" className="btn btn-outline-secondary" onClick={handleOpenImportModal}>
+          {/* <button type="button" className="btn btn-outline-secondary" onClick={handleOpenImportModal}>
             <i className="bi bi-upload me-2" />Import Users
           </button>
           <button type="button" className="btn btn-outline-secondary" onClick={handleExport}>
             <i className="bi bi-download me-2" />Export
+          </button> */}
+          <button type="button" className="btn btn-outline-secondary" onClick={loadUsers}>
+            <i className="bi bi-arrow-clockwise me-1" />Tải lại
           </button>
           <button type="button" className="btn btn-primary" onClick={() => handleOpenUserModal()}>
             <i className="bi bi-person-plus me-2" />Thêm người dùng
@@ -562,21 +563,6 @@ const UsersPage = () => {
                 ))}
               </select>
             </div> */}
-            <div className="col-lg-2 col-md-4">
-              <label className="form-label">Mỗi trang</label>
-              <select
-                className="form-select"
-                value={itemsPerPage}
-                onChange={(event) => {
-                  setItemsPerPage(Number(event.target.value));
-                  setCurrentPage(1);
-                }}
-              >
-                {ITEMS_PER_PAGE_OPTIONS.map(size => (
-                  <option key={size} value={size}>{size}</option>
-                ))}
-              </select>
-            </div>
           </div>
           <div className="d-flex flex-wrap gap-2 mt-4">
             <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => handleBulkAction('activate')}>
@@ -585,15 +571,12 @@ const UsersPage = () => {
             <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => handleBulkAction('deactivate')}>
               <i className="bi bi-pause-circle me-1" />Tạm ngưng
             </button>
-            <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => handleBulkAction('delete')}>
+            {/* <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => handleBulkAction('delete')}>
               <i className="bi bi-trash me-1" />Xóa đã chọn
-            </button>
+            </button> */}
             {selectedIds.length > 0 && (
               <span className="badge bg-primary align-self-center">{selectedIds.length} người dùng đã chọn</span>
             )}
-            <button type="button" className="btn btn-outline-primary btn-sm ms-auto" onClick={loadUsers}>
-              <i className="bi bi-arrow-clockwise me-1" />Tải lại từ server
-            </button>
           </div>
         </div>
       </div>

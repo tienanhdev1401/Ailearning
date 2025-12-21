@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import api from '../../../api/api';
 
 const DROPDOWN_HIDE_DELAY = 120;
 
@@ -9,6 +10,7 @@ const AdminHeader = ({ theme, onThemeToggle, searchIndex = [] }) => {
   const [isSearchFocused, setSearchFocused] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
   const notificationsRef = useRef(null);
   const userMenuRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -45,7 +47,20 @@ const AdminHeader = ({ theme, onThemeToggle, searchIndex = [] }) => {
     };
   }, []);
 
-  const { logout } = useAuth();
+  const { logout, accessToken } = useAuth();
+
+  useEffect(() => {
+    if (accessToken) {
+      api.get('/auth/me', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      }).then(res => setUserInfo(res.data)).catch(err => {
+        console.error('Failed to fetch user info', err);
+        setUserInfo(null);
+      });
+    } else {
+      setUserInfo(null);
+    }
+  }, [accessToken]);
 
   const handleLogout = async () => {
     try {
@@ -184,7 +199,7 @@ const AdminHeader = ({ theme, onThemeToggle, searchIndex = [] }) => {
                   height="24"
                   className="rounded-circle me-2"
                 />
-                <span className="d-none d-md-inline">John Doe</span>
+                <span className="d-none d-md-inline">{userInfo?.name || userInfo?.email || 'Staff'}</span>
                 <i className="bi bi-chevron-down ms-1" />
               </button>
               {userMenuOpen && (
