@@ -12,11 +12,14 @@ class AuthController {
       const { email, password } = req.body;
 
       const result = await AuthService.login(email, password);
+
+      const cookieSecure = (process.env.COOKIE_SECURE ?? (process.env.NODE_ENV === "production" ? "true" : "false")) === "true";
+      const cookieSameSite = (process.env.COOKIE_SAMESITE as "strict" | "lax" | "none") || "strict";
       
       res.cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        sameSite: "strict",
-        secure: false,
+        sameSite: cookieSameSite,
+        secure: cookieSecure,
       });
 
       res.status(HttpStatusCode.Ok).json({ accessToken: result.accessToken });

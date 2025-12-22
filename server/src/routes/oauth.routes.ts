@@ -5,6 +5,10 @@ import { User } from "../models/user";
 
 const router = express.Router();
 
+const frontendUrl = (process.env.FRONTEND_URL || "http://localhost:3000").replace(/\/$/, "");
+const cookieSecure = (process.env.COOKIE_SECURE ?? (process.env.NODE_ENV === "production" ? "true" : "false")) === "true";
+const cookieSameSite = (process.env.COOKIE_SAMESITE as "strict" | "lax" | "none") || "strict";
+
 // Route: Bắt đầu xác thực với Google
 router.get("/google", (req, res, next) => {
   console.log("👉 Redirecting to Google for authentication...");
@@ -25,13 +29,13 @@ router.get(
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      sameSite: "strict",
-      secure: false, //  Set true nếu deploy bằng HTTPS
+      sameSite: cookieSameSite,
+      secure: cookieSecure,
     });
 
     // Tuỳ: Redirect về frontend hoặc trả JSON
     // res.json({ accessToken });
-    res.redirect(`http://localhost:3000/login?accessToken=${accessToken}`); // nếu dùng frontend
+    res.redirect(`${frontendUrl}/login?accessToken=${accessToken}`); // nếu dùng frontend
   }
 );
 
