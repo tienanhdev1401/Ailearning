@@ -48,10 +48,25 @@ app.use(express.json());
 
 app.use(passport.initialize()); 
 
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
-}));
+const corsOrigins = (process.env.CORS_ORIGINS || "http://localhost:3000")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true);
+      }
+      if (corsOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
 
 app.use(limiter);
 
@@ -89,7 +104,7 @@ app.use(errorHandlingMiddleware);
 
 
 // Kết nối và sync TypeORM
-const PORT = 5000;
+const PORT = Number(process.env.PORT) || 5000;
 AppDataSource.initialize().then(() => {
   seedAiScenarios().catch((error) =>
     console.error("Failed to seed AI chat scenarios", error)

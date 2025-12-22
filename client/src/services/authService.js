@@ -1,6 +1,7 @@
 // src/services/authService.js
 
-const API_BASE = 'http://localhost:5000/api/auth';
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_BASE = `${API_URL}/api/auth`;
 
 /**
  * Gọi API đăng nhập, trả về accessToken từ server.

@@ -291,7 +291,7 @@ const LoginPage = () => {
           <div className={styles.googleArea}>
             <span className={styles.dividerText}>Hoặc</span>
             <a
-              href="http://localhost:5000/api/auth/google"
+              href={`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/auth/google`}
               className={styles.googleButton}
             >
               <span className={styles.googleIcon}>G</span>

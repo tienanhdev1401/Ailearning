@@ -8,9 +8,14 @@ const aiRoomName = (conversationId: number) => `ai-session-${conversationId}`;
 const supportRoomName = (conversationId: number) => `support-session-${conversationId}`;
 
 export function setupSocket(server: HttpServer) {
+  const corsOrigins = (process.env.CORS_ORIGINS || "http://localhost:3000")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:3000",
+      origin: corsOrigins,
       methods: ["GET", "POST"],
       credentials: true,
     },
