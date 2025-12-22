@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import api from "../../../api/api";
 import MatchImageWordMiniGame from "./MatchImageWordMiniGame";
@@ -526,7 +526,11 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 		}
 	};
 
-	const load = async () => {
+	const load = useCallback(async () => {
+		if (!activityId) {
+			setMinigames([]);
+			return;
+		}
 		setLoading(true);
 		try {
 			const resp = await api.get(`/activities/${activityId}/minigames`);
@@ -537,12 +541,11 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [activityId]);
 
 	useEffect(() => {
-		if (!activityId) return;
 		load();
-	}, [activityId]);
+	}, [load]);
 
 	const openDetail = async (id) => {
 		setDetailLoading(true);

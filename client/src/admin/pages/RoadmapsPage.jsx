@@ -38,8 +38,6 @@ const RoadmapsPage = () => {
   const [itemsPerPage] = useState(DEFAULT_ITEMS_PER_PAGE);
   const [totalPages, setTotalPages] = useState(1);
 
-  const [showPreview, setShowPreview] = useState(true);
-
   const [modalState, setModalState] = useState({ type: null, payload: null });
   const [form, setForm] = useState(emptyForm);
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import api from '../../api/api';
@@ -11,7 +11,7 @@ const LessonManagerPage = ()=> {
 
   // pagination
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10); // 10 lessons per page
+  const [limit] = useState(10); // 10 lessons per page
   const [total, setTotal] = useState(0);
 
   const [showModal, setShowModal] = useState(false);
@@ -31,7 +31,7 @@ const LessonManagerPage = ()=> {
   const [srtModalOpen, setSrtModalOpen] = useState(false); // new
   const [srtData, setSrtData] = useState([]); // new: array of { start_time, full_text }
 
-  const fetchLessons = async (p = page, lim = limit) => {
+  const fetchLessons = useCallback(async (p, lim) => {
     setLoading(true);
     setError(null);
     try {
@@ -74,9 +74,9 @@ const LessonManagerPage = ()=> {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchLessons(page, limit); }, [page, limit]);
+  useEffect(() => { fetchLessons(page, limit); }, [fetchLessons, page, limit]);
 
   const openCreate = () => {
     setEditing(null);

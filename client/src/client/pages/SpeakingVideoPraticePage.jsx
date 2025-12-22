@@ -3,7 +3,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 import RecordRTC from "recordrtc";
-import api from '../../api/api';
 
 import successSound from "../sounds/success.mp3";
 import { useParams } from "react-router-dom";
@@ -14,7 +13,7 @@ export default function SpeakingVideoPraticePage() {
   const { lessonId } = useParams();
 
   const [lesson, setLesson] = useState(null);
-  const [words, setWords] = useState([]);
+  const [, setWords] = useState([]);
   const [revealedMap, setRevealedMap] = useState([]);
   const [typedMap, setTypedMap] = useState([]);
   const [totalWords, setTotalWords] = useState(0);
@@ -38,7 +37,7 @@ export default function SpeakingVideoPraticePage() {
   const [lastRecording, setLastRecording] = useState(null); // { blob, url }
 
   const segmentRefs = useRef([]);
-  const [segmentSuccess, setSegmentSuccess] = useState(false);
+  const [, setSegmentSuccess] = useState(false);
 
   const timeToSeconds = (timeStr) => {
     const [time, ms] = timeStr.split(',');
@@ -104,6 +103,7 @@ export default function SpeakingVideoPraticePage() {
   // Fetch lesson (unchanged except set state)
   useEffect(() => {
     async function fetchLessonData() {
+      if (!lessonId) return;
       try {
         setLoading(true);
         const lessonRes = await lessonService.getLessonApi(lessonId);
@@ -131,7 +131,7 @@ export default function SpeakingVideoPraticePage() {
       }
     }
     fetchLessonData();
-  }, []);
+  }, [lessonId]);
 
   useEffect(() => { if (lesson && lesson.subtitles.length > 0) updateWordsForSegment(0); }, [lesson, updateWordsForSegment]);
 
@@ -154,7 +154,7 @@ export default function SpeakingVideoPraticePage() {
     const videoId = extractYouTubeId(lesson.video_url);
     if (!videoId) { console.error('Invalid video URL:', lesson.video_url); return; }
     try {
-      const newPlayer = new window.YT.Player('youtube-player', {
+      new window.YT.Player('youtube-player', {
         height: '100%', width: '100%', videoId,
         playerVars: { 'playsinline':1,'controls':0,'disablekb':1,'modestbranding':1,'rel':0,'showinfo':0,'fs':0,'cc_load_policy':0 },
         events: {
@@ -177,7 +177,9 @@ export default function SpeakingVideoPraticePage() {
       const nextSeg = lesson.subtitles[currentSegment + 1];
       const endTime = nextSeg ? Number(nextSeg.second) : null;
       if (endTime !== null && currentTime >= endTime && !segmentCompleted) {
-        pauseVideo();
+        if (player && typeof player.pauseVideo === "function") {
+          player.pauseVideo();
+        }
         setSegmentCompleted(true);
         setAutoPaused(true);
       }

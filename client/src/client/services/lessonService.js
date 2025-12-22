@@ -6,6 +6,8 @@ export const getLessonApi = (id) => {
   return api.get(URL_API);
 };
 
-export default {
+const lessonService = {
   getLessonApi,
 };
+
+export default lessonService;
