@@ -1,0 +1,18 @@
+services:
+  f5-model-server:
+    build:
+      context: ./f5-model-server
+    image: ailearning/f5-model-server:latest
+    container_name: f5-model-server
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5001:5001"
+
+  gop-model:
+    build:
+      context: ./GOP-model
+    image: ailearning/gop-model:latest
+    container_name: gop-model
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5005:5005"

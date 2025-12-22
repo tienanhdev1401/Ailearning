@@ -34,6 +34,7 @@ import { ensureAiChatFolders } from "./services/ai-chat/audioStorage.service";
 import { seedAiScenarios } from "./seeds/aiScenarios.seed";
 import supportChatRouter from "./routes/supportChat.routes";
 import dashboardRouter from "./routes/dashboard.routes";
+import gopRouter from "./routes/gop.routes";
 
 import roadmapEnrollementRoutes from './routes/roamapEnrollement.routes'
 
@@ -91,6 +92,7 @@ app.use('/api/minigames', minigameRouter);
 app.use("/api/ai-chat", aiChatRouter);
 app.use("/api/support-chat", supportChatRouter);
 app.use("/api/dashboard", dashboardRouter);
+app.use("/api/gop", gopRouter);
 app.use('/api/confirm', userconfirmRouter);
 app.use('/api/uploads', uploadRouter);
 app.use('/api/roadmap_enrollments',roadmapEnrollementRoutes)

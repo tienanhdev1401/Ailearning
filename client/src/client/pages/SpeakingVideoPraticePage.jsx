@@ -315,9 +315,13 @@ export default function SpeakingVideoPraticePage() {
       formData.append("text", currentText);
 
       try {
-        const response = await fetch("http://localhost:5005/score", {
+        const apiBaseUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
+        const token = localStorage.getItem("accessToken");
+        const response = await fetch(`${apiBaseUrl}/api/gop/score`, {
           method: "POST",
           body: formData,
+          credentials: "include",
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
 
         if (!response.ok) {
