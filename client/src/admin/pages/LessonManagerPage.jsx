@@ -152,7 +152,14 @@ const LessonManagerPage = ()=> {
       else { setPage(1); fetchLessons(1, limit); }
     } catch (err) {
       console.error(err);
-      alert('Lưu thất bại');
+      const message =
+      err?.response?.data?.message ||
+      err?.message ||
+      'Lưu thất bại';
+
+    // Nếu message có nhiều dòng -> lấy dòng đầu tiên
+    const firstMessage = message.split('\n')[0];
+    alert(firstMessage);
     }
   };
 

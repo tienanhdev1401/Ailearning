@@ -357,6 +357,12 @@ const UsersPage = () => {
         gender: form.gender || null
       };
 
+      const phone = form.phone?.trim() || '';
+      if (phone && (phone.length !== 10 || !/^\d+$/.test(phone))) {
+        window.alert('Số điện thoại phải có đúng 10 chữ số');
+        throw new Error('Validation failed');
+      }
+
       try {
         const updatedUser = await userService.updateUser(editingId, payload);
         const normalizedUser = normalizeServerUser(updatedUser);
@@ -388,9 +394,14 @@ const UsersPage = () => {
         errors.push('AuthProvider chỉ có thể là: local, google');
       }
 
+      const phone = form.phone?.trim() || '';
+      if (phone && (phone.length !== 10 || !/^\d+$/.test(phone))) {
+        errors.push('Số điện thoại phải có đúng 10 chữ số');
+      }
+
       if (errors.length > 0) {
         window.alert(errors.join('\n'));
-        return;
+        throw new Error('Validation failed');
       }
 
       try {
