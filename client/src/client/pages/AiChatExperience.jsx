@@ -72,7 +72,7 @@ const AiChatExperience = () => {
     if (Number.isNaN(parsed.getTime())) {
       return "";
     }
-    const hoChiMinhOffsetMs = 14 * 60 * 60 * 1000;
+    const hoChiMinhOffsetMs = 7 * 60 * 60 * 1000;
     const shiftedTimestamp = parsed.getTime() + hoChiMinhOffsetMs;
     const shifted = new Date(shiftedTimestamp);
     const hours = shifted.getUTCHours().toString().padStart(2, "0");
