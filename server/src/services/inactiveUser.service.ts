@@ -36,7 +36,7 @@ export class InactiveUserService {
       );
 
       if (diffDays >= 7) {
-        await this.sendInactive7DaysReminder(user);
+        await this.sendInactive7DaysReminder(user, diffDays);
       }
     }
   }
@@ -59,13 +59,13 @@ export class InactiveUserService {
   }
 
   // User nghỉ học > 7 ngày
-  private async sendInactive7DaysReminder(user: User) {
+  private async sendInactive7DaysReminder(user: User, diffDays: number) {
     await this.sendMail(
       user.email,
-      "Bạn đã 7 ngày không học — quay lại ngay nhé!",
+      `Bạn đã ${diffDays} ngày không học — quay lại ngay nhé!`,
       `
         <p>Chào <b>${user.name || user.email}</b>,</p>
-        <p>Chúng tôi nhận thấy bạn đã <b>${7} ngày</b> không học bài.</p>
+        <p>Chúng tôi nhận thấy bạn đã <b>${diffDays} ngày</b> không học bài.</p>
         <p>Hãy quay lại để duy trì phong độ và không đánh mất động lực nhé! 💪</p>
       `
     );

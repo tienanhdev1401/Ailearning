@@ -70,17 +70,17 @@ const AdminHeader = ({ theme, onThemeToggle, searchIndex = [] }) => {
     }
   };
 
-  const handleFullscreenToggle = async () => {
-    try {
-      if (!document.fullscreenElement) {
-        await document.documentElement.requestFullscreen();
-      } else {
-        await document.exitFullscreen();
-      }
-    } catch (error) {
-      console.error('Failed to toggle fullscreen', error);
-    }
-  };
+  // const handleFullscreenToggle = async () => {
+  //   try {
+  //     if (!document.fullscreenElement) {
+  //       await document.documentElement.requestFullscreen();
+  //     } else {
+  //       await document.exitFullscreen();
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to toggle fullscreen', error);
+  //   }
+  // };
 
   const navbarThemeClass = theme === 'dark' ? 'navbar-dark' : 'navbar-light';
 
@@ -144,14 +144,14 @@ const AdminHeader = ({ theme, onThemeToggle, searchIndex = [] }) => {
               )}
             </button>
 
-            <button
+            {/* <button
               type="button"
               className="btn btn-outline-secondary"
               onClick={handleFullscreenToggle}
               title="Toggle fullscreen"
             >
               <i className="bi bi-arrows-fullscreen" />
-            </button>
+            </button> */}
 
             <div className="dropdown" ref={notificationsRef}>
               <button

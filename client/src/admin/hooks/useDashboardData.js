@@ -1,48 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import dashboardService from '../services/dashboardService';
-import {
-  activityFeed as mockActivityFeed,
-  generateOrderStatus,
-  generateRecentOrders,
-  generateRevenueSeries,
-  generateStatsCards,
-  generateUserGrowthSeries,
-  salesByLocation as mockSales,
-  storageUsage as mockStorage
-} from '../data/dashboardData';
 
-const fallbackData = {
-  statsCards: generateStatsCards(),
-  revenueDataset: (() => {
-    const series = generateRevenueSeries();
-    return {
-      labels: series.map((s) => s.label),
-      revenue: series.map((s) => s.revenue),
-      profit: series.map((s) => s.profit)
-    };
-  })(),
-  userGrowthDataset: (() => {
-    const series = generateUserGrowthSeries();
-    return {
-      labels: series.map((s) => s.label),
-      data: series.map((s) => s.value)
-    };
-  })(),
-  orderStatusDataset: (() => {
-    const status = generateOrderStatus();
-    return {
-      labels: ['Completed', 'Processing', 'Pending', 'Cancelled'],
-      data: [status.completed, status.processing, status.pending, status.cancelled]
-    };
-  })(),
-  recentOrders: generateRecentOrders(),
-  activityFeed: mockActivityFeed,
-  storageUsage: mockStorage,
-  salesByLocation: mockSales
+const emptyData = {
+  statsCards: [],
+  revenueDataset: { labels: [], revenue: [], profit: [] },
+  userGrowthDataset: { labels: [], data: [] },
+  orderStatusDataset: { labels: [], data: [] },
+  recentOrders: [],
+  activityFeed: [],
+  storageUsage: { used: 0, total: 0 },
+  salesByLocation: []
 };
 
 export const useDashboardData = () => {
-  const [data, setData] = useState(fallbackData);
+  const [data, setData] = useState(emptyData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -50,7 +21,7 @@ export const useDashboardData = () => {
     try {
       setLoading(true);
       const result = await dashboardService.getOverview();
-      setData({ ...fallbackData, ...result });
+      setData(result);
       setError(null);
     } catch (err) {
       setError(err?.message || 'Không thể tải dashboard');
