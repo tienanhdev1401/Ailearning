@@ -1,17 +1,38 @@
-import nodemailer from "nodemailer";
+import * as brevo from "@getbrevo/brevo";
 
-// Brevo (Sendinblue) SMTP Configuration
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,  // Login email từ Brevo
-    pass: process.env.SMTP_KEY,   // SMTP Key từ Brevo
+// Brevo API Configuration (không bị chặn bởi firewall như SMTP)
+const apiInstance = new brevo.TransactionalEmailsApi();
+apiInstance.setApiKey(
+  brevo.TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY || ""
+);
+
+interface SendMailOptions {
+  from?: string;
+  to: string;
+  subject: string;
+  text?: string;
+  html?: string;
+}
+
+const transporter = {
+  sendMail: async (options: SendMailOptions) => {
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = {
+      name: "AlearnG",
+      email: process.env.EMAIL_FROM || "tptienanh@gmail.com",
+    };
+    sendSmtpEmail.to = [{ email: options.to }];
+    sendSmtpEmail.subject = options.subject;
+    
+    if (options.html) {
+      sendSmtpEmail.htmlContent = options.html;
+    } else if (options.text) {
+      sendSmtpEmail.textContent = options.text;
+    }
+
+    return await apiInstance.sendTransacEmail(sendSmtpEmail);
   },
-  connectionTimeout: 60000,
-  greetingTimeout: 30000,
-  socketTimeout: 60000,
-});
+};
 
 export default transporter;
