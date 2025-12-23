@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import userService from '../../services/userService';
+import { useToast } from '../../context/ToastContext';
 import { INITIAL_USERS } from '../data/users';
 
 const ROLE_LABELS = {
@@ -142,6 +143,7 @@ const seededInitialUsers = ensureUserRoleList(
 );
 
 const UsersPage = () => {
+  const toast = useToast();
   const [users, setUsers] = useState(seededInitialUsers);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -258,11 +260,12 @@ const UsersPage = () => {
 
   const handleBulkAction = async (action) => {
     if (!selectedIds.length) {
-      window.alert('Vui lòng chọn người dùng trước.');
+      toast.warning('Vui lòng chọn người dùng trước.');
       return;
     }
     if (action === 'delete') {
-      if (!window.confirm(`Xóa ${selectedIds.length} người dùng?`)) return;
+      const confirmed = await toast.confirm(`Xóa ${selectedIds.length} người dùng?`, { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' });
+      if (!confirmed) return;
       setUsers(prev => prev.filter(user => !selectedIds.includes(user.id)));
       setSelectedIds([]);
     } else if (action === 'activate' || action === 'deactivate') {
@@ -300,7 +303,7 @@ const UsersPage = () => {
         
         setSelectedIds([]);
       } catch (updateError) {
-        window.alert(updateError.message || 'Không thể cập nhật trạng thái người dùng. Vui lòng thử lại.');
+        toast.error(updateError.message || 'Không thể cập nhật trạng thái người dùng. Vui lòng thử lại.');
       }
     }
   };
@@ -328,7 +331,7 @@ const UsersPage = () => {
         u.id === user.id ? normalizedUser : u
       ))));
     } catch (updateError) {
-      window.alert(updateError.message || 'Không thể cập nhật trạng thái người dùng. Vui lòng thử lại.');
+      toast.error(updateError.message || 'Không thể cập nhật trạng thái người dùng. Vui lòng thử lại.');
     }
   };
 
@@ -359,7 +362,7 @@ const UsersPage = () => {
 
       const phone = form.phone?.trim() || '';
       if (phone && (phone.length !== 10 || !/^\d+$/.test(phone))) {
-        window.alert('Số điện thoại phải có đúng 10 chữ số');
+        toast.error('Số điện thoại phải có đúng 10 chữ số');
         throw new Error('Validation failed');
       }
 
@@ -372,7 +375,7 @@ const UsersPage = () => {
         setSelectedIds(prev => prev.filter(id => id !== editingId));
         handleCloseModal();
       } catch (updateError) {
-        window.alert(updateError.message || 'Không thể cập nhật người dùng. Vui lòng thử lại.');
+        toast.error(updateError.message || 'Không thể cập nhật người dùng. Vui lòng thử lại.');
         throw updateError;
       }
       return;
@@ -400,7 +403,7 @@ const UsersPage = () => {
       }
 
       if (errors.length > 0) {
-        window.alert(errors.join('\n'));
+        toast.error(errors.join('. '));
         throw new Error('Validation failed');
       }
 
@@ -419,7 +422,7 @@ const UsersPage = () => {
         handleCloseModal();
         return;
       } catch (createError) {
-        window.alert(createError.message || 'Không thể tạo người dùng. Vui lòng thử lại.');
+        toast.error(createError.message || 'Không thể tạo người dùng. Vui lòng thử lại.');
         throw createError;
       }
     }
@@ -897,6 +900,7 @@ const UserModal = ({ show, onClose, onSave, user }) => {
 };
 
 const ImportUsersModal = ({ show, onClose }) => {
+  const toast = useToast();
   const [fileName, setFileName] = useState('');
 
   if (!show || !modalRoot) return null;
@@ -926,7 +930,7 @@ const ImportUsersModal = ({ show, onClose }) => {
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-outline-secondary" onClick={onClose}>Hủy</button>
-              <button type="button" className="btn btn-primary" onClick={() => { window.alert('Import thành công (mô phỏng)'); onClose(); }}>
+              <button type="button" className="btn btn-primary" onClick={() => { toast.success('Import thành công (mô phỏng)'); onClose(); }}>
                 Tải lên
               </button>
             </div>

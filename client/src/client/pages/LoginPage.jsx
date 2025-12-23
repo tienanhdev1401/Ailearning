@@ -6,6 +6,7 @@ import { Modal, Button } from 'react-bootstrap';
 import USER_ROLE from '../../enums/userRole.enum';
 import { showErrorAlert } from '../components/AlertErrorModel';
 import { jwtDecode } from 'jwt-decode';
+import { useToast } from '../../context/ToastContext';
 
 const EYE_OPEN_ICON = '/assets/img/icon/eye-close-up-svgrepo-com.svg';
 const EYE_CLOSED_ICON = '/assets/img/icon/eye-close-svgrepo-com.svg';
@@ -46,6 +47,7 @@ const PasswordField = ({ id, label, value, onChange, showPassword, toggleVisibil
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [isSignIn, setIsSignIn] = useState(true);
   const [fullName, setFullName] = useState('');
@@ -163,19 +165,19 @@ const LoginPage = () => {
   const handleVerifyOtp = async () => {
     const code = otp.join('');
     if (code.length !== 6) {
-      alert('Vui lòng nhập đủ 6 chữ số OTP!');
+      toast.warning('Vui lòng nhập đủ 6 chữ số OTP!');
       return;
     }
 
     try {
       setIsVerifyingOtp(true);
       await api.post('/auth/register', { name: fullName, email, password, otp: code });
-      alert('✅ Đăng ký thành công! Hãy đăng nhập.');
+      toast.success('Đăng ký thành công! Hãy đăng nhập.');
       setShowOtpModal(false);
       setIsSignIn(true);
       clearForm();
     } catch (err) {
-      alert(err.response?.data?.message || '❌ OTP không hợp lệ hoặc đã hết hạn.');
+      toast.error(err.response?.data?.message || 'OTP không hợp lệ hoặc đã hết hạn.');
     } finally {
       setIsVerifyingOtp(false);
     }

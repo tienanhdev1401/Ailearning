@@ -1,18 +1,21 @@
 import React, { useState } from "react";
 import api from "../../../api/api";
 import MiniGameList from "../minigame/MiniGameList";
+import { useToast } from "../../../context/ToastContext";
 
 const ActivityItem = ({ activity, onRefresh }) => {
+  const toast = useToast();
   const [open, setOpen] = useState(false);
 
   const handleDelete = async () => {
-    if (!window.confirm("Xóa activity này?")) return;
+    const confirmed = await toast.confirm("Xóa activity này?", { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' });
+    if (!confirmed) return;
     try {
       await api.delete(`/activities/${activity.id}`);
       onRefresh && onRefresh();
     } catch (err) {
       console.error(err);
-      alert("Xóa thất bại");
+      toast.error("Xóa thất bại");
     }
   };
 

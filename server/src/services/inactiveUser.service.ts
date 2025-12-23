@@ -76,7 +76,7 @@ export class InactiveUserService {
   //--------------------------
   private async sendMail(to: string, subject: string, html: string) {
     await transporter.sendMail({
-      from: `"AlearnG" <${process.env.EMAIL}>`,
+      from: `"AlearnG" <${process.env.EMAIL_FROM}>`,
       to,
       subject,
       html,

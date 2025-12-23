@@ -3,9 +3,11 @@ import { diffWords } from 'diff';
 import styles from '../styles/GrammarCheckerPage.module.css'; // Import CSS Module
 import api from '../../api/api';
 import { ThemeContext } from '../../context/ThemeContext';
+import { useToast } from '../../context/ToastContext';
 
 const GrammarCheckerPage = () => {
   const { isDarkMode } = useContext(ThemeContext);
+  const toast = useToast();
   const [inputTexts, setInputTexts] = useState([""]);
   const [results, setResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
@@ -108,7 +110,7 @@ const GrammarCheckerPage = () => {
       setShowResults(true);
     } catch (error) {
       console.error('Error:', error);
-      alert('Failed to check grammar. Please try again.');
+      toast.error('Kiểm tra ngữ pháp thất bại. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
       setLoadingIndex(-1);
@@ -145,7 +147,7 @@ const GrammarCheckerPage = () => {
       setHistory(prev => [newHistoryItem, ...prev.slice(0, 19)]);
     } catch (error) {
       console.error('Error:', error);
-      alert('Failed to check grammar. Please try again.');
+      toast.error('Kiểm tra ngữ pháp thất bại. Vui lòng thử lại.');
     } finally {
       setLoadingIndex(-1);
     }

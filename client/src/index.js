@@ -6,19 +6,22 @@ import App from './App';
 import { AuthProvider } from './context/AuthContext'; 
 import { HighlightProvider } from './context/HighlightContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
 import store from './store';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <Provider store={store}>
     <BrowserRouter>
-      <AuthProvider>
-        <ThemeProvider>
-          <HighlightProvider>
-            <App />
-          </HighlightProvider>
-        </ThemeProvider>
-      </AuthProvider>
+      <ToastProvider position="top-right">
+        <AuthProvider>
+          <ThemeProvider>
+            <HighlightProvider>
+              <App />
+            </HighlightProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </ToastProvider>
     </BrowserRouter>
   </Provider>
 );

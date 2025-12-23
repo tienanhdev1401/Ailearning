@@ -8,10 +8,12 @@ import ListenSelectMiniGame from "./ListenSelectMiniGame";
 import ExamMiniGame from "./ExamMiniGame";
 import TrueFalseMiniGame from "./TrueFalseMiniGame";
 import TypingChallengeMiniGame from "./TypingChallengeMiniGame";
+import { useToast } from "../../../context/ToastContext";
 
 import { Editor } from "@tinymce/tinymce-react";
 
 const MiniGameList = ({ activityId, onRefresh }) => {
+	const toast = useToast();
 	const [minigames, setMinigames] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [selected, setSelected] = useState(null);
@@ -23,6 +25,7 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 
 	// Embedded dynamic add form component (keeps file count minimal)
 	const AddMiniGameForm = ({ activityId, type, onCancel, onAdded }) => {
+		const toast = useToast();
 		const [prompt, setPrompt] = useState("");
 		const [saving, setSaving] = useState(false);
 
@@ -63,7 +66,7 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 			const next = (typingHintInput || "").trim();
 			if (!next) return;
 			if (typingHints.length >= 5) {
-				alert("Tối đa 5 gợi ý");
+				toast.warning("Tối đa 5 gợi ý");
 				return;
 			}
 			setTypingHints((prev) => [...prev, next]);
@@ -97,45 +100,45 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 
 		const handleSubmit = async () => {
 			// basic validation
-			if (!prompt.trim()) return alert("Prompt không được rỗng");
+			if (!prompt.trim()) return toast.warning("Prompt không được rỗng");
 			let resources = {};
 			if (type === "match_image_word") {
-				if (images.length < 2) return alert("Cần ít nhất 2 ảnh");
+				if (images.length < 2) return toast.warning("Cần ít nhất 2 ảnh");
 				resources = { images: images.map(img => ({ id: img.id, imageUrl: img.imageUrl, correctWord: img.correctWord })) };
 			} 
 			else if (type === "lesson") {
-				if (!content.trim()) return alert("Content HTML không được rỗng");
+				if (!content.trim()) return toast.warning("Content HTML không được rỗng");
 				resources = { content };
 			} 
 			else if (type === "sentence_builder") {
-				if (tokens.length < 3) return alert("Cần ít nhất 3 từ");
+				if (tokens.length < 3) return toast.warning("Cần ít nhất 3 từ");
 				resources = { tokens: tokens.map(t => ({ id: t.id, text: t.text })) };
 			} 
 			else if (type === "listen_select") {
-				if (!audioUrl.trim()) return alert("audioUrl không được rỗng");
-				if (listenOptions.length  <2) return alert("Phải có tối thiểu 2 lựa chọn");
+				if (!audioUrl.trim()) return toast.warning("audioUrl không được rỗng");
+				if (listenOptions.length  <2) return toast.warning("Phải có tối thiểu 2 lựa chọn");
 				if (listenOptions.some(o => !o.text || !o.imageUrl))
-					return alert("Mỗi option phải có text + imageUrl");
+					return toast.warning("Mỗi option phải có text + imageUrl");
 				if (correctIndex < 0 || correctIndex > 3)
-					return alert("correctIndex phải từ 0 → 3");
+					return toast.warning("correctIndex phải từ 0 → 3");
 				resources = { audioUrl, options: listenOptions.map(o => ({ id: o.id, text: o.text,imageUrl: o.imageUrl})),correctIndex};
 			}
 			else if (type === "exam"){
 				if (questions.length === 0)
-					return alert("Cần ít nhất 1 câu hỏi");
+					return toast.warning("Cần ít nhất 1 câu hỏi");
 				for (const q of questions) {
-					if (!q.question.trim()) return alert("Câu hỏi không được rỗng");
-					if (q.options.length !== 4) return alert("Mỗi câu phải có đúng 4 đáp án");
-					if (q.options.some(o => !o.trim())) return alert("Đáp án không được rỗng");
+					if (!q.question.trim()) return toast.warning("Câu hỏi không được rỗng");
+					if (q.options.length !== 4) return toast.warning("Mỗi câu phải có đúng 4 đáp án");
+					if (q.options.some(o => !o.trim())) return toast.warning("Đáp án không được rỗng");
 					if (q.correctIndex < 0 || q.correctIndex > 3)
-						return alert("correctIndex phải từ 0 → 3");
+						return toast.warning("correctIndex phải từ 0 → 3");
 				}
 				resources = { questions: questions.map(q => ({ question: q.question, options: q.options, correctIndex: q.correctIndex}))};
 			}
 			
 			else if (type === "true_false") {
-				if (!tfStatement.trim()) return alert("Statement không được rỗng");
-				if (!tfOptions.every((opt) => opt.label.trim())) return alert("Vui lòng nhập đủ nội dung cho các lựa chọn");
+				if (!tfStatement.trim()) return toast.warning("Statement không được rỗng");
+				if (!tfOptions.every((opt) => opt.label.trim())) return toast.warning("Vui lòng nhập đủ nội dung cho các lựa chọn");
 				resources = {
 					statement: tfStatement.trim(),
 					options: tfOptions.map((opt) => ({ key: opt.key, label: opt.label.trim() })),
@@ -143,10 +146,10 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 					explanation: tfExplanation.trim() || undefined,
 				};
 			} else if (type === "typing_challenge") {
-				if (!typingTarget.trim()) return alert("Target text không được rỗng");
+				if (!typingTarget.trim()) return toast.warning("Target text không được rỗng");
 				const numericLimit = Number(typingTimeLimit);
 				if (typingTimeLimit !== "" && (!Number.isFinite(numericLimit) || numericLimit <= 0)) {
-					return alert("Thời gian phải là số dương");
+					return toast.warning("Thời gian phải là số dương");
 				}
 				resources = {
 					targetText: typingTarget.trim(),
@@ -163,7 +166,7 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 				onCancel && onCancel();
 			} catch (err) {
 				console.error(err);
-				alert("Tạo minigame thất bại");
+				toast.error("Tạo minigame thất bại");
 			} finally {
 				setSaving(false);
 			}
@@ -554,7 +557,7 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 			setSelected(resp.data);
 		} catch (err) {
 			console.error("Load minigame detail failed", err);
-			alert("Không thể tải chi tiết minigame");
+			toast.error("Không thể tải chi tiết minigame");
 		} finally {
 			setDetailLoading(false);
 		}
@@ -571,39 +574,41 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 			setSelected(resp.data ?? { ...selected, ...payload });
 			await load();
 			onRefresh && onRefresh();
-			alert("Lưu minigame thành công");
+			toast.success("Lưu minigame thành công");
 		} catch (err) {
 			console.error("Save minigame failed", err);
-			alert("Lưu minigame thất bại");
+			toast.error("Lưu minigame thất bại");
 		}
 	};
 
 	// xóa từ modal
 	const handleDeleteDetail = async (id) => {
-		if (!window.confirm("Xác nhận xóa minigame?")) return;
+		const confirmed = await toast.confirm("Xác nhận xóa minigame?", { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' });
+		if (!confirmed) return;
 		try {
 			await api.delete(`/minigames/${id}`);
 			closeDetail();
 			await load();
 			onRefresh && onRefresh();
-			alert("Xóa thành công");
+			toast.success("Xóa thành công");
 		} catch (err) {
 			console.error("Delete minigame failed", err);
-			alert("Xóa thất bại");
+			toast.error("Xóa thất bại");
 		}
 	};
 
 	// xóa trực tiếp từ danh sách (wrapper) — tránh lỗi khi gọi handleDelete trong rendering
 	const handleDelete = async (id) => {
-		if (!window.confirm("Xác nhận xóa minigame?")) return;
+		const confirmed = await toast.confirm("Xác nhận xóa minigame?", { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' });
+		if (!confirmed) return;
 		try {
 			await api.delete(`/minigames/${id}`);
 			await load();
 			onRefresh && onRefresh();
-			alert("Xóa thành công");
+			toast.success("Xóa thành công");
 		} catch (err) {
 			console.error("Delete minigame failed", err);
-			alert("Xóa thất bại");
+			toast.error("Xóa thất bại");
 		}
 	};
 

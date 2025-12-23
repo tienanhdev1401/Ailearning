@@ -10,6 +10,7 @@ import {
   REVENUE_TRENDS_SERIES,
   WEEK_DAYS
 } from '../data/reports';
+import { useToast } from '../../context/ToastContext';
 
 const formatCurrency = (value) => `$${value.toLocaleString()}`;
 
@@ -19,6 +20,7 @@ const getRandomChange = (base, variance) => {
 };
 
 const ReportsPage = () => {
+  const toast = useToast();
   const [dateRange, setDateRange] = useState('30d');
   const [reportType, setReportType] = useState('overview');
   const [exportFormat, setExportFormat] = useState('pdf');
@@ -27,9 +29,7 @@ const ReportsPage = () => {
   const [topProducts] = useState(DEFAULT_TOP_PRODUCTS);
 
   const notify = (message) => {
-    if (typeof window !== 'undefined') {
-      window.alert(message);
-    }
+    toast.info(message);
   };
 
   const randomizeKpis = () => {
@@ -68,8 +68,9 @@ const ReportsPage = () => {
     setRecentReports((prev) => [duplicate, ...prev]);
     notify('Report duplicated successfully.');
   };
-  const handleDeleteReport = (report) => {
-    if (typeof window !== 'undefined' && window.confirm(`Delete ${report.name}?`)) {
+  const handleDeleteReport = async (report) => {
+    const confirmed = await toast.confirm(`Delete ${report.name}?`, { type: 'danger', confirmText: 'Delete', cancelText: 'Cancel' });
+    if (confirmed) {
       setRecentReports((prev) => prev.filter((item) => item.id !== report.id));
       notify('Report deleted.');
     }

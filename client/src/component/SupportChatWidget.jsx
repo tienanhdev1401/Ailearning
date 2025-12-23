@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import styles from "./SupportChatWidget.module.css";
 import { SupportChatService } from "../services/supportChatService";
 import { createSupportChatSocket } from "../utils/supportChatSocket";
+import { useToast } from "../context/ToastContext";
 
 const normalizeMessage = (message) => {
   const created = message?.createdAt ? new Date(message.createdAt) : new Date();
@@ -47,6 +48,7 @@ const statusLabelMap = {
 };
 
 const SupportChatWidget = () => {
+  const toast = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -234,7 +236,7 @@ const SupportChatWidget = () => {
       if (!conversationId || deletingConversationId === conversationId) {
         return;
       }
-      const confirmed = window.confirm("Bạn có chắc muốn xóa cuộc trò chuyện này?");
+      const confirmed = await toast.confirm("Bạn có chắc muốn xóa cuộc trò chuyện này?", { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' });
       if (!confirmed) {
         return;
       }
@@ -264,7 +266,7 @@ const SupportChatWidget = () => {
         setDeletingConversationId(null);
       }
     },
-    [conversation?.id, deletingConversationId, refreshConversations]
+    [conversation?.id, deletingConversationId, refreshConversations, toast]
   );
 
   const handleCreateConversation = async () => {

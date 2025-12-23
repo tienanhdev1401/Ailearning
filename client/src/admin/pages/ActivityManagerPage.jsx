@@ -2,10 +2,12 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../src/api/api";
 import ActivityList from "../components/activity/ActivityList";
+import { useToast } from '../../context/ToastContext';
 
 const ActivityManagerPage = () => {
   const { dayId } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -44,7 +46,7 @@ const ActivityManagerPage = () => {
       await api.patch("/activities/mutiple-update", payload);
     } catch (err) {
       console.error("Failed saving order", err);
-      alert("Lưu thứ tự thất bại");
+      toast.error("Lưu thứ tự thất bại");
       await load();
     }
   };
@@ -129,11 +131,11 @@ const ActivityManagerPage = () => {
               <button
                 className="btn btn-primary"
                 onClick={async () => {
-                  if (!newTitle.trim()) return alert("Tiêu đề không được rỗng");
+                  if (!newTitle.trim()) return toast.warning("Tiêu đề không được rỗng");
                   if (!ALLOWED_SKILLS.includes(newSkill))
-                    return alert("Skill không hợp lệ");
+                    return toast.warning("Skill không hợp lệ");
                   if (!Number.isInteger(Number(newPointOfAc)))
-                    return alert("Điểm phải là số nguyên");
+                    return toast.warning("Điểm phải là số nguyên");
 
                   try {
                     await api.post("/activities", {
@@ -151,7 +153,7 @@ const ActivityManagerPage = () => {
                     await load();
                   } catch (err) {
                     console.error(err);
-                    alert("Tạo activity thất bại");
+                    toast.error("Tạo activity thất bại");
                   }
                 }}
               >

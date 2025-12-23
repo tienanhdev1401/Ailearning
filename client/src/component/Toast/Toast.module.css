@@ -1,0 +1,195 @@
+/* Container chính của Toast */
+.toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 320px;
+  max-width: 420px;
+  padding: 16px 40px 16px 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 
+              0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease-out;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+/* Animation khi toast xuất hiện */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Animation khi toast biến mất */
+.leaving {
+  animation: slideOut 0.3s ease-in forwards;
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Icon wrapper */
+.iconWrapper {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* Nội dung */
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 4px;
+  color: #1a1a2e;
+}
+
+.message {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+/* Nút đóng */
+.closeBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  color: #94a3b8;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeBtn:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* Progress bar */
+.progressBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  width: 100%;
+  animation: shrink linear forwards;
+}
+
+@keyframes shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* ============== LOẠI THÔNG BÁO ============== */
+
+/* SUCCESS - Màu xanh lá */
+.success {
+  border-left: 4px solid #10b981;
+}
+
+.success .iconWrapper {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #059669;
+}
+
+.success .progress {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+/* ERROR - Màu đỏ */
+.error {
+  border-left: 4px solid #ef4444;
+}
+
+.error .iconWrapper {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #dc2626;
+}
+
+.error .progress {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+/* WARNING - Màu vàng cam */
+.warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.warning .iconWrapper {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #d97706;
+}
+
+.warning .progress {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+/* INFO - Màu xanh dương */
+.info {
+  border-left: 4px solid #3b82f6;
+}
+
+.info .iconWrapper {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #2563eb;
+}
+
+.info .progress {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+
+/* ============== RESPONSIVE ============== */
+@media (max-width: 480px) {
+  .toast {
+    min-width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
+  }
+}

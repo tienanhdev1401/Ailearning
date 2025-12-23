@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { useToast } from "../../../context/ToastContext";
 
 const ListenSelectMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
+  const toast = useToast();
   const [audioUrl, setAudioUrl] = useState(minigame?.resources?.audioUrl ?? "");
   const [options, setOptions] = useState(
     Array.isArray(minigame?.resources?.options)
@@ -40,12 +42,12 @@ const ListenSelectMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
 
   const handleSave = async () => {
     if (!audioUrl.trim()) {
-      alert("Audio URL không được rỗng!");
+      toast.warning("Audio URL không được rỗng!");
       return;
     }
 
     if (options.length < 2) {
-      alert("Cần ít nhất 2 lựa chọn!");
+      toast.warning("Cần ít nhất 2 lựa chọn!");
       return;
     }
 

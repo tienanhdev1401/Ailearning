@@ -29,7 +29,7 @@ export class OtpService {
 
     try {
       await transporter.sendMail({
-        from: process.env.EMAIL,
+        from: process.env.EMAIL_FROM,
         to: email,
         subject: "Mã xác thực tài khoản",
         text: `Mã xác thực của bạn là: ${otp}\n\nMã này sẽ hết hạn sau 10 phút.`,

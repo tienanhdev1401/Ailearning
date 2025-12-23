@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { useToast } from "../../../context/ToastContext";
 
 const MatchImageWordMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
+  const toast = useToast();
   // Hooks must be called unconditionally
   const [prompt, setPrompt] = useState(minigame?.prompt ?? "");
   const [images, setImages] = useState((minigame?.resources?.images && Array.isArray(minigame.resources.images)) ? [...minigame.resources.images] : []);
@@ -30,7 +32,7 @@ const MatchImageWordMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
 
   const handleSave = async () => {
     if (!prompt || !prompt.trim()) {
-      alert("Prompt không được rỗng");
+      toast.warning("Prompt không được rỗng");
       return;
     }
     const payload = {

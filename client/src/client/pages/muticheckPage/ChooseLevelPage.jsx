@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../../api/api";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { useToast } from "../../../context/ToastContext";
 
 const ChooseLevelPage = () => {
   const levels = [
@@ -24,6 +25,7 @@ const ChooseLevelPage = () => {
   });
 
   const navigate = useNavigate();
+  const toast = useToast();
 
   // Khi chọn level, lưu tên (label) vào sessionStorage
   const handleSelect = (index) => {
@@ -48,7 +50,7 @@ const ChooseLevelPage = () => {
     try {
       const response = await api.post("/confirm/", confirmData);
       console.log("Gửi dữ liệu thành công:", response.data);
-      alert("Cảm ơn bạn đã dành thời gian xác thực!");
+      toast.success("Cảm ơn bạn đã dành thời gian xác thực!");
     } catch (error) {
       console.error("Lỗi khi gửi dữ liệu:", error);
     }

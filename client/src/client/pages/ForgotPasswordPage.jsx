@@ -3,6 +3,7 @@ import { Modal, Button } from "react-bootstrap";
 import api from "../../api/api";
 import styles from "../styles/LoginPage.module.css";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../../context/ToastContext";
 
 // Icon mắt
 const EYE_OPEN_ICON = "/assets/img/icon/eye-close-up-svgrepo-com.svg";
@@ -21,6 +22,7 @@ const ForgotPasswordPage = () => {
   const [otpCountdown, setOtpCountdown] = useState(60);
 
   const navigate = useNavigate();
+  const toast = useToast();
 
   const clearForm = () => {
     setOtp(Array(6).fill(""));
@@ -32,7 +34,7 @@ const ForgotPasswordPage = () => {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
-      alert("⚠️ Mật khẩu mới và xác nhận mật khẩu không khớp!");
+      toast.warning("Mật khẩu mới và xác nhận mật khẩu không khớp!");
       return;
     }
 
@@ -42,7 +44,7 @@ const ForgotPasswordPage = () => {
       setShowOtpModal(true);
       clearForm();
     } catch (err) {
-      alert(err.response?.data?.message || "❌ Không thể gửi OTP.");
+      toast.error(err.response?.data?.message || "Không thể gửi OTP.");
     } finally {
       setIsSendingOtp(false);
     }
@@ -65,7 +67,7 @@ const ForgotPasswordPage = () => {
   const handleVerifyOtp = async () => {
     const code = otp.join("");
     if (code.length !== 6) {
-      alert("Vui lòng nhập đủ 6 chữ số OTP!");
+      toast.warning("Vui lòng nhập đủ 6 chữ số OTP!");
       return;
     }
 
@@ -76,11 +78,11 @@ const ForgotPasswordPage = () => {
         otp: code,
         newPassword,
       });
-      alert("✅ Đặt lại mật khẩu thành công! Hãy đăng nhập lại.");
+      toast.success("Đặt lại mật khẩu thành công! Hãy đăng nhập lại.");
       setShowOtpModal(false);
       navigate("/login");
     } catch (err) {
-      alert(err.response?.data?.message || "❌ OTP không hợp lệ hoặc đã hết hạn.");
+      toast.error(err.response?.data?.message || "OTP không hợp lệ hoặc đã hết hạn.");
     } finally {
       setIsVerifyingOtp(false);
     }

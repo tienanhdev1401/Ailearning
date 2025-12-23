@@ -6,6 +6,7 @@ import {
   fetchRoadmapReviews,
   updateRoadmapReview,
 } from '../../services/roadmapReviewService';
+import { useToast } from '../../../context/ToastContext';
 
 const classNames = (...parts) => parts.filter(Boolean).join(' ');
 
@@ -86,6 +87,7 @@ const calculateRelativeTime = (isoString) => {
 };
 
 const RoadmapReviewPanel = ({ roadmapId, roadmapTitle, onClose }) => {
+  const toast = useToast();
   const [reviews, setReviews] = useState([]);
   const [summary, setSummary] = useState(defaultSummary);
   const [loading, setLoading] = useState(false);
@@ -194,7 +196,8 @@ const RoadmapReviewPanel = ({ roadmapId, roadmapTitle, onClose }) => {
 
   const handleDeleteReview = async (review) => {
     if (!roadmapId || !review?.id) return;
-    if (!window.confirm('Bạn có chắc muốn xoá đánh giá này?')) return;
+    const confirmed = await toast.confirm('Bạn có chắc muốn xoá đánh giá này?', { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' });
+    if (!confirmed) return;
     setPendingActionId(review.id);
     setError('');
     try {

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useToast } from "../../../context/ToastContext";
 
 const OPTION_KEYS = ["A", "B"];
 
@@ -20,6 +21,7 @@ const extractOptions = (resources) => {
 };
 
 const TrueFalseMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
+  const toast = useToast();
   const [prompt, setPrompt] = useState(minigame?.prompt ?? "");
   const [statement, setStatement] = useState(minigame?.resources?.statement ?? "");
   const [options, setOptions] = useState(() => extractOptions(minigame?.resources));
@@ -44,15 +46,15 @@ const TrueFalseMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
 
   const handleSave = async () => {
     if (!prompt.trim()) {
-      alert("Prompt không được rỗng");
+      toast.warning("Prompt không được rỗng");
       return;
     }
     if (!statement.trim()) {
-      alert("Statement không được rỗng");
+      toast.warning("Statement không được rỗng");
       return;
     }
     if (!OPTION_KEYS.every((key) => (optionMap[key] || "").trim())) {
-      alert("Vui lòng nhập đầy đủ nội dung cho cả hai lựa chọn");
+      toast.warning("Vui lòng nhập đầy đủ nội dung cho cả hai lựa chọn");
       return;
     }
 

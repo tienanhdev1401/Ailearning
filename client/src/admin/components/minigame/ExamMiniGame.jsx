@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { useToast } from "../../../context/ToastContext";
 
 const ExamMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
+  const toast = useToast();
   const [prompt, setPrompt] = useState(minigame?.prompt ?? "");
   const [questions, setQuestions] = useState(
     Array.isArray(minigame?.resources?.questions)
@@ -49,13 +51,13 @@ const ExamMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
 
   const handleSave = async () => {
     if (!prompt.trim()) {
-      alert("Prompt không được rỗng");
+      toast.warning("Prompt không được rỗng");
       return;
     }
 
     for (const q of questions) {
-      if (!q.question.trim()) return alert("Câu hỏi không được rỗng");
-      if (!q.options.every((o) => o.trim())) return alert("Mỗi đáp án đều phải có nội dung");
+      if (!q.question.trim()) return toast.warning("Câu hỏi không được rỗng");
+      if (!q.options.every((o) => o.trim())) return toast.warning("Mỗi đáp án đều phải có nội dung");
     }
 
     const payload = {

@@ -1,12 +1,14 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api/api"; 
+import api from "../api/api";
+import { useToast } from "./ToastContext";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [accessToken, setAccessToken] = useState(null);
   const navigate = useNavigate();
+  const toast = useToast();
 
   useEffect(() => {
     const storedToken = localStorage.getItem("accessToken");
@@ -27,14 +29,14 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       if (err.response?.status === 401) {
         setAccessToken(null);
-        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        toast.warning("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
         navigate('/login'); // dùng navigate
       }
     }
   }, 10 * 60 * 1000); // 10 phút
 
   return () => clearInterval(interval);
-}, [accessToken, navigate]);
+}, [accessToken, navigate, toast]);
 
   useEffect(() => {
     if (accessToken) {

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState, useContext } from 're
 import api from '../../api/api';
 import { useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../../context/ThemeContext';
+import { useToast } from '../../context/ToastContext';
 
 import { Editor } from '@tinymce/tinymce-react';
 
@@ -24,6 +25,7 @@ const normalizeServerRoadmap = (r) => ({
 });
 
 const RoadmapsPage = () => {
+  const toast = useToast();
   const [roadmaps, setRoadmaps] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -221,12 +223,13 @@ const RoadmapsPage = () => {
       await loadRoadmaps(1, itemsPerPage);
     } catch (err) {
       const message = err?.response?.data?.message || err?.message || String(err);
-      alert(message || 'Error');
+      toast.error(message || 'Error');
     }
   };
 
   const deleteRoadmap = async (r) => {
-    if (!window.confirm(`Xác nhận xoá roadmap "${r.levelName}"?`)) return;
+    const confirmed = await toast.confirm(`Xác nhận xoá roadmap "${r.levelName}"?`, { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' });
+    if (!confirmed) return;
 
     try {
       await api.delete(`/roadmaps/${r.id}`);
@@ -235,7 +238,7 @@ const RoadmapsPage = () => {
       await loadRoadmaps(1, itemsPerPage);
     } catch (err) {
       const message = err?.response?.data?.message || err?.message || String(err);
-      alert(message || 'Error');
+      toast.error(message || 'Error');
     }
   };
 

@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { useToast } from '../../context/ToastContext';
 
 const HOURS = [
   '6:00 AM',
@@ -130,6 +131,7 @@ const matchesHour = (event, hourLabel) => {
 };
 
 const CalendarPage = () => {
+  const toast = useToast();
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [currentView, setCurrentView] = useState('month');
   const [currentDate, setCurrentDate] = useState(() => new Date());
@@ -139,9 +141,7 @@ const CalendarPage = () => {
   const [events] = useState(() => generateSampleEvents());
 
   const notify = message => {
-    if (typeof window !== 'undefined') {
-      window.alert(message);
-    }
+    toast.info(message);
   };
 
   const getEventsForDate = useCallback(dateString => events.filter(event => event.date === dateString), [events]);

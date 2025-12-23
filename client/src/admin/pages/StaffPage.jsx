@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import userService from '../../services/userService';
+import { useToast } from '../../context/ToastContext';
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Hoạt động' },
@@ -80,6 +81,7 @@ const formatDate = (value) => {
 };
 
 const StaffPage = () => {
+  const toast = useToast();
   const [staffMembers, setStaffMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -173,7 +175,7 @@ const StaffPage = () => {
       // Tìm staff member hiện tại để lấy thông tin đầy đủ
       const currentMember = staffMembers.find(m => m.id === editingId);
       if (!currentMember) {
-        window.alert('Không tìm thấy nhân viên để cập nhật');
+        toast.error('Không tìm thấy nhân viên để cập nhật');
         return;
       }
 
@@ -199,7 +201,7 @@ const StaffPage = () => {
         );
         setModalState({ open: false, payload: null });
       } catch (updateError) {
-        window.alert(updateError.message || 'Không thể cập nhật nhân viên. Vui lòng thử lại.');
+        toast.error(updateError.message || 'Không thể cập nhật nhân viên. Vui lòng thử lại.');
       }
     } else {
       // Tạo mới: kiểm tra client-side để thỏa validation server
@@ -222,7 +224,7 @@ const StaffPage = () => {
         }
 
         if (errors.length > 0) {
-          window.alert(errors.join('\n'));
+          toast.error(errors.join('. '));
           return;
         }
 
@@ -240,7 +242,7 @@ const StaffPage = () => {
         setStaffMembers((prev) => [normalized, ...prev]);
         setModalState({ open: false, payload: null });
       } catch (createError) {
-        window.alert(createError.message || 'Không thể tạo nhân viên. Vui lòng thử lại.');
+        toast.error(createError.message || 'Không thể tạo nhân viên. Vui lòng thử lại.');
         throw createError;
       }
     }
@@ -267,7 +269,7 @@ const StaffPage = () => {
 
       setStaffMembers((prev) => prev.map((m) => (m.id === member.id ? normalizedMember : m)));
     } catch (err) {
-      window.alert(err.message || 'Không thể cập nhật trạng thái nhân viên. Vui lòng thử lại.');
+      toast.error(err.message || 'Không thể cập nhật trạng thái nhân viên. Vui lòng thử lại.');
     }
   };
 
@@ -292,18 +294,19 @@ const StaffPage = () => {
 
   const handleBulkAction = async (action) => {
     if (!selectedIds.length) {
-      window.alert('Vui lòng chọn ít nhất một nhân viên.');
+      toast.warning('Vui lòng chọn ít nhất một nhân viên.');
       return;
     }
     if (action === 'delete') {
-      if (!window.confirm(`Bạn có chắc muốn xóa ${selectedIds.length} nhân viên đã chọn?`)) return;
+      const confirmed = await toast.confirm(`Bạn có chắc muốn xóa ${selectedIds.length} nhân viên đã chọn?`, { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' });
+      if (!confirmed) return;
       try {
         // Giả sử userService có deleteUser
         await Promise.all(selectedIds.map(id => userService.deleteUser(id)));
         setStaffMembers(prev => prev.filter(m => !selectedIds.includes(m.id)));
         setSelectedIds([]);
       } catch (err) {
-        window.alert(err.message || 'Không thể xóa nhân viên.');
+        toast.error(err.message || 'Không thể xóa nhân viên.');
       }
     } else {
       const newStatus = action === 'activate' ? 'active' : 'inactive';
@@ -327,7 +330,7 @@ const StaffPage = () => {
         setStaffMembers(prev => prev.map(m => selectedIds.includes(m.id) ? { ...m, status: newStatus } : m));
         setSelectedIds([]);
       } catch (err) {
-        window.alert(err.message || 'Không thể cập nhật trạng thái.');
+        toast.error(err.message || 'Không thể cập nhật trạng thái.');
       }
     }
   };

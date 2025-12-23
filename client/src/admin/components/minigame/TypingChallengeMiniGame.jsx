@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { useToast } from "../../../context/ToastContext";
 
 const TypingChallengeMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
+  const toast = useToast();
   const [prompt, setPrompt] = useState(minigame?.prompt ?? "");
   const [targetText, setTargetText] = useState(minigame?.resources?.targetText ?? "");
   const [caseSensitive, setCaseSensitive] = useState(Boolean(minigame?.resources?.caseSensitive));
@@ -28,7 +30,7 @@ const TypingChallengeMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
     const trimmed = (newHint || "").trim();
     if (!trimmed) return;
     if (hints.length >= 5) {
-      alert("Tối đa 5 gợi ý");
+      toast.warning("Tối đa 5 gợi ý");
       return;
     }
     setHints((prev) => [...prev, trimmed]);
@@ -45,17 +47,17 @@ const TypingChallengeMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
 
   const handleSave = async () => {
     if (!prompt.trim()) {
-      alert("Prompt không được rỗng");
+      toast.warning("Prompt không được rỗng");
       return;
     }
     if (!targetText.trim()) {
-      alert("Target text không được rỗng");
+      toast.warning("Target text không được rỗng");
       return;
     }
 
     const numericLimit = Number(timeLimit);
     if (timeLimit !== "" && (!Number.isFinite(numericLimit) || numericLimit <= 0)) {
-      alert("Thời gian phải là số dương");
+      toast.warning("Thời gian phải là số dương");
       return;
     }
 

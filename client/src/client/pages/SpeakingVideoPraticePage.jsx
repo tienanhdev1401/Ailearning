@@ -7,10 +7,12 @@ import RecordRTC from "recordrtc";
 import successSound from "../sounds/success.mp3";
 import { useParams } from "react-router-dom";
 import lessonService from "../services/lessonService";
+import { useToast } from "../../context/ToastContext";
 
 export default function SpeakingVideoPraticePage() {
   // Lay lessonId từ URL param
   const { lessonId } = useParams();
+  const toast = useToast();
 
   const [lesson, setLesson] = useState(null);
   const [, setWords] = useState([]);
@@ -282,7 +284,7 @@ export default function SpeakingVideoPraticePage() {
       setIsRecording(true);
     } catch (err) {
       console.error("Không thể truy cập micro:", err);
-      alert("Không thể truy cập micro. Vui lòng kiểm tra quyền trình duyệt.");
+      toast.error("Không thể truy cập micro. Vui lòng kiểm tra quyền trình duyệt.");
     }
   };
 
@@ -339,7 +341,7 @@ export default function SpeakingVideoPraticePage() {
         }
       } catch (err) {
         console.error("Lỗi khi gọi API:", err);
-        alert("Lỗi khi gửi audio lên server.");
+        toast.error("Lỗi khi gửi audio lên server.");
       }
     } catch (err) {
       console.error("Lỗi stopRecording:", err);
@@ -410,7 +412,7 @@ export default function SpeakingVideoPraticePage() {
       // optional: revoke after playback ended (if you want to free memory immediately)
       // a.onended = () => { URL.revokeObjectURL(lastRecording.url); setLastRecording(null); };
     } else {
-      alert("Chưa có bản ghi");
+      toast.warning("Chưa có bản ghi");
     }
   };
 

@@ -3,8 +3,10 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import api from '../../api/api';
 import lessonTopicEnum from "../../enums/lessonTopic.enum";
+import { useToast } from '../../context/ToastContext';
 
 const LessonManagerPage = ()=> {
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [lessons, setLessons] = useState([]);
   const [error, setError] = useState(null);
@@ -101,14 +103,15 @@ const LessonManagerPage = ()=> {
   };
 
   const handleDelete = async (lesson) => {
-    if (!window.confirm(`Xóa lesson "${lesson.title}"?`)) return;
+    const confirmed = await toast.confirm(`Xóa lesson "${lesson.title}"?`, { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' });
+    if (!confirmed) return;
     try {
       await api.delete(`/lessons/${lesson.id}`);
       // refresh current page
       fetchLessons(page, limit);
     } catch (err) {
       console.error(err);
-      alert('Xóa thất bại');
+      toast.error('Xóa thất bại');
     }
   };
 
@@ -117,7 +120,7 @@ const LessonManagerPage = ()=> {
 
     // CREATE: require SRT file; UPDATE: optional
     if (!editing && !srtFile) {
-      alert("Please upload a .srt file.");
+      toast.warning("Vui lòng upload file .srt.");
       return;
     }
 
@@ -159,7 +162,7 @@ const LessonManagerPage = ()=> {
 
     // Nếu message có nhiều dòng -> lấy dòng đầu tiên
     const firstMessage = message.split('\n')[0];
-    alert(firstMessage);
+    toast.error(firstMessage);
     }
   };
 
@@ -173,7 +176,7 @@ const LessonManagerPage = ()=> {
       setSrtModalOpen(true);
     } catch (err) {
       console.error("Failed to fetch lesson subtitles", err);
-      alert("Không thể tải phụ đề");
+      toast.error("Không thể tải phụ đề");
     }
   };
 

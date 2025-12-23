@@ -1,6 +1,6 @@
 import { HttpStatusCode } from 'axios'
 import UserService from '../services/user.service'
-import nodemailer from 'nodemailer'
+import transporter from '../utils/mailTransporter'
 import ApiError from '../utils/ApiError';
 import { CreateUserDto } from '../dto/request/CreateUserDTO'
 import { UpdateUserDto } from '../dto/request/UpdateUserDTO';
@@ -8,14 +8,6 @@ import { Request, Response, NextFunction } from "express";
 import { plainToInstance } from "class-transformer";
 
 const otpStore = new Map<string, { otp: string; expires: Date; userData: { email: string } }>();
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
 
 class UserController {
   // Lấy danh sách tất cả người dùng
@@ -105,7 +97,7 @@ class UserController {
   
       // Send email
       await transporter.sendMail({
-        from: process.env.EMAIL,
+        from: process.env.EMAIL_FROM,
         to: email,
         subject: 'Mã xác thực tạo tài khoản',
         text: `Mã xác thực của bạn là: ${otp}`

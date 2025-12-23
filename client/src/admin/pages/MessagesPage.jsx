@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { SupportChatService } from "../../services/supportChatService";
 import { createSupportChatSocket } from "../../utils/supportChatSocket";
+import { useToast } from "../../context/ToastContext";
 
 const STATUS_OPTIONS = [
 	{ value: "open", label: "Đang mở" },
@@ -46,6 +47,7 @@ const formatTime = (value) => {
 };
 
 const MessagesPage = () => {
+	const toast = useToast();
 	const [conversations, setConversations] = useState([]);
 	const [loadingConversations, setLoadingConversations] = useState(false);
 	const [conversationsError, setConversationsError] = useState(null);
@@ -287,7 +289,7 @@ const MessagesPage = () => {
 		if (!conversationId || deletingConversationId === conversationId) {
 			return;
 		}
-		const confirmed = window.confirm("Bạn có chắc muốn xóa cuộc trò chuyện này?");
+		const confirmed = await toast.confirm("Bạn có chắc muốn xóa cuộc trò chuyện này?", { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' });
 		if (!confirmed) {
 			return;
 		}

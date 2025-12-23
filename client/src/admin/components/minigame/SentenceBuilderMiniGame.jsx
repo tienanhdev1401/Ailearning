@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { useToast } from "../../../context/ToastContext";
 
 const SentenceBuilderMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
+  const toast = useToast();
   // hooks always called
   const [prompt, setPrompt] = useState(minigame?.prompt ?? "");
   const [tokens, setTokens] = useState(Array.isArray(minigame?.resources?.tokens) ? [...minigame.resources.tokens] : []);
@@ -44,7 +46,7 @@ const SentenceBuilderMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
 
   const handleSave = async () => {
     if (!prompt || !prompt.trim()) {
-      alert("Prompt không được rỗng");
+      toast.warning("Prompt không được rỗng");
       return;
     }
     const payload = {

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/api';
 import { ThemeContext } from '../../context/ThemeContext';
+import { useToast } from '../../context/ToastContext';
 
 const emptyForm = { dayNumber: '', theme: '', description: '', condition: '' };
 
@@ -12,6 +13,7 @@ const GAP = 16;              // gap giữa ô (giống style trước)
 const RoadmapDaysPage = () => {
   const { roadmapId } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [roadmap, setRoadmap] = useState(null);
   const [days, setDays] = useState([]);
@@ -32,9 +34,9 @@ const RoadmapDaysPage = () => {
 
       setDays(sorted);
     } catch (err) {
-      alert(err?.response?.data?.message || err?.message || String(err));
+      toast.error(err?.response?.data?.message || err?.message || String(err));
     } 
-  }, [roadmapId]);
+  }, [roadmapId, toast]);
 
   useEffect(() => {
     loadRoadmap();
@@ -76,7 +78,7 @@ const RoadmapDaysPage = () => {
       closeModal();
       loadRoadmap();
     } catch (err) {
-      alert(err?.response?.data?.message || err?.message || String(err));
+      toast.error(err?.response?.data?.message || err?.message || String(err));
     }
   };
 
@@ -92,7 +94,7 @@ const RoadmapDaysPage = () => {
       closeModal();
       loadRoadmap();
     } catch (err) {
-      alert(err?.response?.data?.message || err?.message || String(err));
+      toast.error(err?.response?.data?.message || err?.message || String(err));
     }
   };
 
@@ -102,13 +104,14 @@ const RoadmapDaysPage = () => {
   };
 
   const deleteDay = async (day) => {
-    if (!window.confirm(`Xác nhận xoá ngày ${day.dayNumber}?`)) return;
+    const confirmed = await toast.confirm(`Xác nhận xoá ngày ${day.dayNumber}?`, { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' });
+    if (!confirmed) return;
 
     try {
       await api.delete(`/days/${day.id}`);
       loadRoadmap();
     } catch (err) {
-      alert(err?.response?.data?.message || err?.message || String(err));
+      toast.error(err?.response?.data?.message || err?.message || String(err));
     }
   };
 

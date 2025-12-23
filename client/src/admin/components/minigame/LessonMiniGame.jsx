@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import DOMPurify from "dompurify";
 import { Editor } from "@tinymce/tinymce-react";
+import { useToast } from "../../../context/ToastContext";
 
 const LessonMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
+  const toast = useToast();
   const [prompt, setPrompt] = useState(minigame?.prompt ?? "");
   const [content, setContent] = useState(minigame?.resources?.content ?? "");
   const [saving, setSaving] = useState(false);
@@ -15,7 +17,7 @@ const LessonMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
 
   const handleSave = async () => {
     if (!prompt || !prompt.trim()) {
-      alert("Prompt không được rỗng");
+      toast.warning("Prompt không được rỗng");
       return;
     }
 
