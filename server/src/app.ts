@@ -37,6 +37,9 @@ import dashboardRouter from "./routes/dashboard.routes";
 import gopRouter from "./routes/gop.routes";
 
 import roadmapEnrollementRoutes from './routes/roamapEnrollement.routes'
+import paymentRouter from './routes/payment.routes'
+import packageRouter from './routes/package.routes'
+import subscriptionRouter from './routes/subscription.routes'
 
 import { startAllSchedulers } from './schedulers/index';
 
@@ -96,6 +99,9 @@ app.use("/api/gop", gopRouter);
 app.use('/api/confirm', userconfirmRouter);
 app.use('/api/uploads', uploadRouter);
 app.use('/api/roadmap_enrollments',roadmapEnrollementRoutes)
+app.use('/api/payments', paymentRouter);
+app.use('/api/packages', packageRouter);
+app.use('/api/subscriptions', subscriptionRouter);
 
 
 

@@ -61,6 +61,7 @@ const Header = () => {
         { label: "Chủ Đề", icon: "📚", path: "/topics" },
         { label: "Ngữ Pháp", icon: "📝", path: "/grammar" },
         { label: "Lộ Trình", icon: "🗺️", path: "/roadmaps" },
+        { label: "Mở khóa Pro", icon: "💎", path: "/pricing" },
     ];
 
     const handleToggleChat = () => {
@@ -95,7 +96,7 @@ const Header = () => {
                     {menuItems.map((item) => (
                         <div
                             key={item.label}
-                            className={styles.navItem}
+                            className={`${styles.navItem} ${item.label === "Mở khóa Pro" ? styles.proItem : ""}`}
                             onClick={() => {
                                 navigate(item.path);
                                 setIsMenuOpen(false);
