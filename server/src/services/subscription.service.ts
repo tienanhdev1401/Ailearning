@@ -77,4 +77,12 @@ export class SubscriptionService {
     });
     return !!sub;
   }
+
+  async getUserSubscriptions(userId: number): Promise<UserSubscription[]> {
+    return this.subscriptionRepo.find({
+      where: { userId },
+      relations: ["package"],
+      order: { startDate: "DESC" }
+    });
+  }
 }

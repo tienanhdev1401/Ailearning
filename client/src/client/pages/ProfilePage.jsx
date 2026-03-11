@@ -7,6 +7,8 @@ import LoadingSpinner from "../../component/LoadingSpinner";
 import { useAuth } from "../../context/AuthContext";
 import Cropper from "react-easy-crop";
 import { getCroppedImage } from "../../utils/imageCropper";
+import subscriptionService from "../../services/subscriptionService";
+import CountdownCircle from "../../component/CountdownCircle";
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
@@ -35,6 +37,8 @@ const ProfilePage = () => {
     data: null,
     error: "",
   });
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [isSubLoading, setIsSubLoading] = useState(true);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -163,7 +167,7 @@ const ProfilePage = () => {
       { label: "Email", value: displayEmail },
       { label: "Số điện thoại", value: profile?.phone || "Chưa cập nhật" },
       { label: "Ngày sinh", value: formattedBirthday },
-  { label: "Giới tính", value: genderLabel },
+      { label: "Giới tính", value: genderLabel },
       { label: "Trạng thái tài khoản", value: statusLabel },
       { label: "Địa chỉ", value: profile?.address ?? "TP. Hồ Chí Minh, Việt Nam" },
     ],
@@ -452,6 +456,29 @@ const ProfilePage = () => {
     fetchActiveRoadmap();
   }, [fetchActiveRoadmap]);
 
+  useEffect(() => {
+    const fetchSubscriptions = async () => {
+      try {
+        const data = await subscriptionService.getMySubscriptions();
+        setSubscriptions(data);
+      } catch (err) {
+        console.error("Failed to fetch subscriptions", err);
+      } finally {
+        setIsSubLoading(false);
+      }
+    };
+    fetchSubscriptions();
+  }, []);
+
+  const calculateRemainingDays = (endDate) => {
+    if (!endDate) return null; // Permanent
+    const now = new Date();
+    const end = new Date(endDate);
+    const diffTime = end - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
   const activeRoadmap = activeRoadmapState.data;
 
   const activeRoadmapMeta = useMemo(() => {
@@ -612,6 +639,47 @@ const ProfilePage = () => {
               </div>
             </div>
           </article>
+
+          <article className={styles.card}>
+            <header className={styles.cardHeader}>
+              <h2>Gói dịch vụ đã đăng ký</h2>
+            </header>
+            <div className={styles.cardBody}>
+              {isSubLoading ? (
+                <p className={styles.sectionNote}>Đang tải...</p>
+              ) : subscriptions.length === 0 ? (
+                <p className={styles.sectionNote}>Bạn chưa đăng ký gói nào.</p>
+              ) : (
+                <ul className={styles.infoList}>
+                  {subscriptions.map((sub) => {
+                    const daysRemaining = calculateRemainingDays(sub.endDate);
+                    const totalDays = sub.package?.durationInDays;
+
+                    return (
+                      <li key={sub.id} style={{ marginBottom: "16px", borderBottom: "1px solid #eee", paddingBottom: "12px" }}>
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div style={{ flex: 1 }}>
+                            <span className={styles.infoLabel} style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "4px" }}>
+                              {sub.package?.name}
+                            </span>
+                            <span className={styles.infoValue} style={{ fontSize: "12px", color: "#64748b" }}>
+                              Từ: {new Intl.DateTimeFormat("vi-VN").format(new Date(sub.startDate))}
+                            </span>
+                          </div>
+                          <div className="ms-3">
+                            <CountdownCircle
+                              daysRemaining={daysRemaining}
+                              totalDays={totalDays}
+                            />
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </article>
         </aside>
 
         <main className={styles.main}>
@@ -737,143 +805,143 @@ const ProfilePage = () => {
         </main>
       </div>
 
-          {isEditing && (
-            <div className={styles.editOverlay}>
-              <div className={styles.editDialog} role="dialog" aria-modal="true">
-                <div className={styles.editHeader}>
-                  <h2>Chỉnh sửa hồ sơ</h2>
-                  <button
-                    type="button"
-                    className={styles.closeBtn}
-                    onClick={handleCloseEdit}
-                    aria-label="Đóng hộp thoại chỉnh sửa"
+      {isEditing && (
+        <div className={styles.editOverlay}>
+          <div className={styles.editDialog} role="dialog" aria-modal="true">
+            <div className={styles.editHeader}>
+              <h2>Chỉnh sửa hồ sơ</h2>
+              <button
+                type="button"
+                className={styles.closeBtn}
+                onClick={handleCloseEdit}
+                aria-label="Đóng hộp thoại chỉnh sửa"
+              >
+                ×
+              </button>
+            </div>
+            <form className={styles.editForm} onSubmit={handleSaveProfile}>
+              {formError && <div className={styles.formError}>{formError}</div>}
+
+              <label className={styles.field}>
+                <span>Họ và tên</span>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={handleInputChange("name")}
+                  placeholder="Nhập họ và tên"
+                  maxLength={120}
+                />
+              </label>
+
+              <label className={styles.field}>
+                <span>Ảnh đại diện</span>
+                <div className={styles.avatarInputRow}>
+                  <div
+                    className={styles.avatarPreview}
+                    style={
+                      avatarPreview
+                        ? { backgroundImage: `url(${avatarPreview})` }
+                        : undefined
+                    }
                   >
-                    ×
-                  </button>
-                </div>
-                <form className={styles.editForm} onSubmit={handleSaveProfile}>
-                  {formError && <div className={styles.formError}>{formError}</div>}
-
-                  <label className={styles.field}>
-                    <span>Họ và tên</span>
-                    <input
-                      type="text"
-                      value={editForm.name}
-                      onChange={handleInputChange("name")}
-                      placeholder="Nhập họ và tên"
-                      maxLength={120}
-                    />
-                  </label>
-
-                  <label className={styles.field}>
-                    <span>Ảnh đại diện</span>
-                    <div className={styles.avatarInputRow}>
-                      <div
-                        className={styles.avatarPreview}
-                        style={
-                          avatarPreview
-                            ? { backgroundImage: `url(${avatarPreview})` }
-                            : undefined
-                        }
-                      >
-                        {!avatarPreview && initials}
-                      </div>
-                      <label className={styles.uploadBtn}>
-                        Chọn ảnh
-                        <input type="file" accept="image/*" onChange={handleAvatarChange} />
-                      </label>
-                    </div>
-                    <span className={styles.fieldHint}>Hỗ trợ JPG, PNG, GIF, WEBP (tối đa 5MB)</span>
-                  </label>
-
-                  <label className={styles.field}>
-                    <span>Số điện thoại</span>
-                    <input
-                      type="text"
-                      value={editForm.phone}
-                      onChange={handlePhoneChange}
-                      placeholder="Ví dụ: 0901234567"
-                      maxLength={20}
-                    />
-                  </label>
-
-                  <label className={styles.field}>
-                    <span>Ngày sinh</span>
-                    <input
-                      type="date"
-                      value={editForm.birthday}
-                      onChange={handleInputChange("birthday")}
-                    />
-                  </label>
-
-                  <label className={styles.field}>
-                    <span>Giới tính</span>
-                    <select value={editForm.gender} onChange={handleInputChange("gender")}>
-                      <option value="">Chọn giới tính</option>
-                      <option value="MALE">Nam</option>
-                      <option value="FEMALE">Nữ</option>
-                      <option value="OTHER">Khác</option>
-                    </select>
-                  </label>
-
-                  <div className={styles.formActions}>
-                    <button
-                      type="button"
-                      className={styles.cancelBtn}
-                      onClick={handleCloseEdit}
-                    >
-                      Hủy
-                    </button>
-                    <button type="submit" className={styles.saveBtn} disabled={isSaving}>
-                      {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
-                    </button>
+                    {!avatarPreview && initials}
                   </div>
-                </form>
+                  <label className={styles.uploadBtn}>
+                    Chọn ảnh
+                    <input type="file" accept="image/*" onChange={handleAvatarChange} />
+                  </label>
+                </div>
+                <span className={styles.fieldHint}>Hỗ trợ JPG, PNG, GIF, WEBP (tối đa 5MB)</span>
+              </label>
+
+              <label className={styles.field}>
+                <span>Số điện thoại</span>
+                <input
+                  type="text"
+                  value={editForm.phone}
+                  onChange={handlePhoneChange}
+                  placeholder="Ví dụ: 0901234567"
+                  maxLength={20}
+                />
+              </label>
+
+              <label className={styles.field}>
+                <span>Ngày sinh</span>
+                <input
+                  type="date"
+                  value={editForm.birthday}
+                  onChange={handleInputChange("birthday")}
+                />
+              </label>
+
+              <label className={styles.field}>
+                <span>Giới tính</span>
+                <select value={editForm.gender} onChange={handleInputChange("gender")}>
+                  <option value="">Chọn giới tính</option>
+                  <option value="MALE">Nam</option>
+                  <option value="FEMALE">Nữ</option>
+                  <option value="OTHER">Khác</option>
+                </select>
+              </label>
+
+              <div className={styles.formActions}>
+                <button
+                  type="button"
+                  className={styles.cancelBtn}
+                  onClick={handleCloseEdit}
+                >
+                  Hủy
+                </button>
+                <button type="submit" className={styles.saveBtn} disabled={isSaving}>
+                  {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isCropping && pendingAvatarUrl && (
+        <div className={styles.cropOverlay}>
+          <div className={styles.cropDialog} role="dialog" aria-modal="true">
+            <div className={styles.cropArea}>
+              <Cropper
+                image={pendingAvatarUrl}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                objectFit="contain"
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={handleCropComplete}
+              />
+            </div>
+            <div className={styles.cropControls}>
+              <label htmlFor="avatarZoom">Thu phóng</label>
+              <input
+                id="avatarZoom"
+                className={styles.zoomRange}
+                type="range"
+                min={1}
+                max={3}
+                step={0.1}
+                value={zoom}
+                onChange={(event) => setZoom(Number(event.target.value))}
+              />
+              <div className={styles.cropActions}>
+                <button type="button" className={styles.cancelBtn} onClick={handleCropCancel}>
+                  Hủy
+                </button>
+                <button type="button" className={styles.saveBtn} onClick={handleCropConfirm}>
+                  Áp dụng
+                </button>
               </div>
             </div>
-          )}
-
-          {isCropping && pendingAvatarUrl && (
-            <div className={styles.cropOverlay}>
-              <div className={styles.cropDialog} role="dialog" aria-modal="true">
-                <div className={styles.cropArea}>
-                  <Cropper
-                    image={pendingAvatarUrl}
-                    crop={crop}
-                    zoom={zoom}
-                    aspect={1}
-                    cropShape="round"
-                    showGrid={false}
-                    objectFit="contain"
-                    onCropChange={setCrop}
-                    onZoomChange={setZoom}
-                    onCropComplete={handleCropComplete}
-                  />
-                </div>
-                <div className={styles.cropControls}>
-                  <label htmlFor="avatarZoom">Thu phóng</label>
-                  <input
-                    id="avatarZoom"
-                    className={styles.zoomRange}
-                    type="range"
-                    min={1}
-                    max={3}
-                    step={0.1}
-                    value={zoom}
-                    onChange={(event) => setZoom(Number(event.target.value))}
-                  />
-                  <div className={styles.cropActions}>
-                    <button type="button" className={styles.cancelBtn} onClick={handleCropCancel}>
-                      Hủy
-                    </button>
-                    <button type="button" className={styles.saveBtn} onClick={handleCropConfirm}>
-                      Áp dụng
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
