@@ -42,6 +42,7 @@ import SupportChatWidget from "./component/SupportChatWidget";
 
 import LessonManagerPage from "./admin/pages/LessonManagerPage";
 import PaymentSuccessPage from "./client/pages/PaymentSuccessPage";
+import PricingPage from "./client/pages/PricingPage";
 
 function App() {
   return (
@@ -156,6 +157,16 @@ function App() {
             <DayDetailPage />
           </ProtectedRoute>
         } />
+
+        <Route
+          path="/pricing"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><PricingPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
 
 
         <Route
