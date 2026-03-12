@@ -32,6 +32,7 @@ class LessonService {
           thumbnail_url : dto.thumbnail_url,
           topic_type: dto.topic_type,
           level: dto.level,
+          isLock: dto.isLock ?? false,
         });
       await queryRunner.manager.save(lesson);
 
@@ -120,6 +121,7 @@ class LessonService {
       "lesson.topic_type",
       "lesson.level",
       "lesson.views",
+      "lesson.isLock",
       "lesson.updatedAt",
     ]);
 
@@ -184,6 +186,7 @@ class LessonService {
           topic_type: lesson.topic_type,
           level: lesson.level,
           views: lesson.views,
+          isLock: lesson.isLock,
           duration,
           durationText: secondsToMinuteSecond(duration),
         };
@@ -219,7 +222,7 @@ class LessonService {
       // Lấy 4 lesson mới nhất của mỗi topic  
       const lessons = await lessonRepo.find({
         where: { topic_type: topic },
-        select: ["id", "title", "thumbnail_url", "topic_type", "views", "level", "video_url"],
+        select: ["id", "title", "thumbnail_url", "topic_type", "views", "level", "video_url", "isLock"],
         order: { id: "DESC" }, // mới nhất
         take: 4,               // lấy đúng 4 cái
       });
@@ -247,6 +250,7 @@ class LessonService {
             topic_type: lesson.topic_type,
             views: lesson.views,
             level: lesson.level,
+            isLock: lesson.isLock,
             duration: secondsToMinuteSecond(duration),
           };
         })
@@ -275,6 +279,7 @@ class LessonService {
         title: lesson.title,
         video_url: lesson.video_url,
         thumbnail_url: lesson.thumbnail_url,
+        isLock: lesson.isLock,
         subtitles: (lesson.subtitles || []).map((sub: Subtitle) => ({
           id: sub.id,
           lesson_id: sub.lesson?.id,
@@ -316,7 +321,7 @@ class LessonService {
   }
 
   // Update lesson and optionally replace subtitles from provided srtPath
-  static async updateLesson(id: number, dto: { title?: string; video_url?: string; thumbnail_url?: string; topic_type?: any; level?: any; srtPath?: string }) {
+  static async updateLesson(id: number, dto: { title?: string; video_url?: string; thumbnail_url?: string; topic_type?: any; level?: any; srtPath?: string; isLock?: boolean }) {
     const lessonRepo = AppDataSource.getRepository(Lesson);
     const subtitleRepo = AppDataSource.getRepository(Subtitle);
 
@@ -336,6 +341,7 @@ class LessonService {
       if (typeof dto.thumbnail_url !== "undefined") lesson.thumbnail_url = dto.thumbnail_url;
       if (typeof dto.topic_type !== "undefined") lesson.topic_type = dto.topic_type;
       if (typeof dto.level !== "undefined") lesson.level = dto.level;
+      if (typeof dto.isLock !== "undefined") lesson.isLock = dto.isLock;
 
       await queryRunner.manager.save(lesson);
 
