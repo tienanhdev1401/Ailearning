@@ -8,6 +8,7 @@ import ListenSelectMiniGame from "./ListenSelectMiniGame";
 import ExamMiniGame from "./ExamMiniGame";
 import TrueFalseMiniGame from "./TrueFalseMiniGame";
 import TypingChallengeMiniGame from "./TypingChallengeMiniGame";
+import FlipCardMiniGame from "./FlipCardMiniGame";
 import { useToast } from "../../../context/ToastContext";
 
 import { Editor } from "@tinymce/tinymce-react";
@@ -78,6 +79,14 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 		const removeTypingHint = (index) => {
 			setTypingHints((prev) => prev.filter((_, idx) => idx !== index));
 		};
+        
+        // FLIP_CARD fields
+        const [flipCards, setFlipCards] = useState([]);
+        const addFlipCard = () => setFlipCards([...flipCards, { term: "", definition: "" }]);
+        const updateFlipCard = (idx, field, val) => {
+            const copy = [...flipCards]; copy[idx] = { ...copy[idx], [field]: val }; setFlipCards(copy);
+        };
+        const removeFlipCard = (idx) => setFlipCards(flipCards.filter((_, i) => i !== idx));
 
 		// LESSON fields
 		const [content, setContent] = useState("");
@@ -157,7 +166,12 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 					hints: typingHints.map((hint) => hint.trim()).filter(Boolean),
 					...(typingTimeLimit === "" ? {} : { timeLimitSeconds: Math.floor(numericLimit) }),
 				};
-			}
+			} else if (type === "flip_card") {
+                if (flipCards.length === 0) return toast.warning("Cần ít nhất 1 thẻ");
+                if (flipCards.some(c => !c.term.trim() || !c.definition.trim()))
+                    return toast.warning("Vui lòng điền đủ Thuật ngữ và Định nghĩa");
+                resources = { cards: flipCards.map(c => ({ term: c.term.trim(), definition: c.definition.trim() })) };
+            }
 
 			try {
 				setSaving(true);
@@ -508,6 +522,33 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 							</div>
 						</div>
 					)}
+                    
+                    {type === "flip_card" && (
+                        <div>
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                <h6>Thẻ ghi nhớ (Cards)</h6>
+                                <button className="btn btn-sm btn-outline-primary" onClick={addFlipCard}>Thêm thẻ</button>
+                            </div>
+                            {flipCards.map((card, idx) => (
+                                <div key={idx} className="card mb-2 bg-light">
+                                    <div className="card-body">
+                                        <div className="row g-2 align-items-center">
+                                            <div className="col-md-5">
+                                                <input className="form-control" placeholder="Thuật ngữ" value={card.term} onChange={(e) => updateFlipCard(idx, "term", e.target.value)} />
+                                            </div>
+                                            <div className="col-md-5">
+                                                <input className="form-control" placeholder="Định nghĩa" value={card.definition} onChange={(e) => updateFlipCard(idx, "definition", e.target.value)} />
+                                            </div>
+                                            <div className="col-md-2 d-flex justify-content-end">
+                                                <button className="btn btn-sm btn-outline-danger" onClick={() => removeFlipCard(idx)}>X</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
           <div className="d-flex align-items-center mb-3">
 						<div className="ms-auto">
 							<button className="btn btn-sm btn-outline-secondary me-2" onClick={onCancel}>Hủy</button>
@@ -648,6 +689,7 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 							<option value="exam">exam</option>
 							<option value="true_false">true_false</option>
 							<option value="typing_challenge">typing_challenge</option>
+							<option value="flip_card">flip_card</option>
 						</select>
 					</div>
 					{/* render form for selected addType */}
@@ -758,7 +800,14 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 									onSave={(payload) => handleSaveDetail(selected.id, payload)}
 									onDelete={() => handleDeleteDetail(selected.id)}
 								/>
-							) : (
+							) : (selected.type === "flip_card") ? (
+                                <FlipCardMiniGame
+                                    minigame={selected}
+                                    onClose={closeDetail}
+                                    onSave={(payload) => handleSaveDetail(selected.id, payload)}
+                                    onDelete={() => handleDeleteDetail(selected.id)}
+                                />
+                            ) : (
 								<div className="card p-3">
 									<div className="d-flex justify-content-between">
 										<h5>Minigame: {selected.type}</h5>

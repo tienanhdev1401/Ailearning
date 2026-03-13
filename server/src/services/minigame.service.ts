@@ -7,6 +7,7 @@ import { SentenceBuilderMiniGame } from "../models/minigameImp/sentence_builder"
 import { ListenSelectMiniGame } from "../models/minigameImp/listen-select-minigame";
 import { TrueFalseMiniGame } from "../models/minigameImp/true-false-minigame";
 import { TypingChallengeMiniGame } from "../models/minigameImp/typing-challenge-minigame";
+import { FlipCardMiniGame } from "../models/minigameImp/flip-card-minigame";
 import { Activity } from "../models/activity";
 import ApiError from "../utils/ApiError";
 import { HttpStatusCode } from "axios";
@@ -38,6 +39,8 @@ export class MiniGameService {
         return new TrueFalseMiniGame(dto.prompt, dto.resources as any, activity);
       case MiniGameType.TYPING_CHALLENGE:
         return new TypingChallengeMiniGame(dto.prompt, dto.resources as any, activity);
+      case MiniGameType.FLIP_CARD:
+        return new FlipCardMiniGame(dto.prompt, dto.resources as any, activity);
       default:
         throw new ApiError(HttpStatusCode.BadRequest, `Loại minigame không hợp lệ: ${dto.type}`);
     }
