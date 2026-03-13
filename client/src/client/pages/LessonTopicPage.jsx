@@ -96,7 +96,7 @@ const LessonTopiCPage = () => {
                         style={{ height: "180px", objectFit: "cover" }}
                       />
                       <span className="badge bg-primary position-absolute top-0 end-0 m-2">
-                        {lesson.level }
+                        {lesson.level}
                       </span>
                       <div className="position-absolute bottom-0 start-0 m-2 d-flex gap-2">
                         <span className="badge bg-danger">YouTube</span>
@@ -105,6 +105,25 @@ const LessonTopiCPage = () => {
                       <span className="badge bg-dark bg-opacity-75 position-absolute top-0 start-0 m-2">
                         🎧 {lesson.views || 0}
                       </span>
+                      {lesson.isLock && (
+                        <div
+                          className="position-absolute d-flex align-items-center justify-content-center text-white rounded-circle border border-2 border-white shadow-sm"
+                          style={{
+                            bottom: "5px",
+                            right: "5px",
+                            width: "45px",
+                            height: "45px",
+                            opacity: "0.95",
+                            background: "linear-gradient(135deg, #ff9a00 0%, #ff5e00 100%)",
+                            boxShadow: "0 4px 15px rgba(255, 154, 0, 0.4)",
+                            zIndex: 5
+                          }}
+                          title="VIP Lesson"
+                        >
+                          <span style={{ fontSize: "20px" }}>💎</span>
+                          <span style={{ fontSize: "9px", fontWeight: "bold", position: "absolute", bottom: "3px" }}>VIP</span>
+                        </div>
+                      )}
                     </div>
                     <div className="card-body d-flex flex-column" style={{ minHeight: "100px" }}>
                       <h6

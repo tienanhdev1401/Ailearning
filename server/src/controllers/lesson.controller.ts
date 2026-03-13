@@ -5,6 +5,11 @@ import { Request, Response, NextFunction } from "express";
 import { CreateLessonDto } from "../dto/request/CreateLessonDto";
 import { UpdateLessonDto } from "../dto/request/UpdateLessonDto";
 import { plainToInstance } from "class-transformer";
+import { SubscriptionService } from "../services/subscription.service";
+import PACKAGE_TYPE from "../enums/packageType.enum";
+import USER_ROLE from "../enums/userRole.enum";
+
+const subscriptionService = new SubscriptionService();
 
 class LessonController {
   static async createLesson(req: Request & { file?: any }, res: Response, next: NextFunction) {
@@ -77,6 +82,25 @@ class LessonController {
         throw new ApiError(HttpStatusCode.BadRequest, "Missing lesson id");
       }
       const lesson = await LessonService.getLessonById(Number(id));
+      
+      // VIP Access Check
+      if (lesson.lesson.isLock) {
+        const user = (req as any).user;
+        let hasAccess = false;
+
+        if (user) {
+          if (user.role === USER_ROLE.ADMIN || user.role === USER_ROLE.STAFF) {
+            hasAccess = true;
+          } else if (user.role === USER_ROLE.USER) {
+            hasAccess = await subscriptionService.checkUserAccess(user.id, PACKAGE_TYPE.VIDEO_LESSON);
+          }
+        }
+
+        if (!hasAccess) {
+          throw new ApiError(HttpStatusCode.Forbidden, "Bạn cần mua gói VIP để xem bài học này");
+        }
+      }
+
       console.log(lesson);
       res.status(HttpStatusCode.Ok).json(lesson);
     } catch (error) {
