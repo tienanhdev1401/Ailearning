@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { useParams } from "react-router-dom";
 import successSound from "../sounds/success.mp3";
-
+import { useParams, useNavigate } from "react-router-dom";
 import lessonService from "../services/lessonService";
+import { useToast } from "../../context/ToastContext";
 
 
 export default function VideoPraticePage() {
   // Lay lessonId từ URL param
   const { lessonId } = useParams();
+  const navigate = useNavigate();
+  const toast = useToast();
 
   const [lesson, setLesson] = useState(null);
   const [words, setWords] = useState([]);
@@ -21,12 +23,13 @@ export default function VideoPraticePage() {
   const [currentTime, setCurrentTime] = useState(0);
   const [currentSegment, setCurrentSegment] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-//   const [videoStartTime, setVideoStartTime] = useState(null);
+  //   const [videoStartTime, setVideoStartTime] = useState(null);
   const [intervalId] = useState(null);
   const [player, setPlayer] = useState(null);
   const [segmentCompleted, setSegmentCompleted] = useState(false);
   const [autoPaused, setAutoPaused] = useState(false);
   const [youtubeAPIReady, setYoutubeAPIReady] = useState(false); // Thêm state này
+  const [showVipModal, setShowVipModal] = useState(false);
 
   const segmentRefs = useRef([]);
 
@@ -58,39 +61,39 @@ export default function VideoPraticePage() {
   // returns a numeric `second` per segment so front-end seeks directly using
   // `Number(s.second)` and no longer needs SRT parsing here.
 
-//   const getCurrentSegment = (time) => {
-//     if (!lesson) return null;
+  //   const getCurrentSegment = (time) => {
+  //     if (!lesson) return null;
 
-//     for (let i = 0; i < lesson.subtitles.length; i++) {
-//       const subtitle = lesson.subtitles[i];
-//       const startTime = timeToSeconds(subtitle.start_time);
-//       const endTime = timeToSeconds(subtitle.end_time);
+  //     for (let i = 0; i < lesson.subtitles.length; i++) {
+  //       const subtitle = lesson.subtitles[i];
+  //       const startTime = timeToSeconds(subtitle.start_time);
+  //       const endTime = timeToSeconds(subtitle.end_time);
 
-//       if (time >= startTime && time <= endTime) {
-//         return i;
-//       }
-//     }
+  //       if (time >= startTime && time <= endTime) {
+  //         return i;
+  //       }
+  //     }
 
-//     for (let i = 0; i < lesson.subtitles.length; i++) {
-//       const startTime = timeToSeconds(lesson.subtitles[i].start_time);
-//       if (time < startTime) {
-//         return i;
-//       }
-//     }
+  //     for (let i = 0; i < lesson.subtitles.length; i++) {
+  //       const startTime = timeToSeconds(lesson.subtitles[i].start_time);
+  //       if (time < startTime) {
+  //         return i;
+  //       }
+  //     }
 
-//     return null;
-//   };
+  //     return null;
+  //   };
 
   // Update words based on current segment
   const updateWordsForSegment = useCallback((segmentIndex) => {
-    if (!lesson || segmentIndex >= lesson.subtitles.length) {
+    if (!lesson || segmentIndex >= (lesson?.subtitles?.length || 0)) {
       return;
     }
 
-  const currentSubtitle = lesson.subtitles[segmentIndex];
-  const segmentWords = (currentSubtitle.text || '')
-        .split(" ")
-        .filter((w) => w.length >= 1);
+    const currentSubtitle = lesson?.subtitles?.[segmentIndex];
+    const segmentWords = (currentSubtitle.text || '')
+      .split(" ")
+      .filter((w) => w.length >= 1);
     setWords(segmentWords);
 
     // ensure revealedMap has an entry for this segment
@@ -189,15 +192,19 @@ export default function VideoPraticePage() {
         });
 
         // compute total words from subtitles text
-        const total = subtitles.reduce((sum, s) => sum + (s.text ? s.text.split(' ').filter(w => w.length>0).length : 0), 0);
+        const total = subtitles.reduce((sum, s) => sum + (s.text ? s.text.split(' ').filter(w => w.length > 0).length : 0), 0);
         setTotalWords(total);
         // initialize revealedMap based on text words
-        setRevealedMap(subtitles.map(s => Array((s.text || '').split(' ').filter(w => w.length>0).length).fill(false)));
+        setRevealedMap(subtitles.map(s => Array((s.text || '').split(' ').filter(w => w.length > 0).length).fill(false)));
         // initialize typedMap
-        setTypedMap(subtitles.map(s => Array((s.text || '').split(' ').filter(w => w.length>0).length).fill(false)));
+        setTypedMap(subtitles.map(s => Array((s.text || '').split(' ').filter(w => w.length > 0).length).fill(false)));
       } catch (err) {
         console.error('Lỗi fetch lesson:', err);
-        // keep loading false and show error in console; UI already handles empty data
+        if (err.response?.status === 403) {
+          setShowVipModal(true);
+        } else {
+          toast.error("Không thể tải bài học. Vui lòng thử lại sau.");
+        }
       } finally {
         setLoading(false);
       }
@@ -206,10 +213,10 @@ export default function VideoPraticePage() {
   }, [lessonId]);
 
   useEffect(() => {
-  if (lesson && lesson.subtitles.length > 0) {
-    updateWordsForSegment(0);
-  }
-}, [lesson, updateWordsForSegment]);
+    if (lesson && (lesson?.subtitles?.length || 0) > 0) {
+      updateWordsForSegment(0);
+    }
+  }, [lesson, updateWordsForSegment]);
 
   useEffect(() => {
     if (!lesson || !lesson.video_url || !youtubeAPIReady) {
@@ -256,8 +263,8 @@ export default function VideoPraticePage() {
     }
 
     try {
-        // eslint-disable-next-line no-unused-vars
-        const newPlayer = new window.YT.Player('youtube-player', {
+      // eslint-disable-next-line no-unused-vars
+      const newPlayer = new window.YT.Player('youtube-player', {
         height: '100%',
         width: '100%',
         videoId: videoId,
@@ -299,9 +306,9 @@ export default function VideoPraticePage() {
       return;
     }
 
-    if (currentSegment !== null && currentSegment < lesson.subtitles.length) {
+    if (currentSegment !== null && currentSegment < (lesson?.subtitles?.length || 0)) {
       // upstream provides `second` per segment; use next segment's second as boundary if present
-      const nextSeg = lesson.subtitles[currentSegment + 1];
+      const nextSeg = lesson?.subtitles?.[currentSegment + 1];
       const endTime = nextSeg ? Number(nextSeg.second) : null;
 
       if (endTime !== null && currentTime >= endTime && !segmentCompleted) {
@@ -348,9 +355,9 @@ export default function VideoPraticePage() {
     if (!lesson) {
       return;
     }
-    if (currentSegment < lesson.subtitles.length - 1) {
+    if (currentSegment < (lesson?.subtitles?.length || 0) - 1) {
       const next = currentSegment + 1;
-      const start = Number(lesson.subtitles[next].second);
+      const start = Number(lesson?.subtitles?.[next]?.second);
       setCurrentSegment(next);
       updateWordsForSegment(next);
       setSegmentCompleted(false);
@@ -361,8 +368,8 @@ export default function VideoPraticePage() {
     }
   };
   const restartCurrentSegment = () => {
-    const currentSubtitle = lesson.subtitles[currentSegment];
-    const startTime = Number(currentSubtitle.second);
+    const currentSubtitle = lesson?.subtitles?.[currentSegment];
+    const startTime = Number(currentSubtitle?.second);
     seekToTime(startTime);
     setSegmentCompleted(false);
     setAutoPaused(false);
@@ -407,31 +414,6 @@ export default function VideoPraticePage() {
       if (!copy[currentSegment][index]) {
         copy[currentSegment][index] = true;
       }
-      
-      // Check if all words are now revealed after this click (both typed and clicked)
-      const typedArr = (typedMap && typedMap[currentSegment]) ? typedMap[currentSegment] : Array(words.length).fill(false);
-      const allWordsRevealed = copy[currentSegment].length > 0 && 
-        copy[currentSegment].every((clicked, i) => clicked || typedArr[i]);
-      
-      if (allWordsRevealed && !segmentSuccess) {
-        // Fill input with the complete sentence
-        const full = (lesson?.subtitles?.[currentSegment]?.text) || '';
-        setInputText(full);
-        
-        // Mark segment as completed and successful
-        setSegmentSuccess(true);
-        setSegmentCompleted(true);
-        
-        // Play success sound
-        try {
-          const audio = new Audio(successSound);
-          audio.volume = 1;
-          audio.play().catch((err) => console.warn("Audio play blocked:", err));
-        } catch (err) {
-          console.warn("Audio error:", err);
-        }
-      }
-      
       return copy;
     });
   };
@@ -444,33 +426,16 @@ export default function VideoPraticePage() {
       copy[currentSegment] = Array(words.length).fill(true);
       return copy;
     });
-    
-    // fill input with whole sentence
-    const full = (lesson?.subtitles?.[currentSegment]?.text) || '';
-    setInputText(full);
-    
-    // mark segment completed and successful
-    setSegmentCompleted(true);
-    setSegmentSuccess(true);
-    
-    // play success sound like when typing correctly
-    try {
-      const audio = new Audio(successSound);
-      audio.volume = 1;
-      audio.play().catch((err) => console.warn("Audio play blocked:", err));
-    } catch (err) {
-      console.warn("Audio error:", err);
-    }
   };
 
   useEffect(() => {
     if (segmentRefs.current[currentSegment]) {
-        segmentRefs.current[currentSegment].scrollIntoView({
+      segmentRefs.current[currentSegment].scrollIntoView({
         behavior: "smooth",
         block: "nearest", // scroll sao cho segment hiện tại vừa vặn trong view
-        });
+      });
     }
-    }, [currentSegment]);
+  }, [currentSegment]);
 
   const handleInputChange = (e) => {
     const raw = e.target.value;
@@ -483,9 +448,9 @@ export default function VideoPraticePage() {
       if (!copy[currentSegment]) {
         copy[currentSegment] = Array(words.length).fill(false);
       }
-      
+
       const typedArray = Array(words.length).fill(false);
-      
+
       // Match tokens against words in strict order - must type all words sequentially
       for (let i = 0; i < Math.min(tokens.length, words.length); i++) {
         const wordNorm = normalizeWord(words[i] || '');
@@ -496,37 +461,40 @@ export default function VideoPraticePage() {
           break;
         }
       }
-      
-      copy[currentSegment] = typedArray;
 
-      // Check if all words are completed (either typed or clicked)
-      const clickRevealed = (revealedMap && revealedMap[currentSegment]) ? revealedMap[currentSegment] : Array(words.length).fill(false);
-      const allWordsRevealed = words.length > 0 && 
-        words.every((_, i) => typedArray[i] || clickRevealed[i]);
-      
-      if (allWordsRevealed && !segmentSuccess) {
-        setSegmentSuccess(true);
-        setSegmentCompleted(true);
-        try {
-          const audio = new Audio(successSound);
-          audio.volume = 1;
-          audio.play().catch((err) => console.warn("Audio play blocked:", err));
-        } catch (err) {
-          console.warn("Audio error:", err);
-        }
-      }
-      
+      copy[currentSegment] = typedArray;
       return copy;
     });
   };
 
-  // Keep local `revealed` in sync as the union of clicked reveals and typed reveals
   useEffect(() => {
     const clickRevealed = (revealedMap && revealedMap[currentSegment]) ? revealedMap[currentSegment] : Array(words.length).fill(false);
     const typedRevealed = (typedMap && typedMap[currentSegment]) ? typedMap[currentSegment] : Array(words.length).fill(false);
     const combined = clickRevealed.map((clicked, i) => clicked || typedRevealed[i]);
     setRevealed(combined);
-  }, [revealedMap, typedMap, currentSegment, words.length]);
+
+    // Effect for segment completion
+    const allWordsRevealed = words.length > 0 && combined.every(Boolean);
+    if (allWordsRevealed && !segmentSuccess) {
+      setSegmentSuccess(true);
+      setSegmentCompleted(true);
+
+      // Fill input if not already full
+      const full = (lesson?.subtitles?.[currentSegment]?.text) || '';
+      if (normalizeWord(inputText) !== normalizeWord(full)) {
+        setInputText(full);
+      }
+
+      // Play success sound
+      try {
+        const audio = new Audio(successSound);
+        audio.volume = 1;
+        audio.play().catch((err) => console.warn("Audio play blocked:", err));
+      } catch (err) {
+        console.warn("Audio error:", err);
+      }
+    }
+  }, [revealedMap, typedMap, currentSegment, words, segmentSuccess, lesson, inputText]);
 
   // Overall progress based on total words revealed across all segments
   const revealedCount = revealedMap ? revealedMap.reduce((sum, arr) => sum + (arr ? arr.filter(Boolean).length : 0), 0) : 0;
@@ -540,14 +508,14 @@ export default function VideoPraticePage() {
   // completed or the user clicks to reveal.
   const partialPrefixLengths = (() => {
     try {
-      if (!lesson || !lesson.subtitles || !lesson.subtitles[currentSegment]) {
+      if (!lesson || !lesson.subtitles || !lesson?.subtitles?.[currentSegment]) {
         return [];
       }
-      const curWords = (lesson.subtitles[currentSegment].text || '').split(' ').filter(w => w.length > 0);
+      const curWords = (lesson?.subtitles?.[currentSegment]?.text || '').split(' ').filter(w => w.length > 0);
       const tokens = inputText.trim().toLowerCase().split(/\s+/).filter(Boolean).map(t => normalizeWord(t));
 
       const prefixLens = Array(curWords.length).fill(0);
-      
+
       // Match tokens against words in strict sequential order
       for (let i = 0; i < curWords.length && i < tokens.length; i++) {
         const wordNorm = normalizeWord(curWords[i] || '');
@@ -631,7 +599,7 @@ export default function VideoPraticePage() {
               <div className="time-display text-center mt-2 text-muted">
                 {lesson ? (
                   <div>
-                    <div>Segment {currentSegment + 1} of {lesson.subtitles.length}</div>
+                    <div>Segment {currentSegment + 1} of {lesson?.subtitles?.length || 0}</div>
                     {/* time hidden by request */}
                     <div className="small text-primary">
                       {isPlaying ? "▶️ Playing" : "⏸️ Paused"}
@@ -652,12 +620,12 @@ export default function VideoPraticePage() {
               <div className="controls mt-3">
                 <div className="d-grid gap-2">
                   <div className="btn-group" role="group">
-                    <button 
+                    <button
                       className="btn btn-outline-secondary btn-sm"
                       onClick={() => {
                         if (currentSegment > 0) {
                           const prevSegment = currentSegment - 1;
-                          const newTime = Number(lesson.subtitles[prevSegment].second);
+                          const newTime = Number(lesson?.subtitles?.[prevSegment]?.second);
                           seekToTime(newTime);
                           setCurrentSegment(prevSegment);
                           updateWordsForSegment(prevSegment);
@@ -669,12 +637,12 @@ export default function VideoPraticePage() {
                     >
                       <i className="bi bi-skip-backward"></i>
                     </button>
-                    <button 
+                    <button
                       className="btn btn-outline-secondary btn-sm"
                       onClick={() => {
-                        if (currentSegment < lesson.subtitles.length - 1) {
+                        if (currentSegment < (lesson?.subtitles?.length || 0) - 1) {
                           const nextSegment = currentSegment + 1;
-                          const newTime = Number(lesson.subtitles[nextSegment].second);
+                          const newTime = Number(lesson?.subtitles?.[nextSegment]?.second);
                           seekToTime(newTime);
                           setCurrentSegment(nextSegment);
                           updateWordsForSegment(nextSegment);
@@ -682,14 +650,14 @@ export default function VideoPraticePage() {
                           setAutoPaused(false);
                         }
                       }}
-                      disabled={currentSegment >= lesson.subtitles.length - 1}
+                      disabled={currentSegment >= (lesson?.subtitles?.length || 0) - 1}
                     >
                       <i className="bi bi-skip-forward"></i>
                     </button>
                   </div>
                   {segmentCompleted ? (
                     <div className="d-grid gap-2">
-                      <button 
+                      <button
                         className="btn btn-outline-primary btn-control w-100"
                         onClick={restartCurrentSegment}
                       >
@@ -698,7 +666,7 @@ export default function VideoPraticePage() {
                       </button>
                     </div>
                   ) : (
-                    <button 
+                    <button
                       className="btn btn-primary btn-control"
                       onClick={isPlaying ? handleVideoPause : handleVideoPlay}
                     >
@@ -706,7 +674,7 @@ export default function VideoPraticePage() {
                       {isPlaying ? 'Pause' : 'Start'}
                     </button>
                   )}
-                  <button 
+                  <button
                     className="btn btn-outline-primary btn-control"
                     onClick={() => {
                       seekToTime(0);
@@ -735,16 +703,16 @@ export default function VideoPraticePage() {
                 className="form-control transcription-area"
                 placeholder="Gõ câu trả lời của bạn ở đây..."
                 style={{
-                    minHeight: 150,
-                    borderRadius: 8,
-                    padding: 15,
-                    resize: "vertical",
+                  minHeight: 150,
+                  borderRadius: 8,
+                  padding: 15,
+                  resize: "vertical",
                 }}
                 value={inputText}
                 onChange={(e) => handleInputChange(e)}
-                ></textarea>
+              ></textarea>
 
-                <div className="masked-words-header d-flex justify-content-between align-items-center mt-3 mb-2 pb-2 border-bottom">
+              <div className="masked-words-header d-flex justify-content-between align-items-center mt-3 mb-2 pb-2 border-bottom">
                 <h6 className="mb-0">Các từ bị ẩn</h6>
               </div>
 
@@ -759,15 +727,15 @@ export default function VideoPraticePage() {
                       className="word-item d-flex flex-column align-items-center"
                     >
                       <div
-                      className={
-                        "eye-icon d-flex align-items-center justify-content-center rounded-circle " +
-                        (revealed[index] ? "bg-success-subtle" : "bg-body-secondary")
-                      }
-                      style={{
-                        cursor: revealed[index] ? 'default' : 'pointer',
-                        width: 30,
-                        height: 30,
-                      }}
+                        className={
+                          "eye-icon d-flex align-items-center justify-content-center rounded-circle " +
+                          (revealed[index] ? "bg-success-subtle" : "bg-body-secondary")
+                        }
+                        style={{
+                          cursor: revealed[index] ? 'default' : 'pointer',
+                          width: 30,
+                          height: 30,
+                        }}
                         onClick={() => {
                           if (!revealed[index]) {
                             toggleWord(index);
@@ -782,13 +750,13 @@ export default function VideoPraticePage() {
                         )}
                       </div>
                       <div
-                      className={
-                        "word-chip mt-1 px-3 py-2 rounded-pill border text-center " +
-                        (revealed[index] ? "bg-primary-subtle border-primary" : "bg-body border-secondary-subtle")
-                      }
-                      style={{
-                        minWidth: 80,
-                      }}
+                        className={
+                          "word-chip mt-1 px-3 py-2 rounded-pill border text-center " +
+                          (revealed[index] ? "bg-primary-subtle border-primary" : "bg-body border-secondary-subtle")
+                        }
+                        style={{
+                          minWidth: 80,
+                        }}
                       >
                         {display}
                       </div>
@@ -797,7 +765,7 @@ export default function VideoPraticePage() {
                 })}
               </div>
 
-              
+
 
               {segmentSuccess ? (
                 <div className="alert alert-success text-center mb-3">
@@ -810,37 +778,37 @@ export default function VideoPraticePage() {
                 </p>
               )}
 
-                <div className="action-buttons d-flex gap-2 mt-3">
-                  {!segmentSuccess && (
-                    <button
-                      className="btn btn-action btn-reveal btn-danger"
-                      onClick={revealAllCurrentSegment}
-                    >
-                      <i className="bi bi-eye-fill me-2"></i>Hiện tất cả từ
-                    </button>
-                  )}
+              <div className="action-buttons d-flex gap-2 mt-3">
+                {!segmentSuccess && (
                   <button
-                    className="btn btn-action btn-next btn-primary ms-auto"
-                    onClick={() => {
-                      // behave like the small skip-forward control: go to next segment and seek
-                      if (!lesson) {
-                        return;
-                      }
-                      if (currentSegment < lesson.subtitles.length - 1) {
-                        const nextSegment = currentSegment + 1;
-                        const newTime = Number(lesson.subtitles[nextSegment].second);
-                        seekToTime(newTime);
-                        setCurrentSegment(nextSegment);
-                        updateWordsForSegment(nextSegment);
-                        setSegmentCompleted(false);
-                        setAutoPaused(false);
-                      }
-                    }}
-                    disabled={!lesson || currentSegment >= (lesson?.subtitles?.length || 0) - 1}
+                    className="btn btn-action btn-reveal btn-danger"
+                    onClick={revealAllCurrentSegment}
                   >
-                    Tiếp theo <i className="bi bi-arrow-right ms-2"></i>
+                    <i className="bi bi-eye-fill me-2"></i>Hiện tất cả từ
                   </button>
-                </div>
+                )}
+                <button
+                  className="btn btn-action btn-next btn-primary ms-auto"
+                  onClick={() => {
+                    // behave like the small skip-forward control: go to next segment and seek
+                    if (!lesson) {
+                      return;
+                    }
+                    if (currentSegment < (lesson?.subtitles?.length || 0) - 1) {
+                      const nextSegment = currentSegment + 1;
+                      const newTime = Number(lesson?.subtitles?.[nextSegment]?.second);
+                      seekToTime(newTime);
+                      setCurrentSegment(nextSegment);
+                      updateWordsForSegment(nextSegment);
+                      setSegmentCompleted(false);
+                      setAutoPaused(false);
+                    }
+                  }}
+                  disabled={!lesson || currentSegment >= (lesson?.subtitles?.length || 0) - 1}
+                >
+                  Tiếp theo <i className="bi bi-arrow-right ms-2"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -866,50 +834,120 @@ export default function VideoPraticePage() {
             </div>
 
             <div className="transcript-list" style={{ maxHeight: 450, overflowY: "auto" }}>
-                {lesson &&
-          lesson.subtitles.map((s, index) => (
-            <div
-            key={s.id ?? index}
-                        ref={(el) => (segmentRefs.current[index] = el)}
-                        className={`transcript-item mb-3 p-3 rounded border-start border-4 ${
-                          index === currentSegment ? "bg-primary-subtle border-primary" : "bg-body border-primary"
-                        }`}
-                        style={{ cursor: "pointer", boxShadow: "0 2px 5px rgba(0,0,0,0.05)" }}
-            onClick={() => {
-              setCurrentSegment(index);
-              updateWordsForSegment(index);
-              setSegmentCompleted(false);
-              setAutoPaused(false);
-              const newTime = Number(s.second);
-              seekToTime(newTime);
-            }}
-                        >
-                        <div className="transcript-header d-flex justify-content-between mb-2 text-muted">
-              <span>#{s.index} {index === currentSegment && "👈 Current"}</span>
-                            <i className="bi bi-pencil"></i>
-                        </div>
-            <div className="transcript-text">
-              {(s.text || '').split(' ').filter(w => w.length > 0).map((w, wi, arr) => {
-                const clickRevealed = (revealedMap && revealedMap[index]) ? revealedMap[index] : Array(arr.length).fill(false);
-                const typedRevealed = (typedMap && typedMap[index]) ? typedMap[index] : Array(arr.length).fill(false);
-                const isRevealed = clickRevealed[wi] || typedRevealed[wi];
-                // Only apply partial prefix for current segment
-                const prefixLen = (index === currentSegment) ? (partialPrefixLengths[wi] || 0) : 0;
-                const shown = isRevealed ? w : (prefixLen > 0 ? w.slice(0, prefixLen) + '*'.repeat(Math.max(0, w.length - prefixLen)) : '*'.repeat(w.length));
-                return (
-                  <span key={wi}>
-                    {shown}{wi < arr.length - 1 ? ' ' : ''}
-                  </span>
-                );
-              })}
-            </div>
-            {/* time hidden by request */}
-                        </div>
-                    ))}
+              {lesson?.subtitles?.map((s, index) => (
+                <div
+                  key={s.id ?? index}
+                  ref={(el) => (segmentRefs.current[index] = el)}
+                  className={`transcript-item mb-3 p-3 rounded border-start border-4 ${index === currentSegment ? "bg-primary-subtle border-primary" : "bg-body border-primary"
+                    }`}
+                  style={{ cursor: "pointer", boxShadow: "0 2px 5px rgba(0,0,0,0.05)" }}
+                  onClick={() => {
+                    setCurrentSegment(index);
+                    updateWordsForSegment(index);
+                    setSegmentCompleted(false);
+                    setAutoPaused(false);
+                    const newTime = Number(s.second);
+                    seekToTime(newTime);
+                  }}
+                >
+                  <div className="transcript-header d-flex justify-content-between mb-2 text-muted">
+                    <span>#{s.index} {index === currentSegment && "👈 Current"}</span>
+                    <i className="bi bi-pencil"></i>
+                  </div>
+                  <div className="transcript-text">
+                    {(s.text || '').split(' ').filter(w => w.length > 0).map((w, wi, arr) => {
+                      const clickRevealed = (revealedMap && revealedMap[index]) ? revealedMap[index] : Array(arr.length).fill(false);
+                      const typedRevealed = (typedMap && typedMap[index]) ? typedMap[index] : Array(arr.length).fill(false);
+                      const isRevealed = clickRevealed[wi] || typedRevealed[wi];
+                      // Only apply partial prefix for current segment
+                      const prefixLen = (index === currentSegment) ? (partialPrefixLengths[wi] || 0) : 0;
+                      const shown = isRevealed ? w : (prefixLen > 0 ? w.slice(0, prefixLen) + '*'.repeat(Math.max(0, w.length - prefixLen)) : '*'.repeat(w.length));
+                      return (
+                        <span key={wi}>
+                          {shown}{wi < arr.length - 1 ? ' ' : ''}
+                        </span>
+                      );
+                    })}
+                  </div>
+                  {/* time hidden by request */}
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
+
+      {/* VIP Access Modal */}
+      {showVipModal && (
+        <React.Fragment>
+          <div
+            className="modal-backdrop show"
+            style={{
+              backgroundColor: "rgba(0,0,0,0.7)",
+              zIndex: 10000
+            }}
+          ></div>
+          <div
+            className="modal show d-block"
+            tabIndex="-1"
+            style={{
+              zIndex: 10001,
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              overflowX: "hidden",
+              overflowY: "auto",
+              outline: 0
+            }}
+          >
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "20px", overflow: "hidden" }}>
+                <div className="modal-header border-0 pb-0 justify-content-end">
+                  <button type="button" className="btn-close" onClick={() => navigate(-1)} aria-label="Close"></button>
+                </div>
+                <div className="modal-body text-center pt-0 pb-4 px-4">
+                  <div
+                    className="d-inline-flex align-items-center justify-content-center text-white rounded-circle mb-4 shadow"
+                    style={{
+                      width: "80px",
+                      height: "80px",
+                      background: "linear-gradient(135deg, #ff9a00 0%, #ff5e00 100%)",
+                      fontSize: "2.5rem"
+                    }}
+                  >
+                    💎
+                  </div>
+                  <h3 className="fw-bold mb-3" style={{ color: "#333" }}>Nâng cấp VIP</h3>
+                  <p className="text-muted fs-5 mb-4">
+                    Bạn cần sở hữu gói <strong>VIP</strong> để mở khóa bài học này và tận hưởng đầy đủ tính năng cao cấp.
+                  </p>
+                  <div className="d-grid gap-3">
+                    <button
+                      className="btn btn-lg fw-bold text-white shadow-sm border-0"
+                      style={{
+                        background: "linear-gradient(135deg, #ff9a00 0%, #ff5e00 100%)",
+                        borderRadius: "12px",
+                        padding: "15px"
+                      }}
+                      onClick={() => navigate("/pricing")}
+                    >
+                      <i className="bi bi-cart-fill me-2"></i>Đăng ký VIP ngay
+                    </button>
+                    <button
+                      className="btn btn-link text-muted text-decoration-none fw-semibold"
+                      onClick={() => navigate(-1)}
+                    >
+                      Quay lại
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </React.Fragment>
+      )}
     </div>
   );
 }

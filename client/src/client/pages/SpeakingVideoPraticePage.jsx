@@ -5,13 +5,14 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import RecordRTC from "recordrtc";
 
 import successSound from "../sounds/success.mp3";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import lessonService from "../services/lessonService";
 import { useToast } from "../../context/ToastContext";
 
 export default function SpeakingVideoPraticePage() {
   // Lay lessonId từ URL param
   const { lessonId } = useParams();
+  const navigate = useNavigate();
   const toast = useToast();
 
   const [lesson, setLesson] = useState(null);
@@ -27,6 +28,7 @@ export default function SpeakingVideoPraticePage() {
   const [segmentCompleted, setSegmentCompleted] = useState(false);
   const [autoPaused, setAutoPaused] = useState(false);
   const [youtubeAPIReady, setYoutubeAPIReady] = useState(false);
+  const [showVipModal, setShowVipModal] = useState(false);
 
   // recording states
   const [isRecording, setIsRecording] = useState(false);
@@ -49,9 +51,9 @@ export default function SpeakingVideoPraticePage() {
 
   // Update words when segment changes
   const updateWordsForSegment = useCallback((segmentIndex) => {
-    if (!lesson || segmentIndex >= lesson.subtitles.length) return;
-    const currentSubtitle = lesson.subtitles[segmentIndex];
-    const segmentWords = (currentSubtitle.text || '').split(" ").filter(w => w.length >= 1);
+    if (!lesson || segmentIndex >= (lesson?.subtitles?.length || 0)) return;
+    const currentSubtitle = lesson?.subtitles?.[segmentIndex];
+    const segmentWords = (currentSubtitle?.text || '').split(" ").filter(w => w.length >= 1);
     setWords(segmentWords);
 
     setRevealedMap(prev => {
@@ -122,12 +124,17 @@ export default function SpeakingVideoPraticePage() {
           thumbnail_url: lessonData.thumbnail_url,
           subtitles
         });
-        const total = subtitles.reduce((sum, s) => sum + (s.text ? s.text.split(' ').filter(w => w.length>0).length : 0), 0);
+        const total = subtitles.reduce((sum, s) => sum + (s.text ? s.text.split(' ').filter(w => w.length > 0).length : 0), 0);
         setTotalWords(total);
-        setRevealedMap(subtitles.map(s => Array((s.text || '').split(' ').filter(w => w.length>0).length).fill(false)));
-        setTypedMap(subtitles.map(s => Array((s.text || '').split(' ').filter(w => w.length>0).length).fill(false)));
+        setRevealedMap(subtitles.map(s => Array((s.text || '').split(' ').filter(w => w.length > 0).length).fill(false)));
+        setTypedMap(subtitles.map(s => Array((s.text || '').split(' ').filter(w => w.length > 0).length).fill(false)));
       } catch (err) {
         console.error('Lỗi fetch lesson:', err);
+        if (err.response?.status === 403) {
+          setShowVipModal(true);
+        } else {
+          toast.error("Không thể tải bài học. Vui lòng thử lại sau.");
+        }
       } finally {
         setLoading(false);
       }
@@ -135,7 +142,7 @@ export default function SpeakingVideoPraticePage() {
     fetchLessonData();
   }, [lessonId]);
 
-  useEffect(() => { if (lesson && lesson.subtitles.length > 0) updateWordsForSegment(0); }, [lesson, updateWordsForSegment]);
+  useEffect(() => { if (lesson && (lesson?.subtitles?.length || 0) > 0) updateWordsForSegment(0); }, [lesson, updateWordsForSegment]);
 
   // YouTube player init (unchanged)
   useEffect(() => {
@@ -158,7 +165,7 @@ export default function SpeakingVideoPraticePage() {
     try {
       new window.YT.Player('youtube-player', {
         height: '100%', width: '100%', videoId,
-        playerVars: { 'playsinline':1,'controls':0,'disablekb':1,'modestbranding':1,'rel':0,'showinfo':0,'fs':0,'cc_load_policy':0 },
+        playerVars: { 'playsinline': 1, 'controls': 0, 'disablekb': 1, 'modestbranding': 1, 'rel': 0, 'showinfo': 0, 'fs': 0, 'cc_load_policy': 0 },
         events: {
           'onReady': (event) => setPlayer(event.target),
           'onStateChange': (event) => {
@@ -175,8 +182,8 @@ export default function SpeakingVideoPraticePage() {
   // Auto-pause and timer (unchanged)
   useEffect(() => {
     if (!lesson || !player) return;
-    if (currentSegment !== null && currentSegment < lesson.subtitles.length) {
-      const nextSeg = lesson.subtitles[currentSegment + 1];
+    if (currentSegment !== null && currentSegment < (lesson?.subtitles?.length || 0)) {
+      const nextSeg = lesson?.subtitles?.[currentSegment + 1];
       const endTime = nextSeg ? Number(nextSeg.second) : null;
       if (endTime !== null && currentTime >= endTime && !segmentCompleted) {
         if (player && typeof player.pauseVideo === "function") {
@@ -206,9 +213,9 @@ export default function SpeakingVideoPraticePage() {
   const handleVideoPause = () => pauseVideo();
   const continueToNextSegment = () => {
     if (!lesson) return;
-    if (currentSegment < lesson.subtitles.length - 1) {
+    if (currentSegment < (lesson?.subtitles?.length || 0) - 1) {
       const next = currentSegment + 1;
-      const start = Number(lesson.subtitles[next].second);
+      const start = Number(lesson?.subtitles?.[next]?.second);
       setCurrentSegment(next);
       updateWordsForSegment(next);
       setSegmentCompleted(false); setAutoPaused(false);
@@ -216,8 +223,8 @@ export default function SpeakingVideoPraticePage() {
     }
   };
   const restartCurrentSegment = () => {
-    const currentSubtitle = lesson.subtitles[currentSegment];
-    const startTime = Number(currentSubtitle.second);
+    const currentSubtitle = lesson?.subtitles?.[currentSegment];
+    const startTime = Number(currentSubtitle?.second);
     seekToTime(startTime); setSegmentCompleted(false); setAutoPaused(false); playVideo();
   };
   const seekToTime = (t) => { if (player) player.seekTo(t, true); };
@@ -231,10 +238,10 @@ export default function SpeakingVideoPraticePage() {
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(t => t.stop());
         }
-      } catch (e) {}
+      } catch (e) { }
       try {
         recorderRef.current && recorderRef.current.destroy && recorderRef.current.destroy();
-      } catch (e) {}
+      } catch (e) { }
       if (lastRecording && lastRecording.url) {
         URL.revokeObjectURL(lastRecording.url);
       }
@@ -263,7 +270,7 @@ export default function SpeakingVideoPraticePage() {
 
       // If there's an existing object URL for lastRecording, revoke it because we will replace it soon
       if (lastRecording && lastRecording.url) {
-        try { URL.revokeObjectURL(lastRecording.url); } catch (e) {}
+        try { URL.revokeObjectURL(lastRecording.url); } catch (e) { }
         setLastRecording(null);
       }
 
@@ -306,7 +313,7 @@ export default function SpeakingVideoPraticePage() {
       const url = URL.createObjectURL(blob);
       // revoke previous if any (already handled in startRecording but keep safe)
       if (lastRecording && lastRecording.url) {
-        try { URL.revokeObjectURL(lastRecording.url); } catch(e) {}
+        try { URL.revokeObjectURL(lastRecording.url); } catch (e) { }
       }
       setLastRecording({ blob, url });
 
@@ -337,7 +344,7 @@ export default function SpeakingVideoPraticePage() {
         const allGood = (data.words || []).every(w => w.label === 1);
         setSegmentSuccess(allGood);
         if (allGood) {
-          try { new Audio(successSound).play(); } catch (e) {}
+          try { new Audio(successSound).play(); } catch (e) { }
         }
       } catch (err) {
         console.error("Lỗi khi gọi API:", err);
@@ -352,10 +359,10 @@ export default function SpeakingVideoPraticePage() {
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(t => t.stop());
         }
-      } catch (e) {}
+      } catch (e) { }
 
       // destroy the recorder object but DO NOT revoke lastRecording blob/url here
-      try { recorderRef.current && recorderRef.current.destroy && recorderRef.current.destroy(); } catch(e){}
+      try { recorderRef.current && recorderRef.current.destroy && recorderRef.current.destroy(); } catch (e) { }
 
       recorderRef.current = null;
       streamRef.current = null;
@@ -382,7 +389,7 @@ export default function SpeakingVideoPraticePage() {
 
   // helper to render colored words using apiResult if available
   const renderSegmentText = () => {
-    const segmentText = lesson.subtitles[currentSegment].text || "";
+    const segmentText = lesson?.subtitles?.[currentSegment]?.text || "";
     const originalWords = segmentText.split(" ").filter(w => w.length > 0);
 
     if (apiResult && Array.isArray(apiResult.words) && apiResult.words.length > 0) {
@@ -390,8 +397,8 @@ export default function SpeakingVideoPraticePage() {
       return apiResult.words.map((w, i) => {
         const colorClass =
           w.label === 1 ? "text-success" :
-          w.label === 2 ? "text-warning" :
-          "text-danger";
+            w.label === 2 ? "text-warning" :
+              "text-danger";
         return (
           <span key={i} className={colorClass} style={{ fontWeight: 600, marginRight: 4 }}>
             {w.word}
@@ -437,14 +444,14 @@ export default function SpeakingVideoPraticePage() {
               {/* Video iframe */}
               <div className="video-container position-relative">
                 <div style={{ position: "relative", paddingTop: "50%", backgroundColor: "#000" }}>
-                  {lesson && (<div id="youtube-player" style={{ position: "absolute", top:0, left:0, width:"100%", height:"100%", borderRadius:8 }}></div>)}
+                  {lesson && (<div id="youtube-player" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", borderRadius: 8 }}></div>)}
                 </div>
               </div>
 
               <div className="time-display text-center mt-2 text-muted">
                 {lesson ? (
                   <div>
-                    <div>Segment {currentSegment + 1} of {lesson.subtitles.length}</div>
+                    <div>Segment {currentSegment + 1} of {lesson?.subtitles?.length || 0}</div>
                     <div className="small text-primary">{isPlaying ? "▶️ Playing" : "⏸️ Paused"}</div>
                     <div className="small text-info">Current Time: {Math.floor(currentTime / 60)}:{(currentTime % 60).toFixed(1).padStart(4, '0')}</div>
                     {autoPaused && !segmentCompleted && (
@@ -462,7 +469,7 @@ export default function SpeakingVideoPraticePage() {
                     <button className="btn btn-outline-secondary btn-sm" onClick={() => {
                       if (currentSegment > 0) {
                         const prevSegment = currentSegment - 1;
-                        const newTime = Number(lesson.subtitles[prevSegment].second);
+                        const newTime = Number(lesson?.subtitles?.[prevSegment]?.second);
                         seekToTime(newTime);
                         setCurrentSegment(prevSegment);
                         updateWordsForSegment(prevSegment);
@@ -472,15 +479,15 @@ export default function SpeakingVideoPraticePage() {
                       <i className="bi bi-skip-backward"></i>
                     </button>
                     <button className="btn btn-outline-secondary btn-sm" onClick={() => {
-                      if (currentSegment < lesson.subtitles.length - 1) {
+                      if (currentSegment < (lesson?.subtitles?.length || 0) - 1) {
                         const nextSegment = currentSegment + 1;
-                        const newTime = Number(lesson.subtitles[nextSegment].second);
+                        const newTime = Number(lesson?.subtitles?.[nextSegment]?.second);
                         seekToTime(newTime);
                         setCurrentSegment(nextSegment);
                         updateWordsForSegment(nextSegment);
                         setSegmentCompleted(false); setAutoPaused(false);
                       }
-                    }} disabled={currentSegment >= lesson.subtitles.length - 1}>
+                    }} disabled={currentSegment >= (lesson?.subtitles?.length || 0) - 1}>
                       <i className="bi bi-skip-forward"></i>
                     </button>
                   </div>
@@ -513,107 +520,107 @@ export default function SpeakingVideoPraticePage() {
                 <div className="segment-display mt-3 text-center">
                   {lesson?.subtitles?.length > 0 && (
                     <>
-                        <div style={{ textAlign: "center", width: "100%", position: "relative", overflow: "visible" }}>
-                            {/* inline-block để nội dung được căn giữa, và làm container relative cho score */}
-                            <div style={{ display: "inline-block", position: "relative" }}>
-                                <div className="fw-bold fs-5">
-                                {renderSegmentText()}
-                                </div>
+                      <div style={{ textAlign: "center", width: "100%", position: "relative", overflow: "visible" }}>
+                        {/* inline-block để nội dung được căn giữa, và làm container relative cho score */}
+                        <div style={{ display: "inline-block", position: "relative" }}>
+                          <div className="fw-bold fs-5">
+                            {renderSegmentText()}
+                          </div>
 
-                                {/* Điểm segment - nửa vòng tròn, đổi màu theo score */}
-                        {apiResult && typeof apiResult.overall_score === "number" && (() => {
-                                    const score = apiResult.overall_score;
-                                    let bgColor = "#e9f5ff";
-                                    let borderColor = "#007bff";
-                                    let textColor = "#007bff";
+                          {/* Điểm segment - nửa vòng tròn, đổi màu theo score */}
+                          {apiResult && typeof apiResult.overall_score === "number" && (() => {
+                            const score = apiResult.overall_score;
+                            let bgColor = "#e9f5ff";
+                            let borderColor = "#007bff";
+                            let textColor = "#007bff";
 
-                                    if (score < 40) { // dưới 40% => đỏ
-                                        bgColor = "rgba(220,53,69,0.1)";
-                                        borderColor = "#dc3545";
-                                        textColor = "#dc3545";
-                                    } else if (score >= 40 && score < 80) { // 40%-79% => vàng
-                                        bgColor = "rgba(255,193,7,0.12)";
-                                        borderColor = "#ffc107";
-                                        textColor = "#ffc107";
-                                    } else if (score >= 80 && score < 100) { // 80%-99% => xanh biển
-                                        bgColor = "rgba(13,110,253,0.12)";
-                                        borderColor = "#0d6efd";
-                                        textColor = "#0d6efd";
-                                    } else if (score === 100) { // 100% => xanh lá
-                                        bgColor = "rgba(25,135,84,0.12)";
-                                        borderColor = "#198754";
-                                        textColor = "#198754";
-                                    }
+                            if (score < 40) { // dưới 40% => đỏ
+                              bgColor = "rgba(220,53,69,0.1)";
+                              borderColor = "#dc3545";
+                              textColor = "#dc3545";
+                            } else if (score >= 40 && score < 80) { // 40%-79% => vàng
+                              bgColor = "rgba(255,193,7,0.12)";
+                              borderColor = "#ffc107";
+                              textColor = "#ffc107";
+                            } else if (score >= 80 && score < 100) { // 80%-99% => xanh biển
+                              bgColor = "rgba(13,110,253,0.12)";
+                              borderColor = "#0d6efd";
+                              textColor = "#0d6efd";
+                            } else if (score === 100) { // 100% => xanh lá
+                              bgColor = "rgba(25,135,84,0.12)";
+                              borderColor = "#198754";
+                              textColor = "#198754";
+                            }
 
-                                    return (
-                                        <span
-                                            style={{
-                                                position: "absolute",
-                                                left: "100%",
-                                                top: "50%",
-                                                transform: "translate(8px, -50%)",
-                                                width: "50px",
-                                                height: "25px",
-                                                display: "flex",
-                                                justifyContent: "center",
-                                                alignItems: "center",
-                                                borderTopLeftRadius: "50px",
-                                                borderTopRightRadius: "50px",
-                                                backgroundColor: bgColor,
-                                                border: `2px solid ${borderColor}`,
-                                                borderBottom: "none",
-                                                color: textColor,
-                                                fontWeight: "bold",
-                                                fontSize: "1.05rem",
-                                                zIndex: 20,
-                                                whiteSpace: "nowrap"
-                                            }}
-                                        >
-                                            {score}
-                                        </span>
-                                    );
-                                })()}
-                            </div>
+                            return (
+                              <span
+                                style={{
+                                  position: "absolute",
+                                  left: "100%",
+                                  top: "50%",
+                                  transform: "translate(8px, -50%)",
+                                  width: "50px",
+                                  height: "25px",
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                  borderTopLeftRadius: "50px",
+                                  borderTopRightRadius: "50px",
+                                  backgroundColor: bgColor,
+                                  border: `2px solid ${borderColor}`,
+                                  borderBottom: "none",
+                                  color: textColor,
+                                  fontWeight: "bold",
+                                  fontSize: "1.05rem",
+                                  zIndex: 20,
+                                  whiteSpace: "nowrap"
+                                }}
+                              >
+                                {score}
+                              </span>
+                            );
+                          })()}
                         </div>
+                      </div>
 
-                        {/* Hiển thị IPA của từng từ nếu có kết quả API */}
-                        {apiResult && Array.isArray(apiResult.words) && (
+                      {/* Hiển thị IPA của từng từ nếu có kết quả API */}
+                      {apiResult && Array.isArray(apiResult.words) && (
                         <div className="d-flex justify-content-center align-items-center gap-3 my-3">
-                            <div className="d-flex flex-column">
+                          <div className="d-flex flex-column">
                             {apiResult.words?.map((w, i) => (
-                                <div
+                              <div
                                 key={i}
                                 className="d-flex justify-content-center align-items-center my-1 text-center"
                                 style={{ gap: "1rem" }}
-                                >
+                              >
                                 <div className="text-muted">
-                                    <strong>{w.word}</strong>
+                                  <strong>{w.word}</strong>
                                 </div>
                                 <div>
-                                    <span className="badge bg-light text-dark me-2">
+                                  <span className="badge bg-light text-dark me-2">
                                     🎯 IPA của bạn {w.predicted_ipa}
-                                    </span>
-                                    <span className="badge bg-light text-dark">
+                                  </span>
+                                  <span className="badge bg-light text-dark">
                                     🎤 IPA của từ {w.target_ipa}
-                                    </span>
+                                  </span>
                                 </div>
-                                </div>
+                              </div>
                             ))}
-                            </div>
+                          </div>
                         </div>
-                        )}
+                      )}
 
-                        {/* Buttons */}
-                        <div className="d-flex justify-content-center gap-2 mt-3">
+                      {/* Buttons */}
+                      <div className="d-flex justify-content-center gap-2 mt-3">
                         <button className="btn btn-outline-secondary btn-sm" onClick={playLastRecording} disabled={!lastRecording}>
-                            <i className="bi bi-play-circle me-2"></i>Phát lại ghi âm
+                          <i className="bi bi-play-circle me-2"></i>Phát lại ghi âm
                         </button>
 
                         <button className={`btn ${isRecording ? 'btn-danger' : 'btn-primary'} btn-sm`} onClick={handleRecordButton} disabled={sending}>
-                            <i className={`bi ${isRecording ? 'bi-stop-fill' : 'bi-mic-fill'} me-2`}></i>
-                            {sending ? 'Đang gửi...' : (isRecording ? 'Dừng & Gửi' : 'Ghi âm')}
+                          <i className={`bi ${isRecording ? 'bi-stop-fill' : 'bi-mic-fill'} me-2`}></i>
+                          {sending ? 'Đang gửi...' : (isRecording ? 'Dừng & Gửi' : 'Ghi âm')}
                         </button>
-                        </div>
+                      </div>
                     </>
                   )}
                 </div>
@@ -639,13 +646,12 @@ export default function SpeakingVideoPraticePage() {
             </div>
 
             <div className="transcript-list" style={{ maxHeight: 450, overflowY: "auto" }}>
-              {lesson && lesson.subtitles.map((s, index) => (
+              {lesson?.subtitles?.map((s, index) => (
                 <div
                   key={s.id ?? index}
                   ref={(el) => (segmentRefs.current[index] = el)}
-                  className={`transcript-item mb-3 p-3 rounded border-start border-4 ${
-                    index === currentSegment ? "bg-primary-subtle border-primary" : "bg-body border-primary"
-                  }`}
+                  className={`transcript-item mb-3 p-3 rounded border-start border-4 ${index === currentSegment ? "bg-primary-subtle border-primary" : "bg-body border-primary"
+                    }`}
                   style={{ cursor: "pointer", boxShadow: "0 2px 5px rgba(0,0,0,0.05)" }}
                   onClick={() => {
                     setCurrentSegment(index);
@@ -670,6 +676,78 @@ export default function SpeakingVideoPraticePage() {
           </div>
         </div>
       </div>
+
+      {/* VIP Access Modal */}
+      {showVipModal && (
+        <React.Fragment>
+          <div
+            className="modal-backdrop show"
+            style={{
+              backgroundColor: "rgba(0,0,0,0.7)",
+              zIndex: 10000
+            }}
+          ></div>
+          <div
+            className="modal show d-block"
+            tabIndex="-1"
+            style={{
+              zIndex: 10001,
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              overflowX: "hidden",
+              overflowY: "auto",
+              outline: 0
+            }}
+          >
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "20px", overflow: "hidden" }}>
+                <div className="modal-header border-0 pb-0 justify-content-end">
+                  <button type="button" className="btn-close" onClick={() => navigate(-1)} aria-label="Close"></button>
+                </div>
+                <div className="modal-body text-center pt-0 pb-4 px-4">
+                  <div
+                    className="d-inline-flex align-items-center justify-content-center text-white rounded-circle mb-4 shadow"
+                    style={{
+                      width: "80px",
+                      height: "80px",
+                      background: "linear-gradient(135deg, #ff9a00 0%, #ff5e00 100%)",
+                      fontSize: "2.5rem"
+                    }}
+                  >
+                    💎
+                  </div>
+                  <h3 className="fw-bold mb-3" style={{ color: "#333" }}>Nâng cấp VIP</h3>
+                  <p className="text-muted fs-5 mb-4">
+                    Bạn cần sở hữu gói <strong>VIP</strong> để mở khóa bài học này và tận hưởng đầy đủ tính năng cao cấp.
+                  </p>
+                  <div className="d-grid gap-3">
+                    <button
+                      className="btn btn-lg fw-bold text-white shadow-sm border-0"
+                      style={{
+                        background: "linear-gradient(135deg, #ff9a00 0%, #ff5e00 100%)",
+                        borderRadius: "12px",
+                        padding: "15px"
+                      }}
+                      onClick={() => navigate("/pricing")}
+                    >
+                      <i className="bi bi-cart-fill me-2"></i>Đăng ký VIP ngay
+                    </button>
+                    <button
+                      className="btn btn-link text-muted text-decoration-none fw-semibold"
+                      onClick={() => navigate(-1)}
+                    >
+                      Quay lại
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </React.Fragment>
+      )}
     </div>
   );
 }
