@@ -111,9 +111,17 @@ const RoadmapDaysPage = () => {
 
   const updateRoadmap = async () => {
     try {
+      const freeCount = Number(roadmapForm.freeDayCount);
+      const totalDays = days.length;
+
+      if (freeCount > totalDays && freeCount !== -1) {
+        toast.error(`Số ngày học thử không được lớn hơn tổng số ngày trong lộ trình học`);
+        return;
+      }
+
       const body = {
         ...roadmapForm,
-        freeDayCount: Number(roadmapForm.freeDayCount)
+        freeDayCount: freeCount
       };
       await api.put(`/roadmaps/${roadmapId}`, body);
       toast.success("Cập nhật roadmap thành công");
