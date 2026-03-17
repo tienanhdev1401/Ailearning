@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import styles from "../../styles/MiniGameFlipCard.module.css";
+import { ThemeContext } from "../../../context/ThemeContext";
 
 const MiniGameFlipCard = ({ data, onNext }) => {
   const cards = useMemo(() => Array.isArray(data?.resources?.cards) ? data.resources.cards : [], [data]);
+  const { isDarkMode } = useContext(ThemeContext);
 
   const [mode, setMode] = useState("learning"); // learning | practice | completed
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -150,7 +152,7 @@ const MiniGameFlipCard = ({ data, onNext }) => {
                 </button>
                 <span className={styles.cardLabel}>Thuật ngữ</span>
                 <div className={styles.cardContent}>{cards[currentIndex].term}</div>
-                <div className="mt-4 text-muted small">Chạm để xem nghĩa</div>
+                <div className="mt-4 small" style={{ color: isDarkMode ? '#6c757d' : '#999' }}>Chạm để xem nghĩa</div>
               </div>
               <div className={styles.cardBack}>
                 <span className={styles.cardLabel}>Định nghĩa</span>
@@ -209,7 +211,7 @@ const MiniGameFlipCard = ({ data, onNext }) => {
       {mode === "completed" && (
         <div className={styles.completionContainer}>
           <h1 className={styles.completionText}>Tuyệt vời!</h1>
-          <p className="mb-4 fs-5 text-muted">Bạn đã hoàn thành bài học và đạt {score}/{cards.length} câu đúng!</p>
+          <p className="mb-4 fs-5" style={{ color: isDarkMode ? '#adb5bd' : '#6c757d' }}>Bạn đã hoàn thành bài học và đạt {score}/{cards.length} câu đúng!</p>
           <button onClick={onNext} className={styles.nextButton}>
             Hoàn thành 🎯
           </button>
