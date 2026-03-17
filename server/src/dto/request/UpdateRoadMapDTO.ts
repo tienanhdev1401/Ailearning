@@ -1,4 +1,5 @@
-import { IsString, IsOptional } from "class-validator";
+import { IsString, IsOptional, IsNumber } from "class-validator";
+import { Type } from "class-transformer";
 
 /**
  * @swagger
@@ -30,5 +31,7 @@ export class UpdateRoadmapDto {
   overview?: string;
 
   @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
   freeDayCount?: number;
 }

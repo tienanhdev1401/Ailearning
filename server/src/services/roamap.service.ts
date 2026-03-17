@@ -17,8 +17,8 @@ export class RoadmapService {
   static async getAllRoadmaps(
     page: number = 1,
     limit: number = 10
-  ): 
-  Promise<{ data: Roadmap[]; total: number; page: number; limit: number }> {
+  ):
+    Promise<{ data: Roadmap[]; total: number; page: number; limit: number }> {
     const [data, total] = await roadmapRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
@@ -36,7 +36,7 @@ export class RoadmapService {
     if (!roadmap) {
       throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy Roadmap");
     }
-      return roadmap;
+    return roadmap;
   }
 
   static async createRoadmap(createRoadmapDto: CreateRoadmapDto): Promise<Roadmap> {
@@ -44,7 +44,7 @@ export class RoadmapService {
       levelName: createRoadmapDto.levelName,
       description: createRoadmapDto.description || null,
       overview: createRoadmapDto.overview || null,
-      freeDayCount: createRoadmapDto.freeDayCount || 0,
+      freeDayCount: createRoadmapDto.freeDayCount ?? -1,
     });
 
     return await roadmapRepository.save(newRoadmap);
@@ -166,7 +166,7 @@ export class RoadmapService {
   //   };
   // }
   static async getUserRoadmapDayStatuses(userId: number, roadmapId: number, page = 1, limit = 10) {
-  // ✅ Kiểm tra enrollment
+    // ✅ Kiểm tra enrollment
     const enrollment = await roadmapEnrollementRepository.findOne({
       where: {
         user: { id: userId },
@@ -183,17 +183,17 @@ export class RoadmapService {
     const now = new Date();
     const subscription = await userSubscriptionRepo.findOne({
       where: [
-        { 
-          userId, 
-          isActive: true, 
+        {
+          userId,
+          isActive: true,
           package: { type: PACKAGE_TYPE.ROADMAP_UNLOCK, targetId: roadmapId },
-          endDate: MoreThan(now) 
+          endDate: MoreThan(now)
         },
-        { 
-          userId, 
-          isActive: true, 
+        {
+          userId,
+          isActive: true,
           package: { type: PACKAGE_TYPE.ROADMAP_UNLOCK, targetId: roadmapId },
-          endDate: IsNull() 
+          endDate: IsNull()
         }
       ],
       relations: ["package"]
@@ -273,7 +273,8 @@ export class RoadmapService {
       }
 
       // ✅ Khóa ngày nếu quá hạn mức free và chưa mua gói
-      if (!isSubscribed && day.dayNumber > freeDayCount) {
+      // freeDayCount = -1 nghĩa là roadmap free hoàn toàn, bỏ qua check này
+      if (!isSubscribed && freeDayCount !== -1 && day.dayNumber > freeDayCount) {
         status = "vip_required";
       }
 
