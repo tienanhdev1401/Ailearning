@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Container, Row, Col, Card, Button, Badge, Spinner, Alert, Modal } from "react-bootstrap";
-import { Gem, CheckCircleFill, Stars, RocketTakeoff, ShieldCheck, PlayCircleFill, Spellcheck, ExclamationTriangleFill, InfoCircleFill, XCircleFill } from "react-bootstrap-icons";
+import { Gem, CheckCircleFill, Stars, RocketTakeoff, PlayCircleFill, Spellcheck, ExclamationTriangleFill, InfoCircleFill, XCircleFill } from "react-bootstrap-icons";
 import packageService from "../../services/packageService";
 import paymentService from "../../services/paymentService";
 import subscriptionService from "../../services/subscriptionService";
+import { ThemeContext } from "../../context/ThemeContext";
 
 const PricingPage = () => {
   const [packages, setPackages] = useState([]);
@@ -13,11 +14,23 @@ const PricingPage = () => {
   const [userSubscriptions, setUserSubscriptions] = useState([]);
   const [modalConfig, setModalConfig] = useState({
     show: false,
-    type: "confirm", // 'confirm' | 'error' | 'info'
+    type: "confirm",
     title: "",
     message: "",
     onConfirm: null,
   });
+
+  const { isDarkMode } = useContext(ThemeContext);
+
+  const theme = {
+    pageBg: isDarkMode ? "#0f1117" : "#f8f9fa",
+    cardBg: isDarkMode ? "#1a1d2e" : "#ffffff",
+    cardBorder: isDarkMode ? "#2a2d3e" : "transparent",
+    titleColor: isDarkMode ? "#ffffff" : "#212529",
+    textColor: isDarkMode ? "#adb5bd" : "#6c757d",
+    featureIconBg: isDarkMode ? "#2a2d3e" : "#ffffff",
+    listItemColor: isDarkMode ? "#dee2e6" : "#212529",
+  };
 
   const showModal = (type, title, message, onConfirm = null) => {
     setModalConfig({ show: true, type, title, message, onConfirm });
@@ -50,7 +63,6 @@ const PricingPage = () => {
     const pkg = packages.find(p => p.id === packageId);
     if (!pkg) return;
 
-    // Kiểm tra xem người dùng đã có gói cùng loại đang còn hạn không
     const activeSub = userSubscriptions.find(sub =>
       sub.package?.type === pkg.type &&
       (!sub.endDate || new Date(sub.endDate) > new Date())
@@ -84,28 +96,27 @@ const PricingPage = () => {
 
   if (loading) {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
+      <div className="min-vh-100 d-flex align-items-center justify-content-center" style={{ background: theme.pageBg }}>
         <Spinner animation="border" variant="primary" />
       </div>
     );
   }
 
   return (
-    <div className="bg-light py-5 min-vh-100">
+    <div className="py-5 min-vh-100" style={{ background: theme.pageBg }}>
       <Container>
         <div className="text-center mb-5 mt-4">
           <Badge bg="primary" className="px-3 py-2 mb-3 rounded-pill">
             Nâng cấp tài khoản
           </Badge>
-          <h1 className="display-4 fw-bold text-dark">Mở khóa sức mạnh Ailearning PRO</h1>
-          <p className="lead text-muted mx-auto" style={{ maxWidth: "700px" }}>
+          <h1 className="display-4 fw-bold" style={{ color: theme.titleColor }}>Mở khóa sức mạnh Ailearning PRO</h1>
+          <p className="lead mx-auto" style={{ maxWidth: "700px", color: theme.textColor }}>
             Học tập không giới hạn với sự hỗ trợ của AI, mở khóa những lộ trình chuyên sâu và nâng tầm kỹ năng tiếng Anh của bạn.
           </p>
         </div>
 
         {error && <Alert variant="danger">{error}</Alert>}
 
-        {/* Group packages by type */}
         {Object.entries(
           packages.reduce((acc, pkg) => {
             if (!acc[pkg.type]) acc[pkg.type] = [];
@@ -121,7 +132,7 @@ const PricingPage = () => {
                 {type === "VIDEO_LESSON" && <PlayCircleFill size={24} />}
                 {type === "GRAMMAR_CHECKER" && <Spellcheck size={24} />}
               </div>
-              <h2 className="h3 fw-bold mb-0">
+              <h2 className="h3 fw-bold mb-0" style={{ color: theme.titleColor }}>
                 {type === "AI_CONVERSATION" && "Gói AI Conversation"}
                 {type === "ROADMAP_UNLOCK" && "Gói Mở khóa Lộ trình"}
                 {type === "VIDEO_LESSON" && "Gói Video Khóa học"}
@@ -132,10 +143,13 @@ const PricingPage = () => {
             <Row className="g-4">
               {group.map((pkg) => (
                 <Col key={pkg.id} md={6} lg={4}>
-                  <Card className="h-100 shadow-sm border-0 rounded-4 overflow-hidden position-relative">
+                  <Card
+                    className="h-100 shadow-sm rounded-4 overflow-hidden position-relative"
+                    style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}` }}
+                  >
                     <Card.Body className="p-4 d-flex flex-column">
-                      <Card.Title className="h4 fw-bold mb-3">{pkg.name}</Card.Title>
-                      <Card.Text className="text-muted small mb-4" style={{ minHeight: "3rem" }}>
+                      <Card.Title className="h4 fw-bold mb-3" style={{ color: theme.titleColor }}>{pkg.name}</Card.Title>
+                      <Card.Text className="small mb-4" style={{ minHeight: "3rem", color: theme.textColor }}>
                         {pkg.description || "Tận hưởng các tính năng cao cấp từ Ailearning để tăng tốc quá trình học tập của bạn."}
                       </Card.Text>
 
@@ -144,21 +158,21 @@ const PricingPage = () => {
                           {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(pkg.price)}
                         </span>
                         {pkg.durationInDays && (
-                          <span className="text-muted ms-2">/ {pkg.durationInDays} ngày</span>
+                          <span className="ms-2" style={{ color: theme.textColor }}>/ {pkg.durationInDays} ngày</span>
                         )}
                         {!pkg.durationInDays && (
-                          <span className="text-muted ms-2">/ Vĩnh viễn</span>
+                          <span className="ms-2" style={{ color: theme.textColor }}>/ Vĩnh viễn</span>
                         )}
                       </div>
 
                       <ul className="list-unstyled mb-4">
                         <li className="mb-2 d-flex align-items-center">
                           <CheckCircleFill className="text-success me-2 flex-shrink-0" size={16} />
-                          <span className="small">Kích hoạt {pkg.name}</span>
+                          <span className="small" style={{ color: theme.listItemColor }}>Kích hoạt {pkg.name}</span>
                         </li>
                         <li className="mb-2 d-flex align-items-center">
                           <CheckCircleFill className="text-success me-2 flex-shrink-0" size={16} />
-                          <span className="small">{pkg.durationInDays ? `Hiệu lực ${pkg.durationInDays} ngày` : "Sở hữu trọn đời"}</span>
+                          <span className="small" style={{ color: theme.listItemColor }}>{pkg.durationInDays ? `Hiệu lực ${pkg.durationInDays} ngày` : "Sở hữu trọn đời"}</span>
                         </li>
                       </ul>
 
@@ -187,50 +201,51 @@ const PricingPage = () => {
           <Row className="text-center g-4">
             <Col md={4}>
               <div className="p-3">
-                <div className="bg-white rounded-circle shadow-sm d-inline-flex align-items-center justify-content-center mb-3" style={{ width: "60px", height: "60px" }}>
+                <div className="rounded-circle shadow-sm d-inline-flex align-items-center justify-content-center mb-3" style={{ width: "60px", height: "60px", background: theme.featureIconBg }}>
                   <Stars className="text-primary" size={24} />
                 </div>
-                <h5 className="fw-bold">AI Tutor Thông Minh</h5>
-                <p className="text-muted small">Luyện nói và giao tiếp với trí tuệ nhân tạo mọi lúc, mọi nơi.</p>
+                <h5 className="fw-bold" style={{ color: theme.titleColor }}>AI Tutor Thông Minh</h5>
+                <p className="small" style={{ color: theme.textColor }}>Luyện nói và giao tiếp với trí tuệ nhân tạo mọi lúc, mọi nơi.</p>
               </div>
             </Col>
             <Col md={4}>
               <div className="p-3">
-                <div className="bg-white rounded-circle shadow-sm d-inline-flex align-items-center justify-content-center mb-3" style={{ width: "60px", height: "60px" }}>
+                <div className="rounded-circle shadow-sm d-inline-flex align-items-center justify-content-center mb-3" style={{ width: "60px", height: "60px", background: theme.featureIconBg }}>
                   <RocketTakeoff className="text-primary" size={24} />
                 </div>
-                <h5 className="fw-bold">Lộ trình Chuyên Sâu</h5>
-                <p className="text-muted small">Các khóa học được thiết kế chuyên biệt để bạn đạt mục tiêu nhanh nhất.</p>
+                <h5 className="fw-bold" style={{ color: theme.titleColor }}>Lộ trình Chuyên Sâu</h5>
+                <p className="small" style={{ color: theme.textColor }}>Các khóa học được thiết kế chuyên biệt để bạn đạt mục tiêu nhanh nhất.</p>
               </div>
             </Col>
             <Col md={4}>
               <div className="p-3">
-                <div className="bg-white rounded-circle shadow-sm d-inline-flex align-items-center justify-content-center mb-3" style={{ width: "60px", height: "60px" }}>
+                <div className="rounded-circle shadow-sm d-inline-flex align-items-center justify-content-center mb-3" style={{ width: "60px", height: "60px", background: theme.featureIconBg }}>
                   <BagCheckFill className="text-primary" size={24} />
                 </div>
-                <h5 className="fw-bold">Mở Khóa Vĩnh Viễn</h5>
-                <p className="text-muted small">Mua một lần, sở hữu mãi mãi cho các lộ trình học tập cụ thể.</p>
+                <h5 className="fw-bold" style={{ color: theme.titleColor }}>Mở Khóa Vĩnh Viễn</h5>
+                <p className="small" style={{ color: theme.textColor }}>Mua một lần, sở hữu mãi mãi cho các lộ trình học tập cụ thể.</p>
               </div>
             </Col>
           </Row>
         </section>
       </Container>
-      <Modal show={modalConfig.show} onHide={handleCloseModal} centered className="border-0">
-        <Modal.Header closeButton={modalConfig.type !== "confirm"} className="border-0 pb-0">
-          <Modal.Title className="fw-bold">{modalConfig.title}</Modal.Title>
+
+      <Modal show={modalConfig.show} onHide={handleCloseModal} centered>
+        <Modal.Header closeButton={modalConfig.type !== "confirm"} className="border-0 pb-0" style={{ background: theme.cardBg }}>
+          <Modal.Title className="fw-bold" style={{ color: theme.titleColor }}>{modalConfig.title}</Modal.Title>
         </Modal.Header>
-        <Modal.Body className="text-center py-4">
+        <Modal.Body className="text-center py-4" style={{ background: theme.cardBg }}>
           <div className="mb-3">
             {modalConfig.type === "confirm" && <ExclamationTriangleFill size={64} className="text-warning" />}
             {modalConfig.type === "error" && <XCircleFill size={64} className="text-danger" />}
             {modalConfig.type === "info" && <InfoCircleFill size={64} className="text-primary" />}
           </div>
-          <p className="fs-5 text-muted px-3">{modalConfig.message}</p>
+          <p className="fs-5 px-3" style={{ color: theme.textColor }}>{modalConfig.message}</p>
         </Modal.Body>
-        <Modal.Footer className="border-0 pt-0 justify-content-center pb-4">
+        <Modal.Footer className="border-0 pt-0 justify-content-center pb-4" style={{ background: theme.cardBg }}>
           {modalConfig.type === "confirm" ? (
             <>
-              <Button variant="light" onClick={handleCloseModal} className="rounded-pill px-4 fw-bold me-2">
+              <Button variant="secondary" onClick={handleCloseModal} className="rounded-pill px-4 fw-bold me-2">
                 Hủy bỏ
               </Button>
               <Button
@@ -255,7 +270,6 @@ const PricingPage = () => {
   );
 };
 
-// Dummy component for the icon missing in import
 const BagCheckFill = ({ className, size }) => <i className={`bi bi-bag-check-fill ${className}`} style={{ fontSize: size }}></i>;
 
 export default PricingPage;
