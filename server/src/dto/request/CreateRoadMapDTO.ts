@@ -30,4 +30,14 @@ export class CreateRoadmapDto {
     @IsOptional()
     @IsString({ message: "Overview phải là chuỗi ký tự" })
     overview?: string;
+
+    /**
+     * @swagger
+     *         freeDayCount:
+     *           type: integer
+     *           example: 5
+     *           description: Số ngày được học miễn phí
+     */
+    @IsOptional()
+    freeDayCount?: number;
 }

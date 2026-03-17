@@ -17,6 +17,9 @@ export class Roadmap {
   @Column({ name: "overview", type: "text", nullable: true })
   overview!: string | null;
 
+  @Column({ name: "free_day_count", type: "int", default: 0 })
+  freeDayCount!: number;
+
   @OneToMany(() => Day, (day) => day.roadmap)
   days!: Day[];
 

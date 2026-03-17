@@ -34,7 +34,7 @@
 }
 
 [data-theme="light"] .wrapper {
-      background: url('../../../../public/assets/img/gallery/roadmap-bg.png') center/cover no-repeat;
+    background: url('../../../../public/assets/img/gallery/roadmap-bg.png') center/cover no-repeat;
     box-shadow: 0 30px 60px rgba(15, 23, 42, 0.12);
 }
 
@@ -109,6 +109,15 @@
 [data-theme="light"] .nodeAvailable .nodeDayTag,
 [data-theme="light"] .nodeAvailable .nodeNumber {
     fill: #f5f5fa;
+}
+
+.nodeVipRequired {
+    cursor: pointer !important;
+    opacity: 1 !important;
+}
+
+.vipBadge {
+    filter: drop-shadow(0 2px 6px rgba(255, 152, 0, 0.45));
 }
 
 .nodeCompleted .nodeOuter {
@@ -196,13 +205,10 @@
 
 .nodeLocked .nodeDayTag,
 .nodeLocked .nodeNumber {
-     fill: rgba(74, 84, 99, 0.85);
-}
-
-[data-theme="light"] .nodeLocked .nodeDayTag,
-[data-theme="light"] .nodeLocked .nodeNumber {
     fill: rgba(74, 84, 99, 0.85);
 }
+
+/* Removed light mode overrides for locked nodes to keep them dark */
 
 .nodeStar {
     font-size: 26px;
@@ -221,9 +227,7 @@
     text-anchor: middle;
 }
 
-[data-theme="light"] .lockBadge {
-    fill: rgba(15, 23, 42, 0.7);
-}
+/* Removed light mode override for lock badge to keep it visible on dark background */
 
 .nodeAccent {
     fill: none;

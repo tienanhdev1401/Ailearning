@@ -244,7 +244,7 @@ const RoadmapMap = ({
           }
 
           const isClickable = node.status !== 'locked';
-          const isLocked = node.status === 'locked';
+          const isLocked = node.status === 'locked' || node.status === 'vip_required';
           const isCompleted = node.status === 'completed';
           const isAvailable = node.status === 'available';
           const nodeStyle = { '--delay': `${idx * 0.03}s` };
@@ -254,6 +254,7 @@ const RoadmapMap = ({
               className={[
                 styles.node,
                 isLocked && styles.nodeLocked,
+                node.status === 'vip_required' && styles.nodeVipRequired,
                 isAvailable && styles.nodeAvailable,
                 isCompleted && styles.nodeCompleted,
               ]
@@ -277,10 +278,23 @@ const RoadmapMap = ({
               <text className={styles.nodeNumber} y={20}>
                 {node.day}
               </text>
-              {isLocked && (
+              {isLocked && node.status !== 'vip_required' && (
                 <text className={styles.lockBadge} x={26} y={-22}>
                   🔒
                 </text>
+              )}
+              {node.status === 'vip_required' && (
+                <g
+                  className={styles.vipBadge}
+                  transform="translate(26, -22) rotate(180)"
+                >
+                  <path
+                    d="M 0,-12 L 8,-4 L 12,0 L 8,8 L 0,12 L -8,8 L -12,0 L -8,-4 Z"
+                    fill="#FF9800"
+                    stroke="#FFF"
+                    strokeWidth="1"
+                  />
+                </g>
               )}
               {isCompleted && (
                 <text className={styles.nodeStar} x={18} y={-22}>
@@ -288,7 +302,7 @@ const RoadmapMap = ({
                 </text>
               )}
               {isCompleted && <circle className={styles.nodeAccent} r={48} />}
-              {isAvailable && <circle className={styles.nodeGlow} r={48} />}
+              {node.status === 'available' && <circle className={styles.nodeGlow} r={48} />}
             </g>
           );
         })}
