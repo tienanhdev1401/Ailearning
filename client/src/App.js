@@ -43,6 +43,7 @@ import SupportChatWidget from "./component/SupportChatWidget";
 import LessonManagerPage from "./admin/pages/LessonManagerPage";
 import PaymentSuccessPage from "./client/pages/PaymentSuccessPage";
 import PricingPage from "./client/pages/PricingPage";
+import VocabNotebookPage from "./client/pages/VocabNotebookPage";
 
 function App() {
   return (
@@ -167,6 +168,14 @@ function App() {
           }
         />
 
+        <Route
+          path="/vocab-notebook"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><VocabNotebookPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
 
 
         <Route

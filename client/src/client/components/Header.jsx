@@ -54,13 +54,14 @@ const Header = () => {
         return () => (mounted = false);
     }, []);
 
-    /** MENU ITEMS */
+    // Conditionally render menu items based on whether user data exists
     const menuItems = [
         { label: "Trang Chủ", icon: "🏠", path: "/" },
         { label: "AI Tutor", icon: "🤖", path: "/experience/ai-chat" },
         { label: "Chủ Đề", icon: "📚", path: "/topics" },
         { label: "Ngữ Pháp", icon: "📝", path: "/grammar" },
         { label: "Lộ Trình", icon: "🗺️", path: "/roadmaps" },
+        { label: "Sổ Tay", icon: "📖", path: "/vocab-notebook" },
         { label: "Mở khóa Pro", icon: "💎", path: "/pricing" },
     ];
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useContext } from "react";
 import styles from "../../styles/MiniGameFlipCard.module.css";
 import { ThemeContext } from "../../../context/ThemeContext";
+import vocabNoteService from "../../../services/vocabNoteService";
 
 const MiniGameFlipCard = ({ data, onNext }) => {
   const cards = useMemo(() => Array.isArray(data?.resources?.cards) ? data.resources.cards : [], [data]);
@@ -14,6 +15,8 @@ const MiniGameFlipCard = ({ data, onNext }) => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [score, setScore] = useState(0);
+  const [savingCards, setSavingCards] = useState({}); // Keep track of saved status: { index: loading|success|error }
+  const [toastMessage, setToastMessage] = useState(null);
 
   const speak = (text) => {
     if (!text) return;
@@ -47,6 +50,38 @@ const MiniGameFlipCard = ({ data, onNext }) => {
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
+  };
+
+  const handleSaveNote = async (e, card, index) => {
+    e.stopPropagation();
+
+    // Nếu đang loading → không cho bấm
+    if (savingCards[index] === 'loading') return;
+
+    // Nếu đã lưu → hiện toast thôi
+    if (savingCards[index] === 'success') {
+      setToastMessage({ type: 'info', text: `"${card.term}" đã được lưu rồi!` });
+      setTimeout(() => setToastMessage(null), 2000);
+      return;
+    }
+
+    setSavingCards(prev => ({ ...prev, [index]: 'loading' }));
+
+    try {
+      await vocabNoteService.addNote(card.term, card.definition, "MiniGame Flip Card");
+
+      // Vẫn giữ trạng thái success (để biết đã lưu)
+      setSavingCards(prev => ({ ...prev, [index]: 'success' }));
+
+      setToastMessage({ type: 'success', text: `Đã lưu "${card.term}" vào sổ tay!` });
+      setTimeout(() => setToastMessage(null), 3000);
+
+    } catch (err) {
+      setSavingCards(prev => ({ ...prev, [index]: 'error' }));
+      const errorMsg = err.response?.data?.message || "Lỗi khi lưu từ.";
+      setToastMessage({ type: 'error', text: errorMsg });
+      setTimeout(() => setToastMessage(null), 3000);
+    }
   };
 
   const handleNextLearned = () => {
@@ -120,6 +155,18 @@ const MiniGameFlipCard = ({ data, onNext }) => {
         </div>
       </div>
 
+      {/* Simple Toast for Save feature */}
+      {toastMessage && (
+        <div style={{
+          position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000,
+          background: toastMessage.type === 'success' ? '#28a745' : '#dc3545', color: 'white',
+          padding: '8px 16px', borderRadius: '20px', fontWeight: 'bold', fontSize: '14px',
+          boxShadow: '0 4px 6px rgba(0,00,0,0.1)'
+        }}>
+          {toastMessage.text}
+        </div>
+      )}
+
       {feedback !== null && (
         <div className={`${styles.feedbackOverlay} ${feedback ? styles.feedbackSuccess : styles.feedbackError}`}>
           <div className={styles.feedbackContent}>
@@ -143,6 +190,14 @@ const MiniGameFlipCard = ({ data, onNext }) => {
           <div className={styles.cardStage} onClick={handleFlip}>
             <div className={`${styles.flashcard} ${isFlipped ? styles.isFlipped : ""}`}>
               <div className={styles.cardFront}>
+                <button
+                  className={`${styles.saveBtn} ${savingCards[currentIndex] === 'success' ? styles.savedBtn : ''}`}
+                  onClick={(e) => handleSaveNote(e, cards[currentIndex], currentIndex)}
+                  title="Lưu vào Sổ tay"
+                  disabled={savingCards[currentIndex] === 'loading'}
+                >
+                  {savingCards[currentIndex] === 'loading' ? '⏳' : '📖'}
+                </button>
                 <button
                   className={styles.speakerBtn}
                   onClick={(e) => { e.stopPropagation(); speak(cards[currentIndex].term); }}
