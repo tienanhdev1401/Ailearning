@@ -8,6 +8,10 @@ import { CreateRoadmapDto } from "../dto/request/CreateRoadMapDTO";
 import { UpdateRoadmapDto } from "../dto/request/UpdateRoadMapDTO";
 import { UserProgress } from "../models/userProgress";
 import { dayRepository } from "../repositories/day.repository";
+import { AppDataSource } from "../config/database";
+import { UserSubscription } from "../models/userSubscription";
+import { PACKAGE_TYPE } from "../enums/packageType.enum";
+import { IsNull, MoreThan } from "typeorm";
 
 export class RoadmapService {
   static async getAllRoadmaps(
@@ -40,6 +44,7 @@ export class RoadmapService {
       levelName: createRoadmapDto.levelName,
       description: createRoadmapDto.description || null,
       overview: createRoadmapDto.overview || null,
+      freeDayCount: createRoadmapDto.freeDayCount || 0,
     });
 
     return await roadmapRepository.save(newRoadmap);
@@ -173,6 +178,31 @@ export class RoadmapService {
       throw new ApiError(HttpStatusCode.Forbidden, "Người dùng chưa enrollment vào roadmap này");
     }
 
+    // ✅ Kiểm tra xem user có gói unlock roadmap này không
+    const userSubscriptionRepo = AppDataSource.getRepository(UserSubscription);
+    const now = new Date();
+    const subscription = await userSubscriptionRepo.findOne({
+      where: [
+        { 
+          userId, 
+          isActive: true, 
+          package: { type: PACKAGE_TYPE.ROADMAP_UNLOCK, targetId: roadmapId },
+          endDate: MoreThan(now) 
+        },
+        { 
+          userId, 
+          isActive: true, 
+          package: { type: PACKAGE_TYPE.ROADMAP_UNLOCK, targetId: roadmapId },
+          endDate: IsNull() 
+        }
+      ],
+      relations: ["package"]
+    });
+
+    const isSubscribed = !!subscription;
+    const roadmap = await roadmapRepository.findOne({ where: { id: roadmapId } });
+    const freeDayCount = roadmap?.freeDayCount || 0;
+
     // ✅ Tính offset
     const skip = (page - 1) * limit;
 
@@ -203,7 +233,7 @@ export class RoadmapService {
     // ✅ Duyệt qua từng day để tính status
     const dayStatuses = days.map((day, index) => {
       const activities = day.activities || [];
-      let status: "locked" | "not_started" | "in_progress" | "completed";
+      let status: "locked" | "not_started" | "in_progress" | "completed" | "vip_required";
 
       if (activities.length === 0) {
         status = "not_started";
@@ -240,6 +270,11 @@ export class RoadmapService {
         if (!prevCompleted) {
           status = "locked";
         }
+      }
+
+      // ✅ Khóa ngày nếu quá hạn mức free và chưa mua gói
+      if (!isSubscribed && day.dayNumber > freeDayCount) {
+        status = "vip_required";
       }
 
       return {

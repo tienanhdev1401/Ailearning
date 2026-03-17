@@ -28,4 +28,7 @@ export class UpdateRoadmapDto {
   @IsOptional()
   @IsString({ message: "Overview phải là chuỗi ký tự" })
   overview?: string;
+
+  @IsOptional()
+  freeDayCount?: number;
 }

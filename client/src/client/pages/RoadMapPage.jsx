@@ -7,6 +7,7 @@ import RoadmapMap from '../components/roadmap/RoadmapMap';
 import MiniGameRenderer from '../components/MiniGame/MiniGameRender';
 import RoadmapReviewPanel from '../components/roadmap/RoadmapReviewPanel';
 import useCurrentUser from '../hooks/useCurrentUser';
+import VipModal from '../components/common/VipModal';
 
 const classNames = (...parts) => parts.filter(Boolean).join(' ');
 
@@ -343,6 +344,7 @@ const RoadMapPage = () => {
   const [availableRoadmaps, setAvailableRoadmaps] = useState([]);
   const [userEnrollments, setUserEnrollments] = useState([]);
   const [switching, setSwitching] = useState(false);
+  const [showVipModal, setShowVipModal] = useState(false);
   const noticeTimerRef = useRef(null);
 
   const hydratePublicRoadmap = useCallback(async () => {
@@ -924,6 +926,8 @@ const RoadMapPage = () => {
         normalizedStatus = 'completed';
       } else if (day.status === 'in_progress') {
         normalizedStatus = 'available';
+      } else if (day.status === 'vip_required') {
+        normalizedStatus = 'vip_required';
       } else {
         const prevUnlocked = index === 0 || sourceDays[index - 1]?.status === 'completed';
         normalizedStatus = prevUnlocked ? 'available' : 'locked';
@@ -983,6 +987,12 @@ const RoadMapPage = () => {
       const targetDay =
         sourceDays.find((day) => day.id === node.metaId) ||
         sourceDays.find((day) => (day.dayNumber || day.day) === node.day);
+      
+      if (node.status === 'vip_required' || targetDay?.status === 'vip_required') {
+        setShowVipModal(true);
+        return;
+      }
+
       if (targetDay) {
         handleNodeClick(targetDay);
       }
@@ -1287,6 +1297,11 @@ const RoadMapPage = () => {
           completedCountOverride={drawerCompletedCount}
         />
       )}
+      <VipModal 
+        show={showVipModal} 
+        onHide={() => setShowVipModal(false)} 
+        message={`Lộ trình "${roadmap?.levelName}" đã đạt giới hạn học thử. Hãy sở hữu ngay gói mở khóa để tiếp tục hành trình học tập nhé!`}
+      />
     </div>
   );
 };
