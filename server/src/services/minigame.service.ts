@@ -16,6 +16,7 @@ import { UpdateMiniGameDto } from "../dto/request/UpdateMiniGameDTO";
 import MiniGameType from "../enums/minigameType.enum";
 import { minigameRepository } from "../repositories/minigame.repository";
 import { activityRepository } from "../repositories/activity.repostitory";
+import { WatchVideoMiniGame } from "../models/minigameImp/watch-video-minigame";
 
 
 export class MiniGameService {
@@ -41,6 +42,8 @@ export class MiniGameService {
         return new TypingChallengeMiniGame(dto.prompt, dto.resources as any, activity);
       case MiniGameType.FLIP_CARD:
         return new FlipCardMiniGame(dto.prompt, dto.resources as any, activity);
+      case MiniGameType.WATCH_VIDEO:
+        return new WatchVideoMiniGame(dto.prompt, dto.resources as any, activity);
       default:
         throw new ApiError(HttpStatusCode.BadRequest, `Loại minigame không hợp lệ: ${dto.type}`);
     }
