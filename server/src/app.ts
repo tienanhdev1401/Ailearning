@@ -1,5 +1,5 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
-import "reflect-metadata"; 
+import "reflect-metadata";
 import dotenv from 'dotenv'
 import mysql from 'mysql2'
 import cookieParser from 'cookie-parser'
@@ -51,7 +51,7 @@ app.use(cookieParser());
 
 app.use(express.json());
 
-app.use(passport.initialize()); 
+app.use(passport.initialize());
 
 const corsOrigins = (process.env.CORS_ORIGINS || "http://localhost:3000")
   .split(",")
@@ -86,8 +86,8 @@ app.use('/api/auth', authRouter);
 app.use("/api/auth", oauthRoutes);
 app.use('/api/users', userRouter);
 
-app.use('/api',grammarCheckerRouter);
-app.use('/api/lessons',lessonRouter);
+app.use('/api', grammarCheckerRouter);
+app.use('/api/lessons', lessonRouter);
 app.use('/api/pronunciation', pronunciationRouter);
 app.use('/api/roadmaps', roadmapRouter);
 app.use('/api/days', dayRouter);
@@ -99,7 +99,7 @@ app.use("/api/dashboard", dashboardRouter);
 app.use("/api/gop", gopRouter);
 app.use('/api/confirm', userconfirmRouter);
 app.use('/api/uploads', uploadRouter);
-app.use('/api/roadmap_enrollments',roadmapEnrollementRoutes)
+app.use('/api/roadmap_enrollments', roadmapEnrollementRoutes)
 app.use('/api/payments', paymentRouter);
 app.use('/api/packages', packageRouter);
 app.use('/api/subscriptions', subscriptionRouter);
@@ -122,7 +122,7 @@ AppDataSource.initialize().then(() => {
 
   // Khởi động tất cả schedulers
   startAllSchedulers();
-  
+
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log('TypeORM connected & synced');
