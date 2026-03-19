@@ -1,0 +1,87 @@
+.videoContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font-family: "Inter", "Roboto", sans-serif;
+}
+
+/* HEADER */
+.videoHeader {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.videoTitle {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+/* PLAYER */
+.playerWrapper {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  aspect-ratio: 16/9;
+  background: #000;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+}
+
+/* 🔥 FIX QUAN TRỌNG */
+.videoInner {
+  position: absolute;
+  inset: 0;
+}
+
+/* VIDEO FULL */
+.videoInner video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* hoặc cover nếu thích full */
+  background: black;
+}
+
+/* NO VIDEO */
+.noVideo {
+  color: #94a3b8;
+  text-align: center;
+  padding: 20px;
+}
+
+/* FOOTER */
+.videoFooter {
+  margin-top: 24px;
+}
+
+.nextButton {
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.nextButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.5);
+}
+
+.nextButton:disabled {
+  background: #475569;
+  cursor: not-allowed;
+}

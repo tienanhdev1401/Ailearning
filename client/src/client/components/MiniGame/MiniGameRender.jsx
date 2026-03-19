@@ -7,6 +7,7 @@ import MiniGameListenSelect from "../MiniGame/MiniGameListenSelect";
 import MiniGameTrueFalse from "../MiniGame/MiniGameTrueFalse";
 import MiniGameTypingChallenge from "../MiniGame/MiniGameTypingChallenge";
 import MiniGameFlipCard from "../MiniGame/MiniGameFlipCard";
+import MiniGameWatchVideo from "../MiniGame/MiniGameWatchVideo";
 
 const MiniGameRenderer = ({ game, onNext }) => {
   switch (game.type) {
@@ -26,6 +27,8 @@ const MiniGameRenderer = ({ game, onNext }) => {
       return <MiniGameTypingChallenge data={game} onNext={onNext} />;
     case "flip_card":
       return <MiniGameFlipCard data={game} onNext={onNext} />;
+    case "watch_video":
+      return <MiniGameWatchVideo data={game} onNext={onNext} />;
     default:
       return <div className="text-center mt-5">❌ Chưa hỗ trợ loại minigame: {game.type}</div>;
   }
