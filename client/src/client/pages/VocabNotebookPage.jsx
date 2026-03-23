@@ -1,192 +1,253 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Container, Row, Col, Card, Form, InputGroup, Button, Spinner, Modal } from 'react-bootstrap';
-import { Search, Trash, Book } from 'react-bootstrap-icons';
-import vocabNoteService from '../../services/vocabNoteService';
-import { ThemeContext } from '../../context/ThemeContext';
+import React, { useState, useEffect, useContext } from "react";
+import { Container, Row, Col, Card, Form, InputGroup, Button, Spinner, Modal } from "react-bootstrap";
+import { Search, Trash, JournalText, PlayFill, PlusLg, ArrowLeft, LightbulbFill } from "react-bootstrap-icons";
+import { useParams, useNavigate } from "react-router-dom";
+import notebookService from "../../services/notebookService";
+import vocabNoteService from "../../services/vocabNoteService";
+import { ThemeContext } from "../../context/ThemeContext";
+import { useToast } from "../../context/ToastContext";
+import styles from "../styles/NotebookDetail.module.css";
 
 const VocabNotebookPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { isDarkMode } = useContext(ThemeContext);
-  const [notes, setNotes] = useState([]);
+  const toast = useToast();
+  
+  const [notebook, setNotebook] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [toastMessage, setToastMessage] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [noteToDelete, setNoteToDelete] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newCard, setNewCard] = useState({ term: "", definition: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [lookupLoading, setLookupLoading] = useState(false);
 
-  const fetchNotes = async (pageNum, append = false) => {
+  const fetchNotebook = async () => {
     try {
       setLoading(true);
-      const res = await vocabNoteService.getMyNotes(pageNum, 20);
-      if (append) {
-        setNotes(prev => [...prev, ...res.data]);
-      } else {
-        setNotes(res.data);
-      }
-      setHasMore(res.data.length === 20); // Assuming limit is 20
+      const data = await notebookService.getNotebookById(id);
+      setNotebook(data);
     } catch (error) {
-      console.error("Lỗi khi tải sổ tay:", error);
+      console.error("Failed to fetch notebook:", error);
+      navigate("/notebooks");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchNotes(1, false);
-  }, []);
+    fetchNotebook();
+  }, [id]);
 
-  const confirmDelete = (note) => {
-    setNoteToDelete(note);
-    setShowDeleteModal(true);
-  };
-
-  const executeDelete = async () => {
-    if (!noteToDelete) return;
-    const id = noteToDelete.id;
+  const handleAddCard = async (e) => {
+    e.preventDefault();
+    if (!newCard.term.trim() || !newCard.definition.trim()) return;
     try {
-      await vocabNoteService.deleteNote(id);
-      setNotes(prev => prev.filter(n => n.id !== id));
-      setToastMessage({ type: 'success', text: 'Đã xóa từ vựng thành công!' });
-      setTimeout(() => setToastMessage(null), 3000);
+      setSubmitting(true);
+      await notebookService.addCard(id, newCard.term, newCard.definition);
+      setNewCard({ term: "", definition: "" });
+      setShowAddModal(false);
+      toast.success("Đã thêm từ mới thành công!");
+      fetchNotebook();
     } catch (error) {
-      console.error("Lỗi khi xóa từ:", error);
-      setToastMessage({ type: 'error', text: 'Đã có lỗi xảy ra khi xóa từ.' });
-      setTimeout(() => setToastMessage(null), 3000);
+      console.error("Failed to add card:", error);
+      const message = error.response?.data?.message || "Đã có lỗi xảy ra khi thêm từ.";
+      toast.error(message);
     } finally {
-      setShowDeleteModal(false);
-      setNoteToDelete(null);
+      setSubmitting(false);
     }
   };
 
-  const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchNotes(nextPage, true);
+  const handleLookup = async () => {
+    if (!newCard.term.trim()) return;
+    try {
+      setLookupLoading(true);
+      const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${newCard.term.trim()}`);
+      if (!res.ok) throw new Error("Not found");
+      const data = await res.json();
+
+      const entry = data[0]?.meanings[0]?.definitions[0];
+      const definition = entry?.definition;
+      const example = entry?.example;
+
+      if (definition) {
+        let finalDef = definition;
+        if (example) {
+          finalDef += `\n(Ví dụ: ${example})`;
+        }
+        setNewCard(prev => ({ ...prev, definition: finalDef }));
+      }
+    } catch (error) {
+      console.error("Dictionary lookup failed:", error);
+      toast.warning("Không tìm thấy định nghĩa cho từ này.");
+    } finally {
+      setLookupLoading(false);
+    }
   };
 
-  const filteredNotes = notes.filter(note =>
+  const handleConfirmDelete = async (card) => {
+    const isConfirmed = await toast.confirm(`Bạn có chắc muốn xóa "${card.term}" khỏi sổ tay này?`, {
+      title: "Xác nhận xóa từ",
+      type: "danger",
+      confirmText: "Xóa",
+      cancelText: "Hủy"
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+      await vocabNoteService.deleteNote(card.id);
+      toast.info(`Đã xóa "${card.term}"`);
+      fetchNotebook();
+    } catch (error) {
+      console.error("Failed to delete card:", error);
+      toast.error("Không thể xóa từ này. Vui lòng thử lại.");
+    }
+  };
+
+  const filteredNotes = notebook?.notes?.filter(note =>
     note.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
     note.definition.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) || [];
+
+  if (loading) {
+    return (
+      <div className="text-center py-5">
+        <Spinner animation="border" variant="primary" />
+      </div>
+    );
+  }
 
   return (
-    <Container className="py-5" style={{ minHeight: '80vh' }}>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className={`fw-bold ${isDarkMode ? 'text-light' : 'text-dark'}`}>
-          <Book className="me-2" /> Sổ Tay Từ Vựng
-        </h2>
-      </div>
+    <div className={styles.pageWrapper}>
+      <header className={styles.header}>
+        <Container>
+          <Button
+            variant="link"
+            className={styles.backBtn}
+            onClick={() => navigate("/notebooks")}
+          >
+            <ArrowLeft className="me-2" /> Quay lại danh sách
+          </Button>
 
-      {toastMessage && (
-        <div style={{
-          position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999,
-          background: toastMessage.type === 'success' ? '#28a745' : '#dc3545', color: 'white',
-          padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          transition: 'all 0.3s ease-in-out'
-        }}>
-          {toastMessage.text}
-        </div>
-      )}
+          <div className={styles.headerContent}>
+            <div className={styles.headerMain}>
+              <h1 className={styles.title}>{notebook.title}</h1>
+              <p className={styles.description}>{notebook.description || "Danh sách từ vựng cá nhân"}</p>
+            </div>
+            <div className={styles.headerActions}>
+              <Button
+                variant="primary"
+                className={styles.studyBtn}
+                disabled={filteredNotes.length === 0}
+                onClick={() => navigate(`/flashcards/notebook/${id}`)}
+              >
+                <PlayFill size={20} className="me-2" /> Học ngay
+              </Button>
+              <Button
+                variant="outline-primary"
+                className={styles.addBtn}
+                onClick={() => setShowAddModal(true)}
+              >
+                <PlusLg className="me-2" /> Thêm từ
+              </Button>
+            </div>
+          </div>
+        </Container>
+      </header>
 
-      <Row className="mb-4">
-        <Col md={6}>
-          <InputGroup>
-            <InputGroup.Text className={isDarkMode ? 'bg-dark text-light border-secondary' : 'bg-white'}>
-              <Search />
-            </InputGroup.Text>
+      <Container className="py-5">
+        <div className={styles.searchSection}>
+          <InputGroup className={styles.searchBar}>
+            <InputGroup.Text><Search /></InputGroup.Text>
             <Form.Control
-              type="text"
-              placeholder="Tìm kiếm từ vựng hoặc ý nghĩa..."
+              placeholder="Tìm kiếm trong sổ tay..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={isDarkMode ? 'bg-dark text-light border-secondary' : ''}
-              style={{ boxShadow: 'none' }}
             />
           </InputGroup>
-        </Col>
-      </Row>
+          <span className={styles.countText}>{filteredNotes.length} thuật ngữ</span>
+        </div>
 
-      {loading && page === 1 ? (
-        <div className="text-center py-5">
-          <Spinner animation="border" variant={isDarkMode ? "light" : "primary"} />
-        </div>
-      ) : filteredNotes.length === 0 ? (
-        <div className={`text-center py-5 ${isDarkMode ? 'text-secondary' : 'text-muted'}`}>
-          {searchTerm ? 'Không tìm thấy từ vựng nào phù hợp.' : 'Sổ tay của bạn hiện đang trống.'}
-        </div>
-      ) : (
-        <Row xs={1} md={2} lg={3} className="g-4">
-          {filteredNotes.map(note => (
-            <Col key={note.id}>
-              <Card className={`h-100 shadow-sm ${isDarkMode ? 'bg-dark border-secondary' : ''}`}>
+        {filteredNotes.length === 0 ? (
+          <div className={styles.emptyState}>
+            <JournalText size={48} className="mb-3 opacity-50" />
+            <p>Không có từ vựng nào trong danh sách này.</p>
+          </div>
+        ) : (
+          <div className={styles.termGrid}>
+            {filteredNotes.map((note) => (
+              <Card key={note.id} className={styles.termCard}>
                 <Card.Body>
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <Card.Title className={`fs-4 fw-bold mb-0 ${isDarkMode ? 'text-info' : 'text-primary'}`}>
-                      {note.term}
-                    </Card.Title>
+                  <div className={styles.cardMain}>
+                    <div className={styles.termContent}>
+                      <h3 className={styles.termTitle}>{note.term}</h3>
+                      <p className={styles.termDef}>{note.definition}</p>
+                    </div>
                     <Button
                       variant="link"
-                      className="text-danger p-0"
-                      onClick={() => confirmDelete(note)}
-                      title="Xóa khỏi sổ tay"
+                      className={styles.deleteBtn}
+                      onClick={() => handleConfirmDelete(note)}
                     >
-                      <Trash size={20} />
+                      <Trash />
                     </Button>
                   </div>
-                  <Card.Text className={`fs-5 ${isDarkMode ? 'text-light' : 'text-dark'}`}>
-                    {note.definition}
-                  </Card.Text>
                 </Card.Body>
-                {note.source && (
-                  <Card.Footer className={`${isDarkMode ? 'bg-dark border-secondary text-secondary' : 'bg-light text-muted'} small`}>
-                    Nguồn: {note.source}
-                  </Card.Footer>
-                )}
               </Card>
-            </Col>
-          ))}
-        </Row>
-      )}
+            ))}
+          </div>
+        )}
+      </Container>
 
-      {hasMore && !searchTerm && notes.length > 0 && (
-        <div className="text-center mt-4">
-          <Button
-            variant={isDarkMode ? "outline-light" : "outline-primary"}
-            onClick={handleLoadMore}
-            disabled={loading}
-          >
-            {loading ? <Spinner size="sm" animation="border" className="me-2" /> : null}
-            Tải thêm
-          </Button>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        show={showDeleteModal}
-        onHide={() => setShowDeleteModal(false)}
-        centered
-        contentClassName={isDarkMode ? 'bg-dark text-light border-secondary' : ''}
-      >
-        <Modal.Header closeButton closeVariant={isDarkMode ? 'white' : undefined} className={isDarkMode ? 'border-secondary' : ''}>
-          <Modal.Title>Xác nhận xóa</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Bạn có chắc chắn muốn xóa từ vựng <strong className="text-danger">{noteToDelete?.term}</strong> khỏi sổ tay?
-        </Modal.Body>
-        <Modal.Footer className={isDarkMode ? 'border-secondary' : ''}>
-          <Button variant={isDarkMode ? "outline-light" : "secondary"} onClick={() => setShowDeleteModal(false)}>
-            Hủy
-          </Button>
-          <Button variant="danger" onClick={executeDelete}>
-            Xóa
-          </Button>
-        </Modal.Footer>
+      {/* Add Card Modal */}
+      <Modal show={showAddModal} onHide={() => setShowAddModal(false)} centered>
+        <Form onSubmit={handleAddCard}>
+          <Modal.Header closeButton>
+            <Modal.Title>Thêm thuật ngữ mới</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form.Group className="mb-3">
+              <Form.Label>Thuật ngữ (Tiếng Anh)</Form.Label>
+              <InputGroup>
+                <Form.Control
+                  type="text"
+                  placeholder="Ví dụ: Hello"
+                  value={newCard.term}
+                  onChange={(e) => setNewCard({ ...newCard, term: e.target.value })}
+                  required
+                  autoFocus
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={handleLookup}
+                  disabled={lookupLoading || !newCard.term.trim()}
+                  title="Gợi ý nghĩa từ điển"
+                >
+                  {lookupLoading ? <Spinner size="sm" animation="border" /> : <LightbulbFill />}
+                </Button>
+              </InputGroup>
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Định nghĩa</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                placeholder="Ví dụ: Xin chào"
+                value={newCard.definition}
+                onChange={(e) => setNewCard({ ...newCard, definition: e.target.value })}
+                required
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowAddModal(false)}>Hủy</Button>
+            <Button variant="primary" type="submit" disabled={submitting}>
+              {submitting ? "Đang lưu..." : "Lưu lại"}
+            </Button>
+          </Modal.Footer>
+        </Form>
       </Modal>
-
-    </Container>
+    </div>
   );
 };
 

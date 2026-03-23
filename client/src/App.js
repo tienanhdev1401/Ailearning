@@ -46,6 +46,7 @@ import PricingPage from "./client/pages/PricingPage";
 import VocabNotebookPage from "./client/pages/VocabNotebookPage";
 import FlashcardPage from "./client/pages/FlashcardPage";
 import FlashcardListPage from "./client/pages/FlashcardListPage";
+import NotebookListPage from "./client/pages/NotebookListPage";
 
 function App() {
   return (
@@ -171,10 +172,28 @@ function App() {
         />
 
         <Route
-          path="/vocab-notebook"
+          path="/notebooks"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><NotebookListPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notebooks/:id"
           element={
             <ProtectedRoute>
               <ClientLayout><VocabNotebookPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/flashcards/:type/:id"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><FlashcardPage /></ClientLayout>
             </ProtectedRoute>
           }
         />

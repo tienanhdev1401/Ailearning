@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Nav, Button, Spinner } from "react-bootstrap";
 import { ArrowLeft, Collection, Grid, PencilSquare } from "react-bootstrap-icons";
 import api from "../../api/api";
+import notebookService from "../../services/notebookService";
 import { ThemeContext } from "../../context/ThemeContext";
 import styles from "../styles/FlashcardPage.module.css";
 
@@ -13,7 +14,7 @@ import WritingGame from "../components/Flashcard/WritingGame";
 import TermList from "../components/Flashcard/TermList";
 
 const FlashcardPage = () => {
-  const { minigameId } = useParams();
+  const { minigameId, type, id } = useParams();
   const navigate = useNavigate();
   const { isDarkMode } = useContext(ThemeContext);
 
@@ -26,8 +27,19 @@ const FlashcardPage = () => {
     const fetchGameData = async () => {
       try {
         setLoading(true);
-        const res = await api.get(`/minigames/${minigameId}`);
-        setGameData(res.data);
+        if (type === "notebook") {
+          const data = await notebookService.getNotebookById(id);
+          // Transform notebook data to match minigame resource structure
+          setGameData({
+            prompt: data.title,
+            resources: {
+              cards: data.notes || []
+            }
+          });
+        } else {
+          const res = await api.get(`/minigames/${minigameId}`);
+          setGameData(res.data);
+        }
       } catch (err) {
         console.error("Lỗi khi tải dữ liệu flashcard:", err);
         setError("Không thể tải dữ liệu bài học. Vui lòng thử lại sau.");
@@ -36,7 +48,7 @@ const FlashcardPage = () => {
       }
     };
 
-    if (minigameId) {
+    if (minigameId || (type && id)) {
       fetchGameData();
     }
   }, [minigameId]);

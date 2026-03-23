@@ -2,12 +2,14 @@ import React, { useState, useEffect, useCallback, useContext } from "react";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { VolumeUp, Star, StarFill, Lightbulb, ChevronLeft, ChevronRight } from "react-bootstrap-icons";
 import styles from "../../styles/FlashcardPlayer.module.css";
+import SaveToNotebookModal from "./SaveToNotebookModal";
 
 const FlashcardPlayer = ({ cards }) => {
   const { isDarkMode } = useContext(ThemeContext);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [starredIndices, setStarredIndices] = useState(new Set());
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const currentCard = cards[currentIndex] || {};
 
@@ -31,10 +33,11 @@ const FlashcardPlayer = ({ cards }) => {
 
   const toggleStar = (e) => {
     e.stopPropagation();
+    setShowSaveModal(true);
+    // Track local UI state if needed, but the modal handles saving
     setStarredIndices((prev) => {
       const next = new Set(prev);
-      if (next.has(currentIndex)) next.delete(currentIndex);
-      else next.add(currentIndex);
+      next.add(currentIndex);
       return next;
     });
   };
@@ -146,6 +149,13 @@ const FlashcardPlayer = ({ cards }) => {
           </div>
         </div>
       </div>
+
+      <SaveToNotebookModal 
+        show={showSaveModal} 
+        onHide={() => setShowSaveModal(false)}
+        term={currentCard.term}
+        definition={currentCard.definition}
+      />
     </div>
   );
 };
