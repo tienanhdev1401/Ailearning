@@ -44,6 +44,8 @@ import LessonManagerPage from "./admin/pages/LessonManagerPage";
 import PaymentSuccessPage from "./client/pages/PaymentSuccessPage";
 import PricingPage from "./client/pages/PricingPage";
 import VocabNotebookPage from "./client/pages/VocabNotebookPage";
+import FlashcardPage from "./client/pages/FlashcardPage";
+import FlashcardListPage from "./client/pages/FlashcardListPage";
 
 function App() {
   return (
@@ -173,6 +175,24 @@ function App() {
           element={
             <ProtectedRoute>
               <ClientLayout><VocabNotebookPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/flashcards/:minigameId"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><FlashcardPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/flashcards"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><FlashcardListPage /></ClientLayout>
             </ProtectedRoute>
           }
         />

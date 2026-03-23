@@ -9,6 +9,11 @@ import { UpdateMiniGameDto } from "../dto/request/UpdateMiniGameDTO";
 
 const router = Router();
 
+router.get("/", 
+  verifyTokenAndRole(),
+  MiniGameController.getAllMiniGames
+);
+
 router.post("/", 
   verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
   validateDto(CreateMiniGameDto),

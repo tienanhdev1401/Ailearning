@@ -1,0 +1,261 @@
+.gameContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.progressBar {
+  height: 8px;
+  width: 100%;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+:global([data-theme="dark"]) .progressBar {
+  background: #334155;
+}
+
+.progressFill {
+  height: 100%;
+  background: #3b82f6;
+  transition: width 0.3s ease;
+}
+
+.questionBox {
+  padding: 32px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+:global([data-theme="dark"]) .questionBox {
+  background: #1e293b;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+.questionHeader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.speakBtn {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 50%;
+  padding: 10px;
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:global([data-theme="dark"]) .speakBtn {
+  background: #334155;
+}
+
+.questionCount {
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.termText {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  text-align: center;
+}
+
+:global([data-theme="dark"]) .termText {
+  color: #f8fafc;
+}
+
+.optionsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.optionCard {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  color: #1e293b;
+}
+
+:global([data-theme="dark"]) .optionCard {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.optionCard:hover:not(:disabled) {
+  border-color: #3b82f6;
+  background: #f8fafc;
+}
+
+:global([data-theme="dark"]) .optionCard:hover:not(:disabled) {
+  background: #334155;
+}
+
+.optionIndex {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.optionText {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.statusIcon {
+  font-size: 20px;
+}
+
+/* Feedback States */
+.selected {
+  border-color: #3b82f6;
+  border-width: 2px;
+}
+
+.correct {
+  border-color: #10b981;
+  background: #ecfdf5;
+  border-width: 2px;
+}
+
+:global([data-theme="dark"]) .correct {
+  background: #064e3b;
+}
+
+.wrong {
+  border-color: #ef4444;
+  background: #fef2f2;
+  border-width: 2px;
+}
+
+:global([data-theme="dark"]) .wrong {
+  background: #7f1d1d;
+}
+
+.disabled {
+  opacity: 0.6;
+}
+
+/* Footer & Feedback Msg */
+.footer {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+  text-align: center;
+}
+
+.feedbackMsg {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.msgCorrect {
+  color: #10b981;
+}
+
+.msgWrong {
+  color: #ef4444;
+}
+
+.nextBtn,
+.primaryBtn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin: 0 auto;
+}
+
+.nextBtn:hover,
+.primaryBtn:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+}
+
+/* Result Screen */
+.resultScreen {
+  text-align: center;
+  padding: 64px;
+  background: white;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+:global([data-theme="dark"]) .resultScreen {
+  background: #1e293b;
+}
+
+.scoreCircle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 8px solid #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.scoreText {
+  font-size: 24px;
+  font-weight: 800;
+  color: #3b82f6;
+}
+
+.resultTitle {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.resultDesc {
+  color: #64748b;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 768px) {
+  .optionsGrid {
+    grid-template-columns: 1fr;
+  }
+}

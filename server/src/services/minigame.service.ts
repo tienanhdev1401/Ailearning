@@ -65,6 +65,16 @@ export class MiniGameService {
     return miniGame;
   }
 
+  // 🔹 Lấy tất cả MiniGame (có thể lọc theo type)
+  static async getAll(type?: MiniGameType): Promise<MiniGame[]> {
+    const where: any = {};
+    if (type) where.type = type;
+    return minigameRepository.find({
+      where,
+      order: { createdAt: "DESC" },
+    });
+  }
+
   // 🔹 Lấy danh sách MiniGame theo Activity
   static async getByActivity(activityId: number): Promise<MiniGame[]> {
     const activity = await activityRepository.findOne({ where: { id: activityId } });

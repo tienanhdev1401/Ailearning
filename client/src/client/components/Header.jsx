@@ -62,6 +62,7 @@ const Header = () => {
         { label: "Ngữ Pháp", icon: "📝", path: "/grammar" },
         { label: "Lộ Trình", icon: "🗺️", path: "/roadmaps" },
         { label: "Sổ Tay", icon: "📖", path: "/vocab-notebook" },
+        { label: "Flashcards", icon: "🎴", path: "/flashcards" },
         { label: "Mở khóa Pro", icon: "💎", path: "/pricing" },
     ];
 

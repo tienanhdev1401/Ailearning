@@ -1,0 +1,164 @@
+.pageWrapper {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  transition: background-color 0.3s ease;
+}
+
+:global([data-theme="dark"]) .pageWrapper {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.backBtn, .headerSpace {
+  width: 140px;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+:global([data-theme="dark"]) .backBtn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+.backBtn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+:global([data-theme="dark"]) .backBtn:hover {
+  background: #334155;
+}
+
+.titleSection {
+  flex: 1;
+  text-align: center;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #1e293b;
+}
+
+:global([data-theme="dark"]) .title {
+  color: #f8fafc;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+:global([data-theme="dark"]) .subtitle {
+  color: #94a3b8;
+}
+
+/* Nav Tabs */
+.navWrapper {
+  margin: 0 auto 32px;
+  padding: 8px;
+  background: #f1f5f9;
+  border-radius: 16px;
+  display: flex;
+  width: fit-content;
+}
+
+:global([data-theme="dark"]) .navWrapper {
+  background: #1e293b;
+}
+
+.customNav {
+  gap: 8px;
+}
+
+.navLink {
+  border-radius: 12px !important;
+  color: #64748b;
+  font-weight: 600;
+  padding: 10px 20px !important;
+  transition: all 0.2s ease;
+}
+
+:global([data-theme="dark"]) .navLink {
+  color: #94a3b8;
+}
+
+.navLink:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+:global([data-theme="dark"]) .navLink:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.navLink.active,
+.navLink:global(.active) {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.navLink.active svg,
+.navLink:global(.active) svg {
+  color: #ffffff !important;
+}
+
+/* Main Content Area */
+.mainContent {
+  margin-bottom: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Term List Section */
+.termListSection {
+  margin-top: 64px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 48px;
+}
+
+:global([data-theme="dark"]) .termListSection {
+  border-color: #334155;
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .navWrapper {
+    display: flex;
+    overflow-x: auto;
+    width: 100%;
+  }
+  
+  .customNav {
+    flex-wrap: nowrap;
+  }
+}

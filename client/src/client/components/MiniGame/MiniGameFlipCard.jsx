@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "../../styles/MiniGameFlipCard.module.css";
 import { ThemeContext } from "../../../context/ThemeContext";
 import vocabNoteService from "../../../services/vocabNoteService";
 
 const MiniGameFlipCard = ({ data, onNext }) => {
+  const navigate = useNavigate();
   const cards = useMemo(() => Array.isArray(data?.resources?.cards) ? data.resources.cards : [], [data]);
   const { isDarkMode } = useContext(ThemeContext);
 
@@ -146,12 +148,21 @@ const MiniGameFlipCard = ({ data, onNext }) => {
         <div className={styles.progressBar}>
           <div className={styles.progressFill} style={{ width: `${mode === 'completed' ? 100 : progress}%` }}></div>
         </div>
-        <div className="d-flex justify-content-between">
+        <div className="d-flex justify-content-between align-items-center">
           <span className={styles.progressText}>
             {mode === "learning" ? "Học: " : mode === "practice" ? "Luyện tập: " : "Hoàn thành!"}
             {mode !== "completed" ? `${currentIndex + 1} / ${cards.length}` : ""}
           </span>
-          {mode === "practice" && <span className={styles.progressText}>Điểm: {score}</span>}
+          <div className="d-flex gap-2">
+            <button 
+              className="btn btn-sm btn-outline-primary rounded-pill border-2 fw-bold"
+              onClick={() => navigate(`/flashcards/${data.id}`)}
+              style={{ fontSize: '12px' }}
+            >
+              🚀 Mở trang Flashcard học tập
+            </button>
+            {mode === "practice" && <span className={styles.progressText}>Điểm: {score}</span>}
+          </div>
         </div>
       </div>
 
