@@ -110,6 +110,7 @@ const TranslatePopup = () => {
   if (!hasTranslated) {
     return (
       <div
+        id="translate-popup"
         style={{
           position: "absolute",
           top: mousePos.y + 15,
@@ -153,6 +154,7 @@ const TranslatePopup = () => {
   return (
     <>
       <div
+        id="translate-popup"
         style={{
           position: "absolute",
           top: mousePos.y + 15,

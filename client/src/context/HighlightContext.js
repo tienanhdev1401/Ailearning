@@ -14,12 +14,21 @@ export const HighlightProvider = ({ children }) => {
     const handleMouseUp = (e) => {
       if (!enablePopup) return; // Nếu tắt → không chạy
 
-      const text = window.getSelection().toString().trim();
-
-      if (text) {
-        setSelectedText(text);
-        setMousePos({ x: e.pageX, y: e.pageY });
+      // Bỏ qua nếu click vào trong popup dịch
+      if (e.target.closest("#translate-popup")) {
+        return;
       }
+
+      setTimeout(() => {
+        const text = window.getSelection().toString().trim();
+
+        if (text) {
+          setSelectedText(text);
+          setMousePos({ x: e.pageX, y: e.pageY });
+        } else {
+          setSelectedText("");
+        }
+      }, 10);
     };
 
     document.addEventListener("mouseup", handleMouseUp);
