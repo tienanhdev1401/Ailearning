@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styles from "../../styles/MiniGameMatchImageWord.module.css";
 
-const MiniGameMatchImageWord = ({ data, onNext }) => {
+const MiniGameMatchImageWord = ({ data, onNext, onFail }) => {
   const imageList = Array.isArray(data?.resources?.images) ? data.resources.images : [];
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedWord, setSelectedWord] = useState("");
@@ -23,6 +23,7 @@ const MiniGameMatchImageWord = ({ data, onNext }) => {
       setFeedback(true);
     } else {
       setFeedback(false);
+      if (onFail) onFail();
     }
 
     setSelectedImage(null);
