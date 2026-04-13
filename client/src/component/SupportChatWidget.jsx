@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import styles from "./SupportChatWidget.module.css";
+import styles from "../client/styles/SupportChatWidget.module.css";
 import { SupportChatService } from "../services/supportChatService";
 import { createSupportChatSocket } from "../utils/supportChatSocket";
 import { useToast } from "../context/ToastContext";

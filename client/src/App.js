@@ -153,12 +153,12 @@ function App() {
         } />
         <Route path="/daily-challenge/:roadmapId" element={
           <ProtectedRoute>
-            <DailyChallengePage />
+            <ClientLayout><DailyChallengePage /></ClientLayout>
           </ProtectedRoute>
         } />
         <Route path="/daily-challenge/:roadmapId/summary" element={
           <ProtectedRoute>
-            <ChallengeSummary />
+            <ClientLayout><ChallengeSummary /></ClientLayout>
           </ProtectedRoute>
         } />
 

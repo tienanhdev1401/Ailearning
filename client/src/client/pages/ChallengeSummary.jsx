@@ -1,14 +1,14 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ThemeContext } from '../../context/ThemeContext';
-import styles from './ChallengeSummary.module.css';
+import styles from '../styles/ChallengeSummary.module.css';
 
 const ChallengeSummary = () => {
   const { roadmapId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const { isDarkMode } = useContext(ThemeContext);
-  
+
   const { streak, level } = location.state || { streak: 0, level: 1 };
   const [showContent, setShowContent] = useState(false);
 
@@ -25,7 +25,7 @@ const ChallengeSummary = () => {
           <div className={styles.crown}>👑</div>
           <div className={styles.stars}>✨✨✨</div>
         </div>
-        
+
         <h1 className={styles.title}>Tuyệt vời!</h1>
         <p className={styles.subtitle}>Bạn đã vượt qua thử thách cấp độ {level}</p>
 
@@ -41,15 +41,15 @@ const ChallengeSummary = () => {
         </div>
 
         <div className={styles.actions}>
-          <button 
-            className={styles.primaryBtn} 
+          <button
+            className={styles.primaryBtn}
             onClick={() => navigate(`/roadmaps/${roadmapId}/days`)}
           >
             Quay lại lộ trình 🎯
           </button>
         </div>
       </div>
-      
+
       {/* Background decorations */}
       <div className={styles.blob1}></div>
       <div className={styles.blob2}></div>

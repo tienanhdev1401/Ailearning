@@ -7,6 +7,7 @@ import { minigameRepository } from "../repositories/minigame.repository";
 import MiniGameType from "../enums/minigameType.enum";
 import { MiniGame } from "../models/minigame";
 import { dayRepository } from "../repositories/day.repository";
+import { Not, In } from "typeorm";
 
 export class DailyChallengeService {
   /**
@@ -86,36 +87,39 @@ export class DailyChallengeService {
     if (!status.isEligible) throw new ApiError(HttpStatusCode.Forbidden, "Chưa đủ 20% tiến độ để mở khóa thử thách");
     if (status.isCompletedToday) throw new ApiError(HttpStatusCode.BadRequest, "Bạn đã hoàn thành thử thách hôm nay rồi");
 
-    // Tính level độ khó (1-5)
+    // Tính level độ khó (1-3)
     // Càng gần về cuối roadmap (progress cao) và streak cao thì càng khó
-    const level = Math.min(5, Math.max(1, Math.floor((status.progress / 20) + (status.streak / 5))));
+    const level = Math.min(3, Math.max(1, Math.floor((status.progress / 20) + (status.streak / 5))));
 
-    const gamesCount = 3 + level * 2; // Level 1: 5 games, Level 5: 13 games
+    const gamesCount = 3 + level * 2; // Level 1: 5 games, Level 3: 9 games
 
     // Phân loại độ khó của các type minigame
     const complexityMap: Record<string, "easy" | "medium" | "hard"> = {
-      [MiniGameType.FLIP_CARD]: "easy",
       [MiniGameType.MATCH_IMAGE_WORD]: "easy",
       [MiniGameType.TRUE_FALSE]: "medium",
-      [MiniGameType.LESSON]: "easy",
       [MiniGameType.SENTENCE_BUILDER]: "medium",
       [MiniGameType.LISTEN_SELECT]: "hard",
-      [MiniGameType.TYPING_CHALLENGE]: "hard",
-      [MiniGameType.WATCH_VIDEO]: "hard",
-      [MiniGameType.EXAM]: "hard"
+      [MiniGameType.TYPING_CHALLENGE]: "hard"
     };
 
-    // Lấy tất cả minigame trong roadmap mà user đã có quyền tiếp cận (dựa trên progress hiện tại)
-    // Ở đây đơn giản là lấy tất cả minigame trong roadmap
-    const allGames = await minigameRepository.find({
-      where: { activity: { day: { roadmap: { id: roadmapId } } } },
+    // Lấy tất cả bài kiểm tra (bỏ các minigame học thuyết và bài thi dài)
+    const testGames = await minigameRepository.find({
+      where: {
+        activity: { day: { roadmap: { id: roadmapId } } },
+        type: Not(In([
+          MiniGameType.LESSON,
+          MiniGameType.WATCH_VIDEO,
+          MiniGameType.FLIP_CARD,
+          MiniGameType.EXAM
+        ]))
+      },
       relations: ["activity", "activity.day"]
     });
 
-    if (allGames.length === 0) throw new ApiError(HttpStatusCode.InternalServerError, "Không tìm thấy nội dung học tập");
+    if (testGames.length === 0) throw new ApiError(HttpStatusCode.InternalServerError, "Không tìm thấy đủ bài kiểm tra để tạo thử thách");
 
     // Lọc và gán độ khó ảo cho từng game dựa trên type và vị trí trong roadmap
-    const scoredGames = allGames.map(game => {
+    const scoredGames = testGames.map(game => {
       const typeDifficulty = complexityMap[game.type] || "medium";
       const dayWeight = game.activity.day.dayNumber; // Ngày càng cao thì càng khó
 
@@ -157,8 +161,8 @@ export class DailyChallengeService {
       level,
       gamesCount,
       games: selectedGames,
-      hearts: level >= 4 ? 3 : null, // Cấp độ 4-5 có giới hạn mạng
-      timer: level >= 3 ? 60 : null  // Cấp độ 3+ có đếm ngược
+      hearts: level >= 3 ? 3 : null, // Cấp độ 3 có giới hạn mạng
+      timer: level >= 2 ? 60 : null  // Cấp độ 2+ có đếm ngược
     };
   }
 
