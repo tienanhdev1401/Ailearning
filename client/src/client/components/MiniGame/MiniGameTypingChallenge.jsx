@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styles from "../../styles/MiniGameTypingChallenge.module.css";
 
-const MiniGameTypingChallenge = ({ data, onNext }) => {
+const MiniGameTypingChallenge = ({ data, onNext, onFail }) => {
   const resources = data?.resources || {};
   const prompt = data?.prompt || "Typing Challenge";
   const targetText = resources.targetText || "";
@@ -66,6 +66,8 @@ const MiniGameTypingChallenge = ({ data, onNext }) => {
 
     if (success) {
       setTimeLeft(null);
+    } else {
+      if (onFail) onFail();
     }
   };
 

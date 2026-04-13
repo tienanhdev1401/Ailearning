@@ -16,8 +16,17 @@ export class RoadmapEnrollment {
   @Column({ default: "active" })
   status!: "active" | "paused" | "completed" | "dropped";
 
+  @Column({ default: 0 })
+  streak!: number;
+
+  @Column({ type: "datetime", nullable: true })
+  lastActivityAt!: Date | null;
+
+  @Column({ type: "datetime", nullable: true })
+  dailyChallengeCompletedAt!: Date | null;
+
   @Column({ type: "datetime", nullable: false })
-  started_at!: Date; 
+  started_at!: Date;
 
   @UpdateDateColumn()
   updatedAt!: Date;

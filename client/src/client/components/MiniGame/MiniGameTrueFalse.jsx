@@ -15,7 +15,7 @@ const normalizeOptions = (options) => {
   }));
 };
 
-const MiniGameTrueFalse = ({ data, onNext }) => {
+const MiniGameTrueFalse = ({ data, onNext, onFail }) => {
   const resources = data?.resources || {};
   const prompt = data?.prompt || "Chọn đáp án đúng";
   const statement = resources.statement || prompt;
@@ -35,6 +35,7 @@ const MiniGameTrueFalse = ({ data, onNext }) => {
     const ok = normalized === correctOption;
     setIsCorrect(ok);
     setSubmitted(true);
+    if (!ok && onFail) onFail();
   };
 
   const handleRetry = () => {

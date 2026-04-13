@@ -47,6 +47,8 @@ import VocabNotebookPage from "./client/pages/VocabNotebookPage";
 import FlashcardPage from "./client/pages/FlashcardPage";
 import FlashcardListPage from "./client/pages/FlashcardListPage";
 import NotebookListPage from "./client/pages/NotebookListPage";
+import DailyChallengePage from "./client/pages/DailyChallengePage";
+import ChallengeSummary from "./client/pages/ChallengeSummary";
 
 function App() {
   return (
@@ -147,6 +149,16 @@ function App() {
         <Route path="/roadmaps/:id/days" element={
           <ProtectedRoute>
             <ClientLayout><RoadMapPage /></ClientLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/daily-challenge/:roadmapId" element={
+          <ProtectedRoute>
+            <ClientLayout><DailyChallengePage /></ClientLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/daily-challenge/:roadmapId/summary" element={
+          <ProtectedRoute>
+            <ClientLayout><ChallengeSummary /></ClientLayout>
           </ProtectedRoute>
         } />
 

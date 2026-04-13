@@ -1,0 +1,335 @@
+/* DailyChallengePage.module.css */
+.page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.page.dark {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.container {
+  width: 100%;
+  max-width: 900px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 32px;
+  padding: 40px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.dark .container {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.dark .title {
+  color: #f8fafc;
+}
+
+.dark .subtitle {
+  color: #94a3b8;
+}
+
+.statsBar {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 10px 20px;
+  border-radius: 100px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  letter-spacing: 0.5px;
+}
+
+.dark .statItem {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f8fafc;
+}
+
+.heart {
+  color: #ef4444;
+}
+
+.timer {
+  color: #3b82f6;
+}
+
+.timerWarning {
+  color: #f59e0b;
+  animation: pulse 1s infinite;
+}
+
+.timerCritical {
+  color: #ef4444;
+  animation: pulse 0.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.progressBarContainer {
+  width: 100%;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  margin-bottom: 30px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.dark .progressBarContainer {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.progressBar {
+  height: 100%;
+  background: #4285F4;
+  transition: width 0.4s ease;
+  border-radius: 12px;
+}
+
+.timeBarContainer {
+  width: 100%;
+  height: 8px;
+  background: rgba(226, 232, 240, 0.6);
+  border-radius: 8px;
+  margin-bottom: 40px;
+  overflow: hidden;
+}
+
+.dark .timeBarContainer {
+  background: rgba(30, 41, 59, 0.6);
+}
+
+.timeBar {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #14b8a6);
+  transition: width 1s linear;
+  border-radius: 8px;
+}
+
+.timeBarWarning {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.timeBarCritical {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.gameArea {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.loading,
+.error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.errorTitle {
+  font-size: 1.5rem;
+  color: #ef4444;
+  margin-bottom: 20px;
+}
+
+.backBtn {
+  margin-top: 24px;
+  padding: 14px 40px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+  transition: all 0.3s ease;
+}
+
+.backBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+}
+
+.failOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(12px);
+  padding: 20px;
+}
+
+.failContent {
+  background: #ffffff;
+  padding: 60px 40px;
+  border-radius: 36px;
+  text-align: center;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.12);
+  border: 4px solid rgba(255, 255, 255, 0.8);
+  animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalPop {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.dark .failContent {
+  background: #1e293b;
+  border: 4px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
+}
+
+.failIconWrapper {
+  width: 100px;
+  height: 100px;
+  background: rgba(239, 68, 68, 0.05);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 30px;
+  position: relative;
+}
+
+.failIconInner {
+  width: 70px;
+  height: 70px;
+  background: #fee2e2;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2);
+}
+
+.failEmoji {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.failTitle {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: #1e293b;
+  letter-spacing: -0.5px;
+}
+
+.dark .failTitle {
+  color: #f8fafc;
+}
+
+.failMessage {
+  font-size: 1rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+.dark .failMessage {
+  color: #94a3b8;
+}
+
+.backBtn {
+  width: 100%;
+  padding: 16px;
+  background: #1e293b;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.backBtn:hover {
+  background: #334155;
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+.dark .backBtn {
+  background: #3b82f6;
+}
+
+.dark .backBtn:hover {
+  background: #2563eb;
+}

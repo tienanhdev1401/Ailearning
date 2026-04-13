@@ -9,22 +9,22 @@ import MiniGameTypingChallenge from "../MiniGame/MiniGameTypingChallenge";
 import MiniGameFlipCard from "../MiniGame/MiniGameFlipCard";
 import MiniGameWatchVideo from "../MiniGame/MiniGameWatchVideo";
 
-const MiniGameRenderer = ({ game, onNext }) => {
+const MiniGameRenderer = ({ game, onNext, onFail }) => {
   switch (game.type) {
     case "match_image_word":
-      return <MiniGameMatchImageWord data={game} onNext={onNext} />;
+      return <MiniGameMatchImageWord data={game} onNext={onNext} onFail={onFail} />;
     case "sentence_builder":
-      return <MiniGameSentenceBuilder data={game} onNext={onNext} />;
+      return <MiniGameSentenceBuilder data={game} onNext={onNext} onFail={onFail} />;
     case "lesson":
       return <MiniGameLesson data={game} onNext={onNext} />;
     case "exam":
       return <MiniGameExam data={game} onNext={onNext} />;
     case "listen_select":
-      return <MiniGameListenSelect data={game} onNext={onNext} />;
+      return <MiniGameListenSelect data={game} onNext={onNext} onFail={onFail} />;
     case "true_false":
-      return <MiniGameTrueFalse data={game} onNext={onNext} />;
+      return <MiniGameTrueFalse data={game} onNext={onNext} onFail={onFail} />;
     case "typing_challenge":
-      return <MiniGameTypingChallenge data={game} onNext={onNext} />;
+      return <MiniGameTypingChallenge data={game} onNext={onNext} onFail={onFail} />;
     case "flip_card":
       return <MiniGameFlipCard data={game} onNext={onNext} />;
     case "watch_video":

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import styles from "../../styles/MiniGameListenSelect.module.css";
 
-const MiniGameListenSelect = ({ data, onNext }) => {
+const MiniGameListenSelect = ({ data, onNext, onFail }) => {
   const resources = data?.resources || {};
   const options = Array.isArray(resources.options) ? resources.options : [];
   const audioUrl = resources.audioUrl || "";
@@ -38,6 +38,7 @@ const MiniGameListenSelect = ({ data, onNext }) => {
     const ok = Number(selected) === Number(correctIndex);
     setIsCorrect(ok);
     setSubmitted(true);
+    if (!ok && onFail) onFail();
   };
 
   const handleRetry = () => {
