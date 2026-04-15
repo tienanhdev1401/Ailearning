@@ -99,7 +99,7 @@ const RoadmapListPage = () => {
             <div className={styles.statLabel}>Bài học</div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statNumber}>100%</div>
+            <div className={styles.statNumber}>Học thử</div>
             <div className={styles.statLabel}>Miễn phí</div>
           </div>
         </div>

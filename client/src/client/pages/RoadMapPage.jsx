@@ -7,6 +7,8 @@ import RoadmapMap from '../components/roadmap/RoadmapMap';
 import MiniGameRenderer from '../components/MiniGame/MiniGameRender';
 import RoadmapReviewPanel from '../components/roadmap/RoadmapReviewPanel';
 import useCurrentUser from '../hooks/useCurrentUser';
+import VipModal from '../components/common/VipModal';
+import DailyChallengeWidget from '../components/DailyChallenge/DailyChallengeWidget';
 
 const classNames = (...parts) => parts.filter(Boolean).join(' ');
 
@@ -39,8 +41,8 @@ const decorateActivitiesWithProgress = (activities = [], progressList = []) => {
     const status = isCompleted
       ? 'completed'
       : isUnlocked
-      ? (isInProgress ? 'in_progress' : 'available')
-      : 'locked';
+        ? (isInProgress ? 'in_progress' : 'available')
+        : 'locked';
 
     if (!isCompleted) {
       allPreviousCompleted = false;
@@ -117,8 +119,8 @@ const ActivityDrawer = ({
     typeof progressPercentOverride === 'number'
       ? progressPercentOverride
       : activities.length
-      ? Math.round((completedActivities / activities.length) * 100)
-      : 0;
+        ? Math.round((completedActivities / activities.length) * 100)
+        : 0;
   const nextActivityTitle = currentActivity?.title || currentActivity?.name || 'Hoạt động tiếp theo';
 
   const completeActivity = useCallback(async () => {
@@ -288,8 +290,8 @@ const ActivityDrawer = ({
                 {stage === 'content'
                   ? 'Bắt đầu ngay'
                   : stage === 'minigame'
-                  ? 'Hoàn thành mini game'
-                  : 'Hoàn thành ngày'}
+                    ? 'Hoàn thành mini game'
+                    : 'Hoàn thành ngày'}
               </button>
               <button className={styles.secondaryBtn} type="button" disabled>
                 Bắt đầu lại từ đầu
@@ -343,6 +345,7 @@ const RoadMapPage = () => {
   const [availableRoadmaps, setAvailableRoadmaps] = useState([]);
   const [userEnrollments, setUserEnrollments] = useState([]);
   const [switching, setSwitching] = useState(false);
+  const [showVipModal, setShowVipModal] = useState(false);
   const noticeTimerRef = useRef(null);
 
   const hydratePublicRoadmap = useCallback(async () => {
@@ -537,8 +540,8 @@ const RoadMapPage = () => {
       const activitiesPayload = Array.isArray(activitiesPayloadRaw?.data)
         ? activitiesPayloadRaw.data
         : Array.isArray(activitiesPayloadRaw)
-        ? activitiesPayloadRaw
-        : [];
+          ? activitiesPayloadRaw
+          : [];
       const progressPayload = Array.isArray(progressRes.data) ? progressRes.data : [];
       return decorateActivitiesWithProgress(activitiesPayload, progressPayload);
     },
@@ -924,6 +927,8 @@ const RoadMapPage = () => {
         normalizedStatus = 'completed';
       } else if (day.status === 'in_progress') {
         normalizedStatus = 'available';
+      } else if (day.status === 'vip_required') {
+        normalizedStatus = 'vip_required';
       } else {
         const prevUnlocked = index === 0 || sourceDays[index - 1]?.status === 'completed';
         normalizedStatus = prevUnlocked ? 'available' : 'locked';
@@ -983,6 +988,12 @@ const RoadMapPage = () => {
       const targetDay =
         sourceDays.find((day) => day.id === node.metaId) ||
         sourceDays.find((day) => (day.dayNumber || day.day) === node.day);
+
+      if (node.status === 'vip_required' || targetDay?.status === 'vip_required') {
+        setShowVipModal(true);
+        return;
+      }
+
       if (targetDay) {
         handleNodeClick(targetDay);
       }
@@ -990,65 +1001,70 @@ const RoadMapPage = () => {
     [enrolled, handleLoadMoreDays, handleNodeClick, showNotice, sourceDays]
   );
 
-  
+
   if (loading || userLoading) return <div className="text-center mt-5">Loading...</div>;
   if (!roadmap) return <div className="text-center mt-5">Không tìm thấy roadmap</div>;
 
   return (
     <div className={styles.page}>
       <section className={styles.shell}>
-        <header className={styles.header}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
-            <div style={{ flex: '1 1 auto', minWidth: 0 }}>
-              <div className={styles.headerIntro} style={{ marginTop: 20 }}>
-                <h2 className={styles.headerTitle} style={{ marginTop: 0, wordBreak: 'break-word' }}>
-                  {roadmap?.levelName ? `${roadmap.levelName} Roadmap` : 'Roadmap'}
-                </h2>
-                <p className={styles.headerDescription}>{roadmap.description || ''}</p>
-                <div className={styles.ctaRow}>
-              {!enrolled && (
-                <button className={styles.ctaPrimary} onClick={handleEnroll} disabled={enrolling}>
-                  {enrolling ? 'Đang ghi danh...' : 'Bắt đầu ngay'}
-                </button>
-              )}
-              {enrolled && (
-                <button className={styles.ctaPrimary} type="button">
-                  Tiếp tục học
-                </button>
-              )}
-              <button className={styles.ctaGhost} type="button" onClick={openOverview}>
-                Giới thiệu lộ trình
-              </button>
-              <button className={styles.ctaSecondary} type="button" onClick={openReviews}>
-                Đánh giá & bình luận
-              </button>
+        <div className={styles.topSection}>
+          <header className={styles.header}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+              <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+                <div className={styles.headerIntro} style={{ marginTop: 20 }}>
+                  <h2 className={styles.headerTitle} style={{ marginTop: 0, wordBreak: 'break-word' }}>
+                    {roadmap?.levelName ? `${roadmap.levelName} Roadmap` : 'Roadmap'}
+                  </h2>
+                  <p className={styles.headerDescription}>{roadmap.description || ''}</p>
+                  <div className={styles.ctaRow}>
+                    {!enrolled && (
+                      <button className={styles.ctaPrimary} onClick={handleEnroll} disabled={enrolling}>
+                        {enrolling ? 'Đang ghi danh...' : 'Bắt đầu ngay'}
+                      </button>
+                    )}
+                    {enrolled && (
+                      <button className={styles.ctaPrimary} type="button">
+                        Tiếp tục học
+                      </button>
+                    )}
+                    <button className={styles.ctaGhost} type="button" onClick={openOverview}>
+                      Giới thiệu lộ trình
+                    </button>
+                    <button className={styles.ctaSecondary} type="button" onClick={openReviews}>
+                      Đánh giá & bình luận
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '1rem' }}>
+                {isAuthenticated && (
+                  <button
+                    className={styles.switchButton}
+                    type="button"
+                    onClick={openSwitcher}
+                    disabled={switching || switcherLoading}
+                    aria-label="Chọn lại lộ trình"
+                    title="Chọn lại lộ trình"
+                  >
+                    ⟳ Đổi lộ trình
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-          </div>
-            <div style={{ flex: '0 0 auto' }}>
-              {isAuthenticated && (
-                <button
-                  className={styles.switchButton}
-                  type="button"
-                  onClick={openSwitcher}
-                  disabled={switching || switcherLoading}
-                  aria-label="Chọn lại lộ trình"
-                  title="Chọn lại lộ trình"
-                >
-                  ⟳ Đổi lộ trình
-                </button>
-              )}
+            <div className={styles.statGrid}>
+              {stats.map((stat) => (
+                <article key={stat.label} className={styles.statCard}>
+                  <span className={styles.statLabel}>{stat.label}</span>
+                  <strong className={styles.statValue}>{stat.value}</strong>
+                </article>
+              ))}
             </div>
-          </div>
-          <div className={styles.statGrid}>
-            {stats.map((stat) => (
-              <article key={stat.label} className={styles.statCard}>
-                <span className={styles.statLabel}>{stat.label}</span>
-                <strong className={styles.statValue}>{stat.value}</strong>
-              </article>
-            ))}
-          </div>
-        </header>
+          </header>
+          {/* <div className={styles.topWidgetArea}>
+            <DailyChallengeWidget roadmapId={id} />
+          </div> */}
+        </div>
 
         <section className={styles.mapStage}>
           <div className={styles.mapColumn}>
@@ -1084,7 +1100,7 @@ const RoadMapPage = () => {
                     <span>{miniGameView.miniGames.length} mini game</span>
                   </div>
                 </div>
-                <div className={styles.miniGameHubBody}> 
+                <div className={styles.miniGameHubBody}>
                   <div className={styles.miniGameHubListGroup}>
                     {miniGameView.miniGames.map((game, index) => (
                       <button
@@ -1152,100 +1168,100 @@ const RoadMapPage = () => {
           </aside>
         </section>
       </section>
-          {switcherOpen && (
-            <div className={classNames(styles.drawerOverlay, styles.centerOverlay)} onClick={closeSwitcher}>
-              <div
-                className={classNames(styles.popupShell, styles.switcherPopup)}
-                onClick={(event) => event.stopPropagation()}
-              >
-                <header className={styles.overviewHeader}>
-                  <div>
-                    <h3 className={styles.overviewTitle}>Chọn lộ trình khác</h3>
-                    <p className={styles.popupSubtitle}>Tiến trình hiện tại được giữ nguyên. Bạn có thể quay lại bất cứ lúc nào.</p>
-                  </div>
-                  <button className={styles.closeBtn} type="button" onClick={closeSwitcher} aria-label="Đóng chọn lộ trình">
-                    ×
-                  </button>
-                </header>
-                {switcherLoading ? (
-                  <p className={styles.nodeDescription}>Đang tải danh sách lộ trình...</p>
-                ) : (
-                  <div className={styles.switcherList}>
-                    {availableRoadmaps.map((item) => {
-                      const isCurrent = item.id === roadmap?.id && enrolled;
-                      const enrollmentRecord = enrollmentMap.get(item.id);
-                      const statusLabel = isCurrent
-                        ? 'Đang học'
-                        : enrollmentRecord
-                        ? 'Đã học trước'
-                        : 'Mới';
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          className={classNames(
-                            styles.switcherCard,
-                            isCurrent && styles.switcherCardActive
-                          )}
-                          onClick={() => handleSelectRoadmap(item)}
-                          disabled={switching}
-                        >
-                          <div className={styles.switcherCardHeader}>
-                            <div>
-                              <p className={styles.mapLabel}>{item.levelName || 'Lộ trình'}</p>
-                              <h4 className={styles.switcherTitle}>{item.displayName || item.title || 'Roadmap'}</h4>
-                            </div>
-                            <span className={styles.switcherStatus}>{statusLabel}</span>
-                          </div>
-                          <p className={styles.switcherDescription}>
-                            {item.description || 'Lộ trình học tập được thiết kế cân bằng giữa lý thuyết và thực hành.'}
-                          </p>
-                        </button>
-                      );
-                    })}
-                    {!availableRoadmaps.length && (
-                      <p className={styles.nodeDescription}>Chưa có lộ trình nào để lựa chọn.</p>
-                    )}
-                  </div>
+      {switcherOpen && (
+        <div className={classNames(styles.drawerOverlay, styles.centerOverlay)} onClick={closeSwitcher}>
+          <div
+            className={classNames(styles.popupShell, styles.switcherPopup)}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className={styles.overviewHeader}>
+              <div>
+                <h3 className={styles.overviewTitle}>Chọn lộ trình khác</h3>
+                <p className={styles.popupSubtitle}>Tiến trình hiện tại được giữ nguyên. Bạn có thể quay lại bất cứ lúc nào.</p>
+              </div>
+              <button className={styles.closeBtn} type="button" onClick={closeSwitcher} aria-label="Đóng chọn lộ trình">
+                ×
+              </button>
+            </header>
+            {switcherLoading ? (
+              <p className={styles.nodeDescription}>Đang tải danh sách lộ trình...</p>
+            ) : (
+              <div className={styles.switcherList}>
+                {availableRoadmaps.map((item) => {
+                  const isCurrent = item.id === roadmap?.id && enrolled;
+                  const enrollmentRecord = enrollmentMap.get(item.id);
+                  const statusLabel = isCurrent
+                    ? 'Đang học'
+                    : enrollmentRecord
+                      ? 'Đã học trước'
+                      : 'Mới';
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={classNames(
+                        styles.switcherCard,
+                        isCurrent && styles.switcherCardActive
+                      )}
+                      onClick={() => handleSelectRoadmap(item)}
+                      disabled={switching}
+                    >
+                      <div className={styles.switcherCardHeader}>
+                        <div>
+                          <p className={styles.mapLabel}>{item.levelName || 'Lộ trình'}</p>
+                          <h4 className={styles.switcherTitle}>{item.displayName || item.title || 'Roadmap'}</h4>
+                        </div>
+                        <span className={styles.switcherStatus}>{statusLabel}</span>
+                      </div>
+                      <p className={styles.switcherDescription}>
+                        {item.description || 'Lộ trình học tập được thiết kế cân bằng giữa lý thuyết và thực hành.'}
+                      </p>
+                    </button>
+                  );
+                })}
+                {!availableRoadmaps.length && (
+                  <p className={styles.nodeDescription}>Chưa có lộ trình nào để lựa chọn.</p>
                 )}
               </div>
-            </div>
-          )}
-          {switchPrompt && (
-            <div className={classNames(styles.drawerOverlay, styles.centerOverlay)} onClick={() => setSwitchPrompt(null)}>
-              <div className={classNames(styles.popupShell, styles.switchPrompt)} onClick={(event) => event.stopPropagation()}>
-                <header className={styles.overviewHeader}>
-                  <div>
-                    <h3 className={styles.overviewTitle}>Chào mừng trở lại</h3>
-                    <p className={styles.popupSubtitle}>
-                      Bạn đã học tới ngày {switchPrompt.summary?.lastCompletedDay || switchPrompt.summary?.lastTouchedDay || 1} của {switchPrompt.roadmap?.displayName || switchPrompt.roadmap?.title || 'lộ trình'}. Muốn tiếp tục hay bắt đầu lại từ đầu?
-                    </p>
-                  </div>
-                  <button className={styles.closeBtn} type="button" onClick={() => setSwitchPrompt(null)} aria-label="Đóng thông báo">
-                    ×
-                  </button>
-                </header>
-                <div className={styles.switchPromptActions}>
-                  <button
-                    className={styles.primaryBtn}
-                    type="button"
-                    onClick={() => confirmSwitchPrompt(false)}
-                    disabled={switching}
-                  >
-                    Tiếp tục
-                  </button>
-                  <button
-                    className={styles.secondaryBtn}
-                    type="button"
-                    onClick={() => confirmSwitchPrompt(true)}
-                    disabled={switching}
-                  >
-                    Bắt đầu lại từ ngày 1
-                  </button>
-                </div>
+            )}
+          </div>
+        </div>
+      )}
+      {switchPrompt && (
+        <div className={classNames(styles.drawerOverlay, styles.centerOverlay)} onClick={() => setSwitchPrompt(null)}>
+          <div className={classNames(styles.popupShell, styles.switchPrompt)} onClick={(event) => event.stopPropagation()}>
+            <header className={styles.overviewHeader}>
+              <div>
+                <h3 className={styles.overviewTitle}>Chào mừng trở lại</h3>
+                <p className={styles.popupSubtitle}>
+                  Bạn đã học tới ngày {switchPrompt.summary?.lastCompletedDay || switchPrompt.summary?.lastTouchedDay || 1} của {switchPrompt.roadmap?.displayName || switchPrompt.roadmap?.title || 'lộ trình'}. Muốn tiếp tục hay bắt đầu lại từ đầu?
+                </p>
               </div>
+              <button className={styles.closeBtn} type="button" onClick={() => setSwitchPrompt(null)} aria-label="Đóng thông báo">
+                ×
+              </button>
+            </header>
+            <div className={styles.switchPromptActions}>
+              <button
+                className={styles.primaryBtn}
+                type="button"
+                onClick={() => confirmSwitchPrompt(false)}
+                disabled={switching}
+              >
+                Tiếp tục
+              </button>
+              <button
+                className={styles.secondaryBtn}
+                type="button"
+                onClick={() => confirmSwitchPrompt(true)}
+                disabled={switching}
+              >
+                Bắt đầu lại từ ngày 1
+              </button>
             </div>
-          )}
+          </div>
+        </div>
+      )}
       {overviewOpen && hasOverview && (
         <div className={styles.drawerOverlay} onClick={closeOverview}>
           <div
@@ -1287,6 +1303,12 @@ const RoadMapPage = () => {
           completedCountOverride={drawerCompletedCount}
         />
       )}
+      <VipModal
+        show={showVipModal}
+        onHide={() => setShowVipModal(false)}
+        message={`Lộ trình "${roadmap?.levelName}" đã đạt giới hạn học thử. Hãy sở hữu ngay gói mở khóa để tiếp tục hành trình học tập nhé!`}
+      />
+      <DailyChallengeWidget roadmapId={id} isFloating={true} />
     </div>
   );
 };

@@ -32,6 +32,9 @@ export class UpdateLessonDto {
   level?: LessonLevel;
 
   @IsOptional()
+  isLock?: boolean;
+
+  @IsOptional()
   @ValidateNested()
   @Type(() => SrtFileDto)
   @IsSrtFile({ message: "File phải có định dạng .srt" })

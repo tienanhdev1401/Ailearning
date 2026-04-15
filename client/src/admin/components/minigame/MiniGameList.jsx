@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import api from "../../../api/api";
 import MatchImageWordMiniGame from "./MatchImageWordMiniGame";
@@ -8,9 +8,12 @@ import ListenSelectMiniGame from "./ListenSelectMiniGame";
 import ExamMiniGame from "./ExamMiniGame";
 import TrueFalseMiniGame from "./TrueFalseMiniGame";
 import TypingChallengeMiniGame from "./TypingChallengeMiniGame";
+import FlipCardMiniGame from "./FlipCardMiniGame";
+import WatchVideoMiniGame from "./WatchVideoMiniGame";
 import { useToast } from "../../../context/ToastContext";
 
 import { Editor } from "@tinymce/tinymce-react";
+import HLSPlayer from "../../../component/HLSPlayer";
 
 const MiniGameList = ({ activityId, onRefresh }) => {
 	const toast = useToast();
@@ -79,24 +82,39 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 			setTypingHints((prev) => prev.filter((_, idx) => idx !== index));
 		};
 
+		// FLIP_CARD fields
+		const [flipCards, setFlipCards] = useState([]);
+		const addFlipCard = () => setFlipCards([...flipCards, { term: "", definition: "" }]);
+		const updateFlipCard = (idx, field, val) => {
+			const copy = [...flipCards]; copy[idx] = { ...copy[idx], [field]: val }; setFlipCards(copy);
+		};
+		const removeFlipCard = (idx) => setFlipCards(flipCards.filter((_, i) => i !== idx));
+
+		// WATCH_VIDEO fields
+		const [watchVideoHls, setWatchVideoHls] = useState("");
+		const [watchVideoMp4, setWatchVideoMp4] = useState("");
+		const [watchVideoTitle, setWatchVideoTitle] = useState("");
+		const watchVideoFileInputRef = useRef(null);
+		const [watchVideoUploading, setWatchVideoUploading] = useState(false);
+
 		// LESSON fields
 		const [content, setContent] = useState("");
-    const [showPreview, setShowPreview] = useState(false);
+		const [showPreview, setShowPreview] = useState(false);
 
 		// Exam fields
 		const [questions, setQuestions] = useState([]);
-		const addQuestion = () => { setQuestions([...questions, { question: "", options: ["","","",""], correctIndex: 0 }]);};
-		const updateQuestion = (idx, field, value) => {setQuestions(prev => { const copy = [...prev]; copy[idx][field] = value; return copy;});};
-		const updateOption = (qIdx, optIdx, value) => {setQuestions(prev => { const copy = [...prev]; copy[qIdx].options[optIdx] = value; return copy;});};
-		const removeQuestion = (idx) => { setQuestions(prev => prev.filter((_, i) => i !== idx));};
+		const addQuestion = () => { setQuestions([...questions, { question: "", options: ["", "", "", ""], correctIndex: 0 }]); };
+		const updateQuestion = (idx, field, value) => { setQuestions(prev => { const copy = [...prev]; copy[idx][field] = value; return copy; }); };
+		const updateOption = (qIdx, optIdx, value) => { setQuestions(prev => { const copy = [...prev]; copy[qIdx].options[optIdx] = value; return copy; }); };
+		const removeQuestion = (idx) => { setQuestions(prev => prev.filter((_, i) => i !== idx)); };
 
 		// Listen Select fields
 		const [audioUrl, setAudioUrl] = useState("");
 		const [listenOptions, setListenOptions] = useState([]);
 		const [correctIndex, setCorrectIndex] = useState(0);
-		const addListenOption = () => {setListenOptions([...listenOptions, { id: Date.now(), text: "", imageUrl: "" }]);};
-		const updateListenOption = (idx, field, value) => { setListenOptions(prev => { const copy = [...prev]; copy[idx][field] = value; return copy;});};
-		const removeListenOption = (idx) => { setListenOptions(prev => prev.filter((_, i) => i !== idx));};
+		const addListenOption = () => { setListenOptions([...listenOptions, { id: Date.now(), text: "", imageUrl: "" }]); };
+		const updateListenOption = (idx, field, value) => { setListenOptions(prev => { const copy = [...prev]; copy[idx][field] = value; return copy; }); };
+		const removeListenOption = (idx) => { setListenOptions(prev => prev.filter((_, i) => i !== idx)); };
 
 		const handleSubmit = async () => {
 			// basic validation
@@ -105,25 +123,25 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 			if (type === "match_image_word") {
 				if (images.length < 2) return toast.warning("Cần ít nhất 2 ảnh");
 				resources = { images: images.map(img => ({ id: img.id, imageUrl: img.imageUrl, correctWord: img.correctWord })) };
-			} 
+			}
 			else if (type === "lesson") {
 				if (!content.trim()) return toast.warning("Content HTML không được rỗng");
 				resources = { content };
-			} 
+			}
 			else if (type === "sentence_builder") {
 				if (tokens.length < 3) return toast.warning("Cần ít nhất 3 từ");
 				resources = { tokens: tokens.map(t => ({ id: t.id, text: t.text })) };
-			} 
+			}
 			else if (type === "listen_select") {
 				if (!audioUrl.trim()) return toast.warning("audioUrl không được rỗng");
-				if (listenOptions.length  <2) return toast.warning("Phải có tối thiểu 2 lựa chọn");
+				if (listenOptions.length < 2) return toast.warning("Phải có tối thiểu 2 lựa chọn");
 				if (listenOptions.some(o => !o.text || !o.imageUrl))
 					return toast.warning("Mỗi option phải có text + imageUrl");
 				if (correctIndex < 0 || correctIndex > 3)
 					return toast.warning("correctIndex phải từ 0 → 3");
-				resources = { audioUrl, options: listenOptions.map(o => ({ id: o.id, text: o.text,imageUrl: o.imageUrl})),correctIndex};
+				resources = { audioUrl, options: listenOptions.map(o => ({ id: o.id, text: o.text, imageUrl: o.imageUrl })), correctIndex };
 			}
-			else if (type === "exam"){
+			else if (type === "exam") {
 				if (questions.length === 0)
 					return toast.warning("Cần ít nhất 1 câu hỏi");
 				for (const q of questions) {
@@ -133,9 +151,9 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 					if (q.correctIndex < 0 || q.correctIndex > 3)
 						return toast.warning("correctIndex phải từ 0 → 3");
 				}
-				resources = { questions: questions.map(q => ({ question: q.question, options: q.options, correctIndex: q.correctIndex}))};
+				resources = { questions: questions.map(q => ({ question: q.question, options: q.options, correctIndex: q.correctIndex })) };
 			}
-			
+
 			else if (type === "true_false") {
 				if (!tfStatement.trim()) return toast.warning("Statement không được rỗng");
 				if (!tfOptions.every((opt) => opt.label.trim())) return toast.warning("Vui lòng nhập đủ nội dung cho các lựa chọn");
@@ -156,6 +174,21 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 					caseSensitive: Boolean(typingCaseSensitive),
 					hints: typingHints.map((hint) => hint.trim()).filter(Boolean),
 					...(typingTimeLimit === "" ? {} : { timeLimitSeconds: Math.floor(numericLimit) }),
+				};
+			} else if (type === "flip_card") {
+				if (flipCards.length === 0) return toast.warning("Cần ít nhất 1 thẻ");
+				if (flipCards.some(c => !c.term.trim() || !c.definition.trim()))
+					return toast.warning("Vui lòng điền đủ Thuật ngữ và Định nghĩa");
+				resources = { cards: flipCards.map(c => ({ term: c.term.trim(), definition: c.definition.trim() })) };
+			} else if (type === "watch_video") {
+				if (!watchVideoHls && !watchVideoMp4) {
+					return toast.warning("Video không được rỗng");
+				}
+
+				resources = {
+					hlsUrl: watchVideoHls || undefined,
+					fallbackUrl: watchVideoMp4 || undefined,
+					title: watchVideoTitle.trim() || undefined,
 				};
 			}
 
@@ -189,108 +222,108 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 								<button className="btn btn-sm btn-outline-primary" onClick={addImage}>Thêm ảnh</button>
 							</div>
 							{images.map((img, idx) => (
-                <div key={img.id} className="card mb-2">
-                  <div className="card-header d-flex justify-content-between align-items-center">
-                    <strong>Ảnh {idx + 1}</strong>
+								<div key={img.id} className="card mb-2">
+									<div className="card-header d-flex justify-content-between align-items-center">
+										<strong>Ảnh {idx + 1}</strong>
 
-                    {/* Nút X ở cùng hàng với Thêm ảnh */}
-                    <button
-                      className="btn btn-sm btn-outline-danger"
-                      onClick={() => removeImage(idx)}
-                    >
-                      X
-                    </button>
-                  </div>
+										{/* Nút X ở cùng hàng với Thêm ảnh */}
+										<button
+											className="btn btn-sm btn-outline-danger"
+											onClick={() => removeImage(idx)}
+										>
+											X
+										</button>
+									</div>
 
-                  <div className="card-body">
-                    <div className="row g-2">
-                      <div className="col-md-7">
-                        <input
-                          className="form-control"
-                          placeholder="Image URL"
-                          value={img.imageUrl}
-                          onChange={(e) => updateImage(idx, "imageUrl", e.target.value)}
-                        />
+									<div className="card-body">
+										<div className="row g-2">
+											<div className="col-md-7">
+												<input
+													className="form-control"
+													placeholder="Image URL"
+													value={img.imageUrl}
+													onChange={(e) => updateImage(idx, "imageUrl", e.target.value)}
+												/>
 
-                        {img.imageUrl && (
-                          <img
-                            src={img.imageUrl}
-                            alt=""
-                            style={{
-                              width: "100%",
-                              maxHeight: 200,
-                              objectFit: "contain",
-                              borderRadius: 6,
-                              marginTop: 8,
-                            }}
-                            onError={(e) => (e.target.style.display = "none")}
-                          />
-                        )}
-                      </div>
+												{img.imageUrl && (
+													<img
+														src={img.imageUrl}
+														alt=""
+														style={{
+															width: "100%",
+															maxHeight: 200,
+															objectFit: "contain",
+															borderRadius: 6,
+															marginTop: 8,
+														}}
+														onError={(e) => (e.target.style.display = "none")}
+													/>
+												)}
+											</div>
 
-                      <div className="col-md-5">
-                        <input
-                          className="form-control"
-                          placeholder="Correct word"
-                          value={img.correctWord}
-                          onChange={(e) => updateImage(idx, "correctWord", e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+											<div className="col-md-5">
+												<input
+													className="form-control"
+													placeholder="Correct word"
+													value={img.correctWord}
+													onChange={(e) => updateImage(idx, "correctWord", e.target.value)}
+												/>
+											</div>
+										</div>
+									</div>
+								</div>
+							))}
 						</div>
 					)}
 
 					{type === "lesson" && (
-					<div>
-						<div className="d-flex justify-content-between align-items-center mb-2">
-							<label className="form-label mb-0">Content</label>
+						<div>
+							<div className="d-flex justify-content-between align-items-center mb-2">
+								<label className="form-label mb-0">Content</label>
 
-							<button
-								type="button"
-								className={`btn btn-sm ${showPreview ? "btn-primary" : "btn-outline-secondary"}`}
-								onClick={() => setShowPreview(!showPreview)}
-							>
-								{showPreview ? "Chỉnh sửa" : "Xem trước"}
-							</button>
+								<button
+									type="button"
+									className={`btn btn-sm ${showPreview ? "btn-primary" : "btn-outline-secondary"}`}
+									onClick={() => setShowPreview(!showPreview)}
+								>
+									{showPreview ? "Chỉnh sửa" : "Xem trước"}
+								</button>
+							</div>
+
+							{/* EDITOR */}
+							{!showPreview ? (
+								<Editor
+									apiKey="5h1mny4wdy7lwto04bpgonbbj9ymfa8bmjxmmjiee045hxq7"
+									value={content}
+									init={{
+										height: 350,
+										menubar: false,
+										plugins: "lists table paste link image code",
+										toolbar:
+											"undo redo | bold italic underline | bullist numlist | table | link image | alignleft aligncenter alignright | code",
+
+										// Auto clean Word formatting
+										paste_data_images: false,
+										paste_as_text: false,
+										paste_webkit_styles: "bold italic underline",
+										paste_merge_formats: true,
+										paste_convert_word_fake_lists: true,
+										paste_retain_style_properties: "color font-size",
+
+										content_style:
+											"body { font-family: Arial, sans-serif; font-size: 14px; background: transparent; }",
+									}}
+									onEditorChange={(val) => setContent(val)}
+								/>
+							) : (
+								<div
+									className="p-3 border rounded"
+									style={{ background: "#f8f9fa", minHeight: 120 }}
+									dangerouslySetInnerHTML={{ __html: content }}
+								/>
+							)}
 						</div>
-
-						{/* EDITOR */}
-						{!showPreview ? (
-							<Editor
-								apiKey="5h1mny4wdy7lwto04bpgonbbj9ymfa8bmjxmmjiee045hxq7"
-								value={content}
-								init={{
-									height: 350,
-									menubar: false,
-									plugins: "lists table paste link image code",
-									toolbar:
-										"undo redo | bold italic underline | bullist numlist | table | link image | alignleft aligncenter alignright | code",
-
-									// Auto clean Word formatting
-									paste_data_images: false,
-									paste_as_text: false,
-									paste_webkit_styles: "bold italic underline",
-									paste_merge_formats: true,
-									paste_convert_word_fake_lists: true,
-									paste_retain_style_properties: "color font-size",
-
-									content_style:
-										"body { font-family: Arial, sans-serif; font-size: 14px; background: transparent; }",
-								}}
-								onEditorChange={(val) => setContent(val)}
-							/>
-						) : (
-							<div
-								className="p-3 border rounded"
-								style={{ background: "#f8f9fa", minHeight: 120 }}
-								dangerouslySetInnerHTML={{ __html: content }}
-							/>
-						)}
-					</div>
-				)}
+					)}
 
 					{type === "sentence_builder" && (
 						<div>
@@ -301,144 +334,144 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 							{tokens.map((t, i) => (
 								<div key={t.id} className="input-group mb-2">
 									<input className="form-control" value={t.text} onChange={(e) => updateToken(i, e.target.value)} />
-									<button className="btn btn-outline-secondary" onClick={() => moveTokenLocal(i, -1)} disabled={i===0}>↑</button>
-									<button className="btn btn-outline-secondary" onClick={() => moveTokenLocal(i, 1)} disabled={i===tokens.length-1}>↓</button>
+									<button className="btn btn-outline-secondary" onClick={() => moveTokenLocal(i, -1)} disabled={i === 0}>↑</button>
+									<button className="btn btn-outline-secondary" onClick={() => moveTokenLocal(i, 1)} disabled={i === tokens.length - 1}>↓</button>
 									<button className="btn btn-outline-danger" onClick={() => removeToken(i)}>Xóa</button>
 								</div>
 							))}
 						</div>
 					)}
 					{type === "exam" && (
-					<div>
-						<div className="d-flex justify-content-between align-items-center mb-2">
-							<h6>Các câu hỏi</h6>
-							<button className="btn btn-sm btn-outline-primary" onClick={addQuestion}>
-								Thêm câu hỏi
-							</button>
-						</div>
+						<div>
+							<div className="d-flex justify-content-between align-items-center mb-2">
+								<h6>Các câu hỏi</h6>
+								<button className="btn btn-sm btn-outline-primary" onClick={addQuestion}>
+									Thêm câu hỏi
+								</button>
+							</div>
 
-						{questions.map((q, qIdx) => (
-							<div key={qIdx} className="card mb-3">
-								<div className="card-header d-flex justify-content-between align-items-center">
-									<strong>Câu {qIdx + 1}</strong>
-									<button className="btn btn-sm btn-outline-danger" onClick={() => removeQuestion(qIdx)}>X</button>
+							{questions.map((q, qIdx) => (
+								<div key={qIdx} className="card mb-3">
+									<div className="card-header d-flex justify-content-between align-items-center">
+										<strong>Câu {qIdx + 1}</strong>
+										<button className="btn btn-sm btn-outline-danger" onClick={() => removeQuestion(qIdx)}>X</button>
+									</div>
+
+									<div className="card-body">
+										<label className="form-label">Câu hỏi</label>
+										<input
+											className="form-control mb-3"
+											value={q.question}
+											onChange={(e) => updateQuestion(qIdx, "question", e.target.value)}
+										/>
+
+										<label className="form-label">Đáp án</label>
+										{q.options.map((opt, optIdx) => (
+											<div key={optIdx} className="input-group mb-2">
+												<span className="input-group-text">{String.fromCharCode(65 + optIdx)}</span>
+												<input
+													className="form-control"
+													value={opt}
+													onChange={(e) => updateOption(qIdx, optIdx, e.target.value)}
+												/>
+												<div className="input-group-text">
+													<input
+														type="radio"
+														checked={q.correctIndex === optIdx}
+														onChange={() => updateQuestion(qIdx, "correctIndex", optIdx)}
+													/>
+												</div>
+											</div>
+										))}
+									</div>
 								</div>
+							))}
+						</div>
+					)}
+					{type === "listen_select" && (
+						<div>
+							<label className="form-label">Audio URL</label>
+							<input
+								className="form-control mb-3"
+								value={audioUrl}
+								onChange={(e) => setAudioUrl(e.target.value)}
+							/>
 
-								<div className="card-body">
-									<label className="form-label">Câu hỏi</label>
-									<input
-										className="form-control mb-3"
-										value={q.question}
-										onChange={(e) => updateQuestion(qIdx, "question", e.target.value)}
-									/>
+							{audioUrl && (
+								<audio controls className="mb-3" style={{ width: "100%" }}>
+									<source src={audioUrl} />
+								</audio>
+							)}
 
-									<label className="form-label">Đáp án</label>
-									{q.options.map((opt, optIdx) => (
-										<div key={optIdx} className="input-group mb-2">
-											<span className="input-group-text">{String.fromCharCode(65 + optIdx)}</span>
-											<input
-												className="form-control"
-												value={opt}
-												onChange={(e) => updateOption(qIdx, optIdx, e.target.value)}
-											/>
+							<div className="d-flex justify-content-between align-items-center mb-2">
+								<h6>Options</h6>
+								<button className="btn btn-sm btn-outline-primary" onClick={addListenOption}>
+									Thêm option
+								</button>
+							</div>
+
+							{listenOptions.map((opt, idx) => (
+								<div key={opt.id} className="card mb-2">
+									<div className="card-header d-flex justify-content-between align-items-center">
+										{/* Left section: Option title + Radio */}
+										<div className="d-flex align-items-center gap-3">
+											<strong>Option {idx + 1}</strong>
+
 											<div className="input-group-text">
 												<input
 													type="radio"
-													checked={q.correctIndex === optIdx}
-													onChange={() => updateQuestion(qIdx, "correctIndex", optIdx)}
+													checked={correctIndex === idx}
+													onChange={() => setCorrectIndex(idx)}
 												/>
 											</div>
 										</div>
-									))}
+
+										{/* Right section: delete button */}
+										<button
+											className="btn btn-sm btn-outline-danger"
+											onClick={() => removeListenOption(idx)}
+										>
+											X
+										</button>
+									</div>
+
+									<div className="card-body">
+										<div className="mb-2">
+											<label className="form-label">Text</label>
+											<input
+												className="form-control"
+												value={opt.text}
+												onChange={(e) => updateListenOption(idx, "text", e.target.value)}
+											/>
+										</div>
+
+										<div>
+											<label className="form-label">Image URL</label>
+											<input
+												className="form-control"
+												value={opt.imageUrl}
+												onChange={(e) => updateListenOption(idx, "imageUrl", e.target.value)}
+											/>
+
+											{opt.imageUrl && (
+												<img
+													src={opt.imageUrl}
+													alt=""
+													style={{
+														width: "100%",
+														maxHeight: 200,
+														objectFit: "contain",
+														borderRadius: 6,
+														marginTop: 8
+													}}
+													onError={(e) => (e.target.style.display = "none")}
+												/>
+											)}
+										</div>
+									</div>
 								</div>
-							</div>
-						))}
-					</div>
-				)}
-				{type === "listen_select" && (
-				<div>
-					<label className="form-label">Audio URL</label>
-					<input
-						className="form-control mb-3"
-						value={audioUrl}
-						onChange={(e) => setAudioUrl(e.target.value)}
-					/>
-
-					{audioUrl && (
-						<audio controls className="mb-3" style={{ width: "100%" }}>
-							<source src={audioUrl} />
-						</audio>
-					)}
-
-					<div className="d-flex justify-content-between align-items-center mb-2">
-						<h6>Options</h6>
-						<button className="btn btn-sm btn-outline-primary" onClick={addListenOption}>
-							Thêm option
-						</button>
-					</div>
-
-					{listenOptions.map((opt, idx) => (
-						<div key={opt.id} className="card mb-2">
-							<div className="card-header d-flex justify-content-between align-items-center">
-							{/* Left section: Option title + Radio */}
-							<div className="d-flex align-items-center gap-3">
-								<strong>Option {idx + 1}</strong>
-
-								<div className="input-group-text">
-									<input
-										type="radio"
-										checked={correctIndex === idx}
-										onChange={() => setCorrectIndex(idx)}
-									/>
-								</div>
-							</div>
-
-							{/* Right section: delete button */}
-							<button
-								className="btn btn-sm btn-outline-danger"
-								onClick={() => removeListenOption(idx)}
-							>
-								X
-							</button>
+							))}
 						</div>
-
-							<div className="card-body">
-								<div className="mb-2">
-									<label className="form-label">Text</label>
-									<input
-										className="form-control"
-										value={opt.text}
-										onChange={(e) => updateListenOption(idx, "text", e.target.value)}
-									/>
-								</div>
-
-								<div>
-									<label className="form-label">Image URL</label>
-									<input
-										className="form-control"
-										value={opt.imageUrl}
-										onChange={(e) => updateListenOption(idx, "imageUrl", e.target.value)}
-									/>
-
-									{opt.imageUrl && (
-										<img
-											src={opt.imageUrl}
-											alt=""
-											style={{
-												width: "100%",
-												maxHeight: 200,
-												objectFit: "contain",
-												borderRadius: 6,
-												marginTop: 8
-											}}
-											onError={(e) => (e.target.style.display = "none")}
-										/>
-									)}
-								</div>
-							</div>
-						</div>
-						))}
-					</div>
 					)}
 					{type === "true_false" && (
 						<div>
@@ -508,12 +541,135 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 							</div>
 						</div>
 					)}
-          <div className="d-flex align-items-center mb-3">
+
+					{type === "watch_video" && (
+						<div>
+							<div className="mb-3">
+								<label className="form-label">Video (Nhập URL hoặc Tải lên) (*)</label>
+
+								<div className="input-group mb-2">
+									<input
+										type="text"
+										className="form-control"
+										placeholder="Nhập URL video"
+										value={watchVideoHls || watchVideoMp4}
+										onChange={(e) => {
+											const value = e.target.value;
+
+											if (value.includes(".m3u8")) {
+												setWatchVideoHls(value);
+												setWatchVideoMp4("");
+											} else {
+												setWatchVideoMp4(value);
+												setWatchVideoHls("");
+											}
+										}}
+									/>
+
+									<button
+										type="button"
+										className="btn btn-outline-secondary"
+										onClick={() => watchVideoFileInputRef.current?.click()}
+										disabled={watchVideoUploading}
+									>
+										{watchVideoUploading ? "Đang tải..." : "Tải lên"}
+									</button>
+
+									<input
+										type="file"
+										accept="video/*"
+										className="d-none"
+										ref={watchVideoFileInputRef}
+										onChange={async (e) => {
+											const file = e.target.files?.[0];
+											if (!file) return;
+
+											if (!file.type.startsWith("video/")) {
+												toast.warning("Chọn file video hợp lệ");
+												return;
+											}
+
+											const formData = new FormData();
+											formData.append("video", file);
+
+											try {
+												setWatchVideoUploading(true);
+
+												const res = await api.post("/uploads/video", formData, {
+													headers: { "Content-Type": "multipart/form-data" },
+												});
+
+												if (res.data) {
+													console.log(res.data);
+													setWatchVideoHls(res.data.hlsUrl.replace("http://", "https://"));
+													setWatchVideoMp4(res.data.fallbackUrl);
+												}
+											} catch (err) {
+												console.error(err);
+												toast.error("Upload video thất bại");
+											} finally {
+												setWatchVideoUploading(false);
+												if (watchVideoFileInputRef.current)
+													watchVideoFileInputRef.current.value = "";
+											}
+										}}
+									/>
+								</div>
+
+								{(watchVideoHls || watchVideoMp4) && (
+									<div className="mt-2">
+										<HLSPlayer
+											hlsUrl={watchVideoHls}
+											fallbackUrl={watchVideoMp4}
+										/>
+									</div>
+								)}
+							</div>
+
+							<div className="mb-3">
+								<label className="form-label">Tiêu đề video (Tùy chọn)</label>
+								<input
+									type="text"
+									className="form-control"
+									value={watchVideoTitle}
+									onChange={(e) => setWatchVideoTitle(e.target.value)}
+								/>
+							</div>
+						</div>
+					)}
+
+					{type === "flip_card" && (
+						<div>
+							<div className="d-flex justify-content-between align-items-center mb-2">
+								<h6>Thẻ ghi nhớ (Cards)</h6>
+								<button className="btn btn-sm btn-outline-primary" onClick={addFlipCard}>Thêm thẻ</button>
+							</div>
+							{flipCards.map((card, idx) => (
+								<div key={idx} className="card mb-2 bg-light">
+									<div className="card-body">
+										<div className="row g-2 align-items-center">
+											<div className="col-md-5">
+												<input className="form-control" placeholder="Thuật ngữ" value={card.term} onChange={(e) => updateFlipCard(idx, "term", e.target.value)} />
+											</div>
+											<div className="col-md-5">
+												<input className="form-control" placeholder="Định nghĩa" value={card.definition} onChange={(e) => updateFlipCard(idx, "definition", e.target.value)} />
+											</div>
+											<div className="col-md-2 d-flex justify-content-end">
+												<button className="btn btn-sm btn-outline-danger" onClick={() => removeFlipCard(idx)}>X</button>
+											</div>
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
+					)}
+
+					<div className="d-flex align-items-center mb-3">
 						<div className="ms-auto">
 							<button className="btn btn-sm btn-outline-secondary me-2" onClick={onCancel}>Hủy</button>
 							<button className="btn btn-sm btn-primary" onClick={handleSubmit} disabled={saving}>{saving ? "Đang tạo..." : "Tạo"}</button>
 						</div>
-				  </div>
+					</div>
 				</div>
 
 			</div>
@@ -648,6 +804,8 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 							<option value="exam">exam</option>
 							<option value="true_false">true_false</option>
 							<option value="typing_challenge">typing_challenge</option>
+							<option value="flip_card">flip_card</option>
+							<option value="watch_video">watch_video</option>
 						</select>
 					</div>
 					{/* render form for selected addType */}
@@ -737,7 +895,7 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 									onSave={(payload) => handleSaveDetail(selected.id, payload)}
 									onDelete={() => handleDeleteDetail(selected.id)}
 								/>
-							): (selected.type === "exam") ? (
+							) : (selected.type === "exam") ? (
 								<ExamMiniGame
 									minigame={selected}
 									onClose={closeDetail}
@@ -753,6 +911,20 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 								/>
 							) : (selected.type === "typing_challenge") ? (
 								<TypingChallengeMiniGame
+									minigame={selected}
+									onClose={closeDetail}
+									onSave={(payload) => handleSaveDetail(selected.id, payload)}
+									onDelete={() => handleDeleteDetail(selected.id)}
+								/>
+							) : (selected.type === "flip_card") ? (
+								<FlipCardMiniGame
+									minigame={selected}
+									onClose={closeDetail}
+									onSave={(payload) => handleSaveDetail(selected.id, payload)}
+									onDelete={() => handleDeleteDetail(selected.id)}
+								/>
+							) : (selected.type === "watch_video") ? (
+								<WatchVideoMiniGame
 									minigame={selected}
 									onClose={closeDetail}
 									onSave={(payload) => handleSaveDetail(selected.id, payload)}

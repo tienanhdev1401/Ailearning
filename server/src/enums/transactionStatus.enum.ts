@@ -1,0 +1,7 @@
+export enum TRANSACTION_STATUS {
+  PENDING = "PENDING",
+  SUCCESS = "SUCCESS",
+  FAILED = "FAILED",
+}
+
+export default TRANSACTION_STATUS;

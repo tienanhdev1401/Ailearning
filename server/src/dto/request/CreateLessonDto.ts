@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsUrl, ValidateNested, IsEnum } from "class-validator";
+import { IsString, IsNotEmpty, IsUrl, ValidateNested, IsEnum, IsOptional } from "class-validator";
 import { Type } from "class-transformer";
 import { IsSrtFile } from "../../validations/IsSrtFile";
 import { TopicLessonType } from "../../enums/topicLessonType";
@@ -70,6 +70,9 @@ export class CreateLessonDto {
   @IsEnum(LessonLevel, { message: "Level không hợp lệ" })
   @IsNotEmpty({ message: "Level không được để trống" })
   level!: LessonLevel;
+
+  @IsOptional()
+  isLock?: boolean;
 
   @ValidateNested()
   @Type(() => SrtFileDto)

@@ -41,6 +41,14 @@ import ActivityManagerPage from "./admin/pages/ActivityManagerPage";
 import SupportChatWidget from "./component/SupportChatWidget";
 
 import LessonManagerPage from "./admin/pages/LessonManagerPage";
+import PaymentSuccessPage from "./client/pages/PaymentSuccessPage";
+import PricingPage from "./client/pages/PricingPage";
+import VocabNotebookPage from "./client/pages/VocabNotebookPage";
+import FlashcardPage from "./client/pages/FlashcardPage";
+import FlashcardListPage from "./client/pages/FlashcardListPage";
+import NotebookListPage from "./client/pages/NotebookListPage";
+import DailyChallengePage from "./client/pages/DailyChallengePage";
+import ChallengeSummary from "./client/pages/ChallengeSummary";
 
 function App() {
   return (
@@ -57,191 +65,261 @@ function App() {
             </ProtectedRoute>
           }
         />
-      <Route
-        path="/grammar"
-        element={
+        <Route
+          path="/grammar"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><GrammarCheckerPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+        <Route
+          path="/video/:lessonId"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><VideoPraticePage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/speak/:lessonId"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><SpeakingVideoPraticePage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
+
+        <Route
+          path="/topics"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><LessonTopicPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/topics/:topic"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><TopicDetailPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
+
+        <Route
+          path="/experience/ai-chat"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><AiChatExperience /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
+
+        <Route path="/welcome/reason" element={<ReasonPage />} />
+        <Route path="/welcome/goal" element={<GoalPage />} />
+        <Route path="/welcome/level" element={<ChooseLevelPage />} />
+        <Route path="/welcome/topic" element={<ChooseTopicPage />} />
+        <Route path="/welcome/proficiency" element={<KnowLevelPage />} />
+        <Route path="/welcome/placement" element={<FindLevelPage />} />
+
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><ProfilePage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
+
+        <Route path="/roadmaps" element={
           <ProtectedRoute>
-            <ClientLayout><GrammarCheckerPage /></ClientLayout>
+            <ClientLayout><RoadmapListPage /></ClientLayout>
           </ProtectedRoute>
-        }
-      />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      
-      <Route
-        path="/video/:lessonId"
-        element={
+        } />
+        <Route path="/roadmaps/:id/days" element={
           <ProtectedRoute>
-            <ClientLayout><VideoPraticePage /></ClientLayout>
+            <ClientLayout><RoadMapPage /></ClientLayout>
           </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/speak/:lessonId"
-        element={
+        } />
+        <Route path="/daily-challenge/:roadmapId" element={
           <ProtectedRoute>
-            <ClientLayout><SpeakingVideoPraticePage /></ClientLayout>
+            <ClientLayout><DailyChallengePage /></ClientLayout>
           </ProtectedRoute>
-        }
-      />
-
-
-      <Route
-        path="/topics"
-        element={
+        } />
+        <Route path="/daily-challenge/:roadmapId/summary" element={
           <ProtectedRoute>
-            <ClientLayout><LessonTopicPage /></ClientLayout>
+            <ClientLayout><ChallengeSummary /></ClientLayout>
           </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/topics/:topic"
-        element={
+        } />
+
+        <Route path="/payment-success" element={
           <ProtectedRoute>
-            <ClientLayout><TopicDetailPage/></ClientLayout>
+            <ClientLayout><PaymentSuccessPage /></ClientLayout>
           </ProtectedRoute>
-        }
-      />
+        } />
 
-
-      <Route
-        path="/experience/ai-chat"
-        element={
+        <Route path="/days/:dayId" element={
           <ProtectedRoute>
-            <ClientLayout><AiChatExperience /></ClientLayout>
+            <DayDetailPage />
           </ProtectedRoute>
-        }
-      />
+        } />
 
-      
-      <Route path="/welcome/reason" element={<ReasonPage />} />
-      <Route path="/welcome/goal" element={<GoalPage />} />
-      <Route path="/welcome/level" element={<ChooseLevelPage />} />
-      <Route path="/welcome/topic" element={<ChooseTopicPage />} />
-      <Route path="/welcome/proficiency" element={<KnowLevelPage />} />
-      <Route path="/welcome/placement" element={<FindLevelPage />} />
+        <Route
+          path="/pricing"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><PricingPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notebooks"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><NotebookListPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notebooks/:id"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><VocabNotebookPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/flashcards/:type/:id"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><FlashcardPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/flashcards/:minigameId"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><FlashcardPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/flashcards"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><FlashcardListPage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
 
 
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <ClientLayout><ProfilePage /></ClientLayout>
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+              <AdminLayout><DashboardPage /></AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+              <AdminLayout><UsersPage /></AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-      <Route path="/roadmaps" element={
-        <ProtectedRoute>
-          <ClientLayout><RoadmapListPage /></ClientLayout>
-        </ProtectedRoute>
-      } />
-      <Route path="/roadmaps/:id/days" element={
-        <ProtectedRoute>
-          <ClientLayout><RoadMapPage /></ClientLayout>
-        </ProtectedRoute>
-      } />
+        <Route
+          path="/admin/staff"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN]}>
+              <AdminLayout><StaffPage /></AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-      <Route path="/days/:dayId" element={
-        <ProtectedRoute>
-          <DayDetailPage />
-        </ProtectedRoute>
-      } />
+        <Route
+          path="/admin/reports"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+              <AdminLayout><ReportsPage /></AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-      
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
-            <AdminLayout><DashboardPage /></AdminLayout>
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/admin/messages"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+              <AdminLayout><MessagesPage /></AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/admin/users"
-        element={
-          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
-            <AdminLayout><UsersPage /></AdminLayout>
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/admin/calendar"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+              <AdminLayout><CalendarPage /></AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/admin/staff"
-        element={
-          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN]}>
-            <AdminLayout><StaffPage /></AdminLayout>
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/admin/lessons"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+              <AdminLayout><LessonManagerPage /></AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/admin/reports"
-        element={
-          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
-            <AdminLayout><ReportsPage /></AdminLayout>
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/admin/roadmaps"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+              <AdminLayout><RoadmapsPage /></AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/admin/messages"
-        element={
-          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
-            <AdminLayout><MessagesPage /></AdminLayout>
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/admin/roadmaps/:roadmapId/days"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+              <AdminLayout><RoadmapDaysPage /></AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/admin/calendar"
-        element={
-          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
-            <AdminLayout><CalendarPage /></AdminLayout>
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/admin/days/:dayId/activities"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+              <AdminLayout><ActivityManagerPage /></AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/admin/lessons"
-        element={
-          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
-            <AdminLayout><LessonManagerPage /></AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/admin/roadmaps"
-        element={
-          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
-            <AdminLayout><RoadmapsPage /></AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/admin/roadmaps/:roadmapId/days"
-        element={
-          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
-            <AdminLayout><RoadmapDaysPage /></AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/admin/days/:dayId/activities"
-        element={
-          <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
-            <AdminLayout><ActivityManagerPage /></AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
+        <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
       </Routes>
     </>
   );

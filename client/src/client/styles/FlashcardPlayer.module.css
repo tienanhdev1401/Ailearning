@@ -1,0 +1,232 @@
+.playerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  width: 100%;
+}
+
+.cardStage {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 800px;
+  height: 400px;
+  cursor: pointer;
+}
+
+.flashcard {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.flashcard.isFlipped {
+  transform: rotateX(180deg);
+}
+
+.cardFront,
+.cardBack {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 24px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: white;
+  color: #1e293b;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+}
+
+:global([data-theme="dark"]) .cardFront,
+:global([data-theme="dark"]) .cardBack {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+.cardBack {
+  transform: rotateX(180deg);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hintBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+  padding: 0;
+}
+
+:global([data-theme="dark"]) .hintBtn {
+  color: #94a3b8;
+}
+
+.topActions {
+  display: flex;
+  gap: 12px;
+}
+
+.iconBtn {
+  background: none;
+  border: none;
+  color: #64748b;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:global([data-theme="dark"]) .iconBtn {
+  color: #94a3b8;
+}
+
+.iconBtn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+:global([data-theme="dark"]) .iconBtn:hover {
+  background: #334155;
+  color: #f8fafc;
+}
+
+.cardBody {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.termText {
+  font-size: 40px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+:global([data-theme="dark"]) .termText {
+  color: #f8fafc;
+}
+
+.definitionText {
+  font-size: 28px;
+  font-weight: 500;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+:global([data-theme="dark"]) .definitionText {
+  color: #f8fafc;
+}
+
+.cardFooter {
+  text-align: center;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+/* Controls Section */
+.playerControls {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.navButtons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+
+.navBtn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  padding: 12px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.navBtn:disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.navBtn:not(:disabled):hover {
+  background: #eff6ff;
+  transform: translateY(-2px);
+}
+
+:global([data-theme="dark"]) .navBtn:not(:disabled):hover {
+  background: #1e293b;
+}
+
+.counter {
+  font-size: 18px;
+  font-weight: 600;
+  color: #64748b;
+  min-width: 80px;
+  text-align: center;
+}
+
+:global([data-theme="dark"]) .counter {
+  color: #94a3b8;
+}
+
+/* Progress Bar */
+.progressSection {
+  width: 100%;
+}
+
+.progressBar {
+  height: 6px;
+  width: 100%;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+:global([data-theme="dark"]) .progressBar {
+  background: #334155;
+}
+
+.progressFill {
+  height: 100%;
+  background: #3b82f6;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (max-width: 768px) {
+  .cardStage {
+    height: 300px;
+  }
+  
+  .termText {
+    font-size: 28px;
+  }
+  
+  .definitionText {
+    font-size: 20px;
+  }
+}

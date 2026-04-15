@@ -6,6 +6,8 @@ enum MiniGameType {
   LISTEN_SELECT = "listen_select",
   TRUE_FALSE = "true_false",
   TYPING_CHALLENGE = "typing_challenge",
+  FLIP_CARD = "flip_card",
+  WATCH_VIDEO = "watch_video",
 }
 
 export default MiniGameType;

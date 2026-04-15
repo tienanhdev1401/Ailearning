@@ -59,8 +59,13 @@
 }
 
 @keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Navigation */
@@ -105,6 +110,25 @@
   font-size: 20px;
   display: flex;
   align-items: center;
+}
+
+/* Pro Item Special Style */
+.proItem {
+  background: linear-gradient(135deg, #ff9a00 0%, #ff5e00 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 15px rgba(255, 154, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.proItem:hover {
+  background: linear-gradient(135deg, #ffb033 0%, #ff7a33 100%) !important;
+  transform: translateY(-3px) scale(1.05) !important;
+  box-shadow: 0 6px 20px rgba(255, 154, 0, 0.6);
+  color: #fff !important;
+}
+
+[data-theme="light"] .proItem {
+  color: #fff !important;
 }
 
 /* User Actions */
@@ -183,6 +207,10 @@
   color: #00FFFF;
   font-weight: 700;
   font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
 }
 
 [data-theme="light"] .username {
@@ -356,99 +384,113 @@
 
 
 .settingsContainer {
-    position: relative; /* Quan trọng để menu bám vào nút 3 chấm */
+  position: relative;
+  /* Quan trọng để menu bám vào nút 3 chấm */
 }
 
 .settingsButton {
-    font-size: 22px;
-    cursor: pointer;
-    user-select: none;
-    padding: 6px 8px;
-    border-radius: 6px;
-    transition: background 0.2s;
+  font-size: 22px;
+  cursor: pointer;
+  user-select: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
 }
 
 .settingsButton:hover {
-    background: rgba(0,0,0,0.1);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 [data-theme="light"] .settingsButton {
-    color: #000;                 /* ✅ chữ đen */
+  color: #000;
+  /* ✅ chữ đen */
 }
 
 /* MENU xổ xuống ngay dưới nút 3 chấm */
 .settingsMenu {
-    position: absolute;
-    top: 110%;        /* xổ xuống phía dưới */
-    right: 0;         /* bám sát mép phải nút 3 chấm */
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.20);
-    width: 190px;
-    animation: fadeIn 0.2s ease-out;
-    z-index: 2000;
+  position: absolute;
+  top: 110%;
+  /* xổ xuống phía dưới */
+  right: 0;
+  /* bám sát mép phải nút 3 chấm */
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.20);
+  width: 190px;
+  animation: fadeIn 0.2s ease-out;
+  z-index: 2000;
 }
 
 .settingsItem {
-    padding: 10px 14px;
-    font-size: 15px;
-    cursor: pointer;
-    border-bottom: 1px solid #eee;
-    transition: background 0.2s;
+  padding: 10px 14px;
+  font-size: 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  transition: background 0.2s;
 }
 
 .settingsItem:hover {
-    background: #f5f5f5;
+  background: #f5f5f5;
 }
 
 .settingsItem:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-4px); }
-    to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 [data-theme="dark"] .settingsMenu {
-    background: #1c2733;
-    border: 1px solid rgba(0, 255, 255, 0.25);
-    box-shadow: 0 6px 20px rgba(0, 255, 255, 0.15);
+  background: #1c2733;
+  border: 1px solid rgba(0, 255, 255, 0.25);
+  box-shadow: 0 6px 20px rgba(0, 255, 255, 0.15);
 }
 
 [data-theme="dark"] .settingsItem {
-    color: #d6faff;
-    border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+  color: #d6faff;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.15);
 }
 
 [data-theme="dark"] .settingsItem:hover {
-    background: rgba(0, 255, 255, 0.12);
+  background: rgba(0, 255, 255, 0.12);
 }
 
 /* Nút 3 chấm */
 [data-theme="dark"] .settingsButton:hover {
-    background: rgba(0, 255, 255, 0.15);
+  background: rgba(0, 255, 255, 0.15);
 }
 
 /* Hamburger trong dark mode */
 [data-theme="dark"] .hamburger span {
-    background-color: #00ffff;
+  background-color: #00ffff;
 }
+
 [data-theme="light"] .settingsMenu {
-    background: #ffffff;
-    border: 1px solid #ddd;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  background: #ffffff;
+  border: 1px solid #ddd;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="light"] .settingsItem {
-    color: #000;                 /* ✅ chữ đen */
-    border-bottom: 1px solid #eee;
+  color: #000;
+  /* ✅ chữ đen */
+  border-bottom: 1px solid #eee;
 }
 
 [data-theme="light"] .settingsItem:hover {
-    background: #f5f5f5;
+  background: #f5f5f5;
 }
+
 /* Menu mobile dark */
 @media (max-width: 768px) {
   [data-theme="dark"] .nav {

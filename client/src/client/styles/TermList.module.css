@@ -1,0 +1,155 @@
+.listContainer {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.listHeader {
+  margin-bottom: 24px;
+}
+
+.listTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+:global([data-theme="dark"]) .listTitle {
+  color: #f8fafc;
+}
+
+.termsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.termRow {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 24px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+:global([data-theme="dark"]) .termRow {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+.termRow:hover {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+:global([data-theme="dark"]) .termRow:hover {
+  border-color: #3b82f6;
+}
+
+.termContent {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.termLeft {
+  flex: 1;
+  max-width: 40%;
+}
+
+.termRight {
+  flex: 1.5;
+}
+
+.divider {
+  width: 1px;
+  height: 40px;
+  background: #e2e8f0;
+}
+
+:global([data-theme="dark"]) .divider {
+  background: #334155;
+}
+
+.termText {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+:global([data-theme="dark"]) .termText {
+  color: #f8fafc;
+}
+
+.definitionText {
+  font-size: 16px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+:global([data-theme="dark"]) .definitionText {
+  color: #cbd5e1;
+}
+
+.rowActions {
+  display: flex;
+  gap: 8px;
+  margin-left: 24px;
+}
+
+.actionBtn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionBtn:hover {
+  background: #f1f5f9;
+  color: #3b82f6;
+}
+
+:global([data-theme="dark"]) .actionBtn:hover {
+  background: #334155;
+  color: #3b82f6;
+}
+
+@media (max-width: 768px) {
+  .termRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .termContent {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    width: 100%;
+  }
+  
+  .termLeft, .termRight {
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  .divider {
+    display: none;
+  }
+  
+  .rowActions {
+    margin-left: 0;
+    align-self: flex-end;
+  }
+}

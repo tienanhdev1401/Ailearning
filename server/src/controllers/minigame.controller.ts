@@ -17,6 +17,16 @@ class MiniGameController {
     }
   }
 
+  static async getAllMiniGames(req: Request, res: Response, next: NextFunction) {
+    try {
+      const type = req.query.type as any;
+      const miniGames = await MiniGameService.getAll(type);
+      res.status(HttpStatusCode.Ok).json(miniGames);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getMiniGameById(req: Request, res: Response, next: NextFunction) {
     try {
       const id = Number(req.params.id);

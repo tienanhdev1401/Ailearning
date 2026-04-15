@@ -26,6 +26,9 @@ export class Lesson {
   @Column({ type: "nvarchar", length: 50, nullable: false })
   level!: LessonLevel;
 
+  @Column({ type: "boolean", default: false })
+  isLock!: boolean;
+
   @OneToMany(() => Subtitle, (subtitle) => subtitle.lesson, { cascade: true })
   subtitles!: Subtitle[];
 

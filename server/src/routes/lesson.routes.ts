@@ -7,6 +7,8 @@ import createLessonValidation from "../validations/createLessonValidation";
 import validateDto from "../middlewares/validateRequest.middleware";
 import { CreateLessonDto } from "../dto/request/CreateLessonDto";
 import { UpdateLessonDto } from "../dto/request/UpdateLessonDto";
+import verifyTokenAndRole from "../middlewares/auth.middleware";
+import USER_ROLE from "../enums/userRole.enum";
 
 const router = express.Router();
 
@@ -43,6 +45,7 @@ const upload = multer({ dest: "uploads/" });
 // POST /lessons -> upload SRT + tạo lesson
 router.post(
   "/",
+  verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
   upload.single("srt_file"),                // multer xử lý upload
   attachFileToBody("srt_file"),             // gắn file vào req.body
   validateDto(CreateLessonDto),              // validate DTO
@@ -106,7 +109,7 @@ export default router;
  *         description: Lỗi server
  */
 // GET /lessons/:id -> lấy lesson theo id
-router.get("/:id", LessonController.getLessonById);
+router.get("/:id", verifyTokenAndRole([]), LessonController.getLessonById);
 
 
 /**
@@ -131,7 +134,7 @@ router.get("/:id", LessonController.getLessonById);
  *         description: Lỗi server
  */
 // DELETE /lessons/:id -> lấy lesson theo id
-router.delete("/:id", LessonController.deleteLesson);
+router.delete("/:id", verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]), LessonController.deleteLesson);
 
 
 /**
@@ -166,6 +169,7 @@ router.delete("/:id", LessonController.deleteLesson);
 // PUT /lessons/:id -> update lesson (srt_file optional)
 router.put(
   "/:id",
+  verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
   upload.single("srt_file"),
   attachFileToBody("srt_file"),
   validateDto(UpdateLessonDto),

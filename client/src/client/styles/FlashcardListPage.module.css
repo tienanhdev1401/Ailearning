@@ -1,0 +1,206 @@
+.page {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  transition: background-all 0.3s ease;
+}
+
+:global([data-theme="dark"]) .page {
+  background-color: #0f172a;
+}
+
+.loadingWrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  color: #64748b;
+}
+
+/* Hero Section */
+.hero {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: white;
+  padding: 80px 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+:global([data-theme="dark"]) .hero {
+  background: linear-gradient(135deg, #020617 0%, #1e293b 100%);
+}
+
+.heroContent {
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.heroTitle {
+  font-size: 48px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  letter-spacing: -1px;
+  color: #ffffff !important;
+}
+
+.heroSubtitle {
+  font-size: 18px;
+  color: #cbd5e1;
+  margin-bottom: 40px;
+  font-weight: 400;
+}
+
+.statsContainer {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.statValue {
+  font-size: 32px;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+.statLabel {
+  font-size: 14px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Card Styling */
+.setCard {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+:global([data-theme="dark"]) .setCard {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.setCard:hover {
+  transform: translateY(-8px);
+  border-color: #3b82f6;
+  box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.15);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.iconBox {
+  width: 48px;
+  height: 48px;
+  background: #eff6ff;
+  color: #3b82f6;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:global([data-theme="dark"]) .iconBox {
+  background: #1e1b4b;
+}
+
+.termCount {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+:global([data-theme="dark"]) .termCount {
+  background: #334155;
+  color: #94a3b8;
+}
+
+.cardTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 24px;
+  line-height: 1.4;
+}
+
+:global([data-theme="dark"]) .cardTitle {
+  color: #f8fafc;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 16px;
+}
+
+:global([data-theme="dark"]) .cardFooter {
+  border-color: #334155;
+}
+
+.learnMore {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.arrowIcon {
+  color: #3b82f6;
+  transition: transform 0.2s ease;
+}
+
+.setCard:hover .arrowIcon {
+  transform: translateX(6px);
+}
+
+.cardDecoration {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent);
+  pointer-events: none;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 80px 0;
+  color: #64748b;
+}
+
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 32px;
+  }
+
+  .statsContainer {
+    gap: 24px;
+  }
+}

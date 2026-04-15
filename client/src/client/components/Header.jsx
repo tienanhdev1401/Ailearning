@@ -54,13 +54,16 @@ const Header = () => {
         return () => (mounted = false);
     }, []);
 
-    /** MENU ITEMS */
+    // Conditionally render menu items based on whether user data exists
     const menuItems = [
         { label: "Trang Chủ", icon: "🏠", path: "/" },
         { label: "AI Tutor", icon: "🤖", path: "/experience/ai-chat" },
         { label: "Chủ Đề", icon: "📚", path: "/topics" },
         { label: "Ngữ Pháp", icon: "📝", path: "/grammar" },
         { label: "Lộ Trình", icon: "🗺️", path: "/roadmaps" },
+        { label: "Sổ Tay", icon: "📖", path: "/notebooks" },
+        { label: "Flashcards", icon: "🎴", path: "/flashcards" },
+        { label: "Mở khóa Pro", icon: "💎", path: "/pricing" },
     ];
 
     const handleToggleChat = () => {
@@ -95,7 +98,7 @@ const Header = () => {
                     {menuItems.map((item) => (
                         <div
                             key={item.label}
-                            className={styles.navItem}
+                            className={`${styles.navItem} ${item.label === "Mở khóa Pro" ? styles.proItem : ""}`}
                             onClick={() => {
                                 navigate(item.path);
                                 setIsMenuOpen(false);

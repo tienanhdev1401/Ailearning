@@ -10,7 +10,7 @@ const shuffleArray = (arr) => {
   return cloned;
 };
 
-const MiniGameSentenceBuilder = ({ data, onNext }) => {
+const MiniGameSentenceBuilder = ({ data, onNext, onFail }) => {
   const tokens = useMemo(() => {
     const baseTokens = Array.isArray(data?.resources?.tokens)
       ? data.resources.tokens
@@ -46,7 +46,9 @@ const MiniGameSentenceBuilder = ({ data, onNext }) => {
   const handleCheck = () => {
     if (!slots.length) return;
     const built = slots.map((t) => t.text).join(" ");
-    setIsCorrect(built.trim() === correctSentence.trim());
+    const correct = built.trim() === correctSentence.trim();
+    setIsCorrect(correct);
+    if (!correct && onFail) onFail();
   };
 
   const handleReset = () => {

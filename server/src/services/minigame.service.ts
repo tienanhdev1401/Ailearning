@@ -7,6 +7,7 @@ import { SentenceBuilderMiniGame } from "../models/minigameImp/sentence_builder"
 import { ListenSelectMiniGame } from "../models/minigameImp/listen-select-minigame";
 import { TrueFalseMiniGame } from "../models/minigameImp/true-false-minigame";
 import { TypingChallengeMiniGame } from "../models/minigameImp/typing-challenge-minigame";
+import { FlipCardMiniGame } from "../models/minigameImp/flip-card-minigame";
 import { Activity } from "../models/activity";
 import ApiError from "../utils/ApiError";
 import { HttpStatusCode } from "axios";
@@ -15,6 +16,7 @@ import { UpdateMiniGameDto } from "../dto/request/UpdateMiniGameDTO";
 import MiniGameType from "../enums/minigameType.enum";
 import { minigameRepository } from "../repositories/minigame.repository";
 import { activityRepository } from "../repositories/activity.repostitory";
+import { WatchVideoMiniGame } from "../models/minigameImp/watch-video-minigame";
 
 
 export class MiniGameService {
@@ -38,6 +40,10 @@ export class MiniGameService {
         return new TrueFalseMiniGame(dto.prompt, dto.resources as any, activity);
       case MiniGameType.TYPING_CHALLENGE:
         return new TypingChallengeMiniGame(dto.prompt, dto.resources as any, activity);
+      case MiniGameType.FLIP_CARD:
+        return new FlipCardMiniGame(dto.prompt, dto.resources as any, activity);
+      case MiniGameType.WATCH_VIDEO:
+        return new WatchVideoMiniGame(dto.prompt, dto.resources as any, activity);
       default:
         throw new ApiError(HttpStatusCode.BadRequest, `Loại minigame không hợp lệ: ${dto.type}`);
     }
@@ -57,6 +63,16 @@ export class MiniGameService {
     });
     if (!miniGame) throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy minigame");
     return miniGame;
+  }
+
+  // 🔹 Lấy tất cả MiniGame (có thể lọc theo type)
+  static async getAll(type?: MiniGameType): Promise<MiniGame[]> {
+    const where: any = {};
+    if (type) where.type = type;
+    return minigameRepository.find({
+      where,
+      order: { createdAt: "DESC" },
+    });
   }
 
   // 🔹 Lấy danh sách MiniGame theo Activity

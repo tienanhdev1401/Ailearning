@@ -99,8 +99,8 @@ const RoadmapsPage = () => {
         const serverTotal1 = payload1?.total
           ? Number(payload1.total)
           : Array.isArray(payload1)
-          ? payload1.length
-          : 0;
+            ? payload1.length
+            : 0;
 
         const pages = serverTotal1
           ? Math.max(1, Math.ceil(serverTotal1 / itemsPerPage))
@@ -212,7 +212,7 @@ const RoadmapsPage = () => {
       };
 
       if (modalState.type === 'add') {
-        await api.post('/roadmaps', body);
+        await api.post('/roadmaps', { ...body, freeDayCount: -1 });
       } else if (modalState.type === 'edit') {
         await api.put(`/roadmaps/${modalState.payload.id}`, body);
       }
@@ -379,9 +379,9 @@ const RoadmapsPage = () => {
                     }
                   />
 
-                 <label className="form-label pt-3">Over view</label>
+                  <label className="form-label pt-3">Over view</label>
                   <Editor
-                    apiKey="5h1mny4wdy7lwto04bpgonbbj9ymfa8bmjxmmjiee045hxq7" 
+                    apiKey="5h1mny4wdy7lwto04bpgonbbj9ymfa8bmjxmmjiee045hxq7"
                     value={form.overview}
                     init={{
                       height: 300,

@@ -1,0 +1,187 @@
+.pageWrapper {
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .pageWrapper {
+  background-color: #0f172a;
+}
+
+/* Hero Section */
+.hero {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  padding: 80px 0;
+  color: white;
+  text-align: center;
+}
+
+:global([data-theme="dark"]) .hero {
+  background: linear-gradient(135deg, #020617 0%, #1e293b 100%);
+}
+
+.heroContent {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.heroTitle {
+  font-size: 48px;
+  font-weight: 800;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+  color: #ffffff !important;
+}
+
+.heroSubtitle {
+  font-size: 18px;
+  color: #cbd5e1;
+  margin-bottom: 40px;
+}
+
+.createBtn {
+  background: #3b82f6;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+}
+
+.createBtn:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.4);
+}
+
+/* Notebook Cards */
+.notebookCard {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100%;
+}
+
+:global([data-theme="dark"]) .notebookCard {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.notebookCard:hover {
+  transform: translateY(-8px);
+  border-color: #3b82f6;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.iconBox {
+  width: 48px;
+  height: 48px;
+  background: #eff6ff;
+  color: #3b82f6;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+:global([data-theme="dark"]) .iconBox {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.cardActions {
+  display: flex;
+}
+
+.deleteAction {
+  color: #94a3b8;
+  padding: 0;
+}
+
+.deleteAction:hover {
+  color: #ef4444;
+}
+
+.cardTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+:global([data-theme="dark"]) .cardTitle {
+  color: #f8fafc;
+}
+
+.cardDesc {
+  font-size: 15px;
+  color: #64748b;
+  margin-bottom: 24px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+:global([data-theme="dark"]) .cardDesc {
+  color: #94a3b8;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 16px;
+}
+
+:global([data-theme="dark"]) .cardFooter {
+  border-color: #334155;
+}
+
+.cardStats {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.arrowIcon {
+  color: #3b82f6;
+  transition: transform 0.2s ease;
+}
+
+.notebookCard:hover .arrowIcon {
+  transform: translateX(4px);
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 80px 0;
+  color: #64748b;
+}
+
+/* Dark Modal Stylings */
+.darkModal {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 32px;
+  }
+}

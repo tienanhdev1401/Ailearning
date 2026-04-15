@@ -1,0 +1,200 @@
+.pageWrapper {
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .pageWrapper {
+  background-color: #0f172a;
+}
+
+/* Header */
+.header {
+  background: white;
+  padding: 40px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+:global([data-theme="dark"]) .header {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.backBtn {
+  color: #64748b;
+  padding: 0;
+  margin-bottom: 24px;
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.backBtn:hover {
+  color: #3b82f6;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+}
+
+.headerMain {
+  flex: 1;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+:global([data-theme="dark"]) .title {
+  color: #f8fafc;
+}
+
+.description {
+  font-size: 18px;
+  color: #64748b;
+  margin: 0;
+}
+
+:global([data-theme="dark"]) .description {
+  color: #94a3b8;
+}
+
+.headerActions {
+  display: flex;
+  gap: 16px;
+}
+
+.studyBtn {
+  background: #3b82f6;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+}
+
+.addBtn {
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+/* Search Section */
+.searchSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.searchBar {
+  max-width: 400px;
+}
+
+.searchBar input {
+  border-radius: 0 10px 10px 0 !important;
+  border-left: none;
+}
+
+.searchBar span {
+  border-radius: 10px 0 0 10px !important;
+  background: white;
+  border-right: none;
+  color: #94a3b8;
+}
+
+:global([data-theme="dark"]) .searchBar span,
+:global([data-theme="dark"]) .searchBar input {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.countText {
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Term Grid */
+.termGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.termCard {
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+:global([data-theme="dark"]) .termCard {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.termCard:hover {
+  transform: translateX(4px);
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.cardMain {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.termContent {
+  flex: 1;
+}
+
+.termTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+:global([data-theme="dark"]) .termTitle {
+  color: #f8fafc;
+}
+
+.termDef {
+  font-size: 16px;
+  color: #64748b;
+  margin: 0;
+}
+
+:global([data-theme="dark"]) .termDef {
+  color: #94a3b8;
+}
+
+.deleteBtn {
+  color: #cbd5e1;
+  padding: 8px;
+}
+
+.deleteBtn:hover {
+  color: #ef4444;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 80px 0;
+  color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+  .headerContent {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
