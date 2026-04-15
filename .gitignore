@@ -65,3 +65,4 @@ Thumbs.db
 /server/public/uploads/" > .gitignore
 
 f5-model-server/my_model/
+/W2V_GOP/
