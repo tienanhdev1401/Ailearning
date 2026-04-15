@@ -207,7 +207,7 @@ const ActivityDrawer = ({
     if (status === 'completed') return 'Đã hoàn thành';
     if (status === 'playing') return 'Đang chơi';
     if (status === 'ready') {
-      if (activity?.isInProgress) return 'Đang dở';
+      if (activity?.isInProgress) return 'Đang tiến hành';
       return 'Sẵn sàng';
     }
     return 'Khóa';
