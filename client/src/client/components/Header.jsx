@@ -57,12 +57,21 @@ const Header = () => {
     // Conditionally render menu items based on whether user data exists
     const menuItems = [
         { label: "Trang Chủ", icon: "🏠", path: "/" },
-        { label: "AI Tutor", icon: "🤖", path: "/experience/ai-chat" },
-        { label: "Chủ Đề", icon: "📚", path: "/topics" },
-        { label: "Ngữ Pháp", icon: "📝", path: "/grammar" },
         { label: "Lộ Trình", icon: "🗺️", path: "/roadmaps" },
+        { label: "Chủ Đề", icon: "📚", path: "/topics" },
+        {
+            label: "Học Tập",
+            icon: "📚",
+            children: [
+                { label: "AI Tutor", icon: "🤖", path: "/experience/ai-chat" },
+                { label: "Ngữ Pháp", icon: "📝", path: "/grammar" },
+                { label: "Flashcards", icon: "🎴", path: "/flashcards" },
+            ]
+        },
+
         { label: "Sổ Tay", icon: "📖", path: "/notebooks" },
-        { label: "Flashcards", icon: "🎴", path: "/flashcards" },
+
+
         { label: "Mở khóa Pro", icon: "💎", path: "/pricing" },
     ];
 
@@ -95,19 +104,48 @@ const Header = () => {
 
                 {/* Navigation */}
                 <nav className={`${styles.nav} ${isMenuOpen ? styles.navOpen : ""}`}>
-                    {menuItems.map((item) => (
-                        <div
-                            key={item.label}
-                            className={`${styles.navItem} ${item.label === "Mở khóa Pro" ? styles.proItem : ""}`}
-                            onClick={() => {
-                                navigate(item.path);
-                                setIsMenuOpen(false);
-                            }}
-                        >
-                            <span className={styles.navIcon}>{item.icon}</span>
-                            <span>{item.label}</span>
-                        </div>
-                    ))}
+                    {menuItems.map((item) => {
+                        if (item.children) {
+                            return (
+                                <div key={item.label} className={styles.dropdown}>
+                                    <div className={styles.dropdownTrigger}>
+                                        <span className={styles.navIcon}>{item.icon}</span>
+                                        <span>{item.label}</span>
+                                        <span className={styles.dropdownArrow}>▼</span>
+                                    </div>
+                                    <div className={styles.dropdownMenu}>
+                                        {item.children.map((child) => (
+                                            <div
+                                                key={child.label}
+                                                className={styles.dropdownItem}
+                                                onClick={() => {
+                                                    navigate(child.path);
+                                                    setIsMenuOpen(false);
+                                                }}
+                                            >
+                                                <span className={styles.navIcon}>{child.icon}</span>
+                                                <span>{child.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <div
+                                key={item.label}
+                                className={`${styles.navItem} ${item.label === "Mở khóa Pro" ? styles.proItem : ""}`}
+                                onClick={() => {
+                                    navigate(item.path);
+                                    setIsMenuOpen(false);
+                                }}
+                            >
+                                <span className={styles.navIcon}>{item.icon}</span>
+                                <span>{item.label}</span>
+                            </div>
+                        );
+                    })}
                 </nav>
 
                 {/* User + settings */}
