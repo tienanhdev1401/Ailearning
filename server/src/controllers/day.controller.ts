@@ -4,6 +4,16 @@ import { plainToInstance } from "class-transformer";
 import { CreateDayDto } from "../dto/request/CreateDayDTO";
 import { UpdateDayDto } from "../dto/request/UpdateDayDTO";
 import { HttpStatusCode } from "axios";
+import ApiError from "../utils/ApiError";
+import { DayWordImportService } from "../services/dayWordImport.service";
+
+const decodeUploadedFilename = (name: string): string => {
+  try {
+    return Buffer.from(name, "latin1").toString("utf8");
+  } catch {
+    return name;
+  }
+};
 
 class DayController {
   // Thêm ngày vào roadmap
@@ -62,6 +72,28 @@ class DayController {
       const dayId = Number(req.params.id);
       await DayService.deleteDay(dayId);
       res.status(HttpStatusCode.Ok).json({ message: "Xóa ngày thành công" });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async importWordLesson(req: Request & { file?: Express.Multer.File }, res: Response, next: NextFunction) {
+    try {
+      const dayId = Number(req.params.id);
+      if (!req.file) {
+        throw new ApiError(HttpStatusCode.BadRequest, "Vui lòng upload file Word (.docx)");
+      }
+
+      const requestedTypes = DayWordImportService.parseRequestedMinigameTypes(req.body.minigameTypes);
+      const result = await DayWordImportService.importWordToDay({
+        dayId,
+        originalFileName: decodeUploadedFilename(req.file.originalname),
+        fileBuffer: req.file.buffer,
+        minigameTypes: requestedTypes,
+        activityTitle: req.body.activityTitle,
+      });
+
+      res.status(HttpStatusCode.Created).json(result);
     } catch (error) {
       next(error);
     }
