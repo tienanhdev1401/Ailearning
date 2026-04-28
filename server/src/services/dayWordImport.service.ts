@@ -21,6 +21,19 @@ const SUPPORTED_OPTIONAL_MINIGAMES: MiniGameType[] = [
   MiniGameType.FLIP_CARD,
 ];
 
+const MINIGAME_DISPLAY_TITLES: Record<string, string> = {
+  [MiniGameType.LESSON]: "Bài học lý thuyết",
+  [MiniGameType.TRUE_FALSE]: "Trắc nghiệm Đúng/Sai",
+  [MiniGameType.SENTENCE_BUILDER]: "Sắp xếp câu hoàn chỉnh",
+  [MiniGameType.TYPING_CHALLENGE]: "Thử thách gõ phím",
+  [MiniGameType.FLIP_CARD]: "Ôn tập Flashcard",
+};
+
+function getMinigameDisplayTitle(type: MiniGameType): string {
+  return MINIGAME_DISPLAY_TITLES[type] || "Trò chơi học tập";
+}
+
+
 type ImportWordInput = {
   dayId: number;
   originalFileName: string;
@@ -497,7 +510,7 @@ ${preprocessed.cleanedSource.slice(0, 8000)}
 
 REQUIRED OUTPUT — a single JSON object with these fields:
 {
-  "lessonTitle": "A descriptive academic title for this lesson (NOT the filename)"${typeInstructions.length > 0 ? ",\n" + typeInstructions.join(",\n") : ""}
+  "lessonTitle": "Một tiêu đề học thuật mô tả cho bài học này (TUYỆT ĐỐI KHÔNG dùng tên file, hãy dựa vào nội dung văn bản)"${typeInstructions.length > 0 ? ",\n" + typeInstructions.join(",\n") : ""}
 }
 
 CRITICAL RULES:
@@ -576,7 +589,7 @@ function generateLocalFallback(
   fileName: string,
 ): GeminiPayload {
   const payload: GeminiPayload = {
-    lessonTitle: fileName.replace(/\.[^/.]+$/, "").slice(0, 80) || "Imported Lesson",
+    lessonTitle: fileName.replace(/\.[^/.]+$/, "").slice(0, 80) || "Bài học mới",
   };
 
   const { allVocab, grammarRules, extractedExamples, cleanedSource } = preprocessed;
@@ -822,14 +835,14 @@ export class DayWordImportService {
         order: nextOrder++,
         pointOfAc: 10,
         skill: Skill.READING,
-        title: input.activityTitle?.trim() || payload.lessonTitle || `Lesson: ${input.originalFileName}`,
+        title: input.activityTitle?.trim() || payload.lessonTitle,
       });
       await manager.save(lessonActivity);
       createdActivities.push(lessonActivity);
       createdMinigames.push(
         await manager.save(
           new LessonMiniGame(
-            `Lesson từ file Word: ${input.originalFileName}`,
+            payload.lessonTitle,
             { content: fullLessonHtml },
             lessonActivity
           )
@@ -879,7 +892,7 @@ export class DayWordImportService {
             order: nextOrder++,
             pointOfAc: 10,
             skill: Skill.READING,
-            title: `${payload.lessonTitle} - ${type}`,
+            title: getMinigameDisplayTitle(type),
           });
           await manager.save(activityForType);
           createdActivities.push(activityForType);
