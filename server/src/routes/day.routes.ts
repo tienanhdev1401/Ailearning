@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import DayController from "../controllers/day.controller";
 import ActivityController from "../controllers/activity.controller";
 import validateDto from "../middlewares/validateRequest.middleware";
@@ -9,6 +10,10 @@ import USER_ROLE from "../enums/userRole.enum";
 import { CreateActivityDto } from "../dto/request/CreateActivityDTO";
 
 const router = express.Router();
+const uploadWord = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
 
 /**
  * @swagger
@@ -104,6 +109,13 @@ router.delete(
 router.get(
   "/:dayId/activities",
   ActivityController.getAllActivityByDayId
+);
+
+router.post(
+  "/:id/import-word",
+  verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
+  uploadWord.single("word_file"),
+  DayController.importWordLesson
 );
 
 export default router;
