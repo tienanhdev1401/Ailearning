@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import Chart from '../../lib/chart';
 
-const UserGrowthCard = ({ dataset }) => {
+const UserGrowthCard = ({ dataset = { labels: [], data: [] } }) => {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
 
@@ -13,11 +13,11 @@ const UserGrowthCard = ({ dataset }) => {
     chartRef.current = new Chart(canvasRef.current, {
       type: 'bar',
       data: {
-        labels: dataset.labels,
+        labels: dataset?.labels || [],
         datasets: [
           {
             label: 'New Users',
-            data: dataset.data,
+            data: dataset?.data || [],
             backgroundColor: 'rgba(99, 102, 241, 0.8)',
             borderRadius: 8,
             borderSkipped: false
