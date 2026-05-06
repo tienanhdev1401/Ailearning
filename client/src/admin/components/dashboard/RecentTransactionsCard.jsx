@@ -1,12 +1,12 @@
-const RecentOrdersCard = ({ orders }) => (
+const RecentTransactionsCard = ({ orders }) => (
   <div className="card h-100">
     <div className="card-header">
-      <h5 className="card-title mb-0">Tickets</h5>
+      <h5 className="card-title mb-0">Recent Transactions</h5>
     </div>
     <div className="card-body">
       <div className="table-responsive">
         <table className="table table-hover mb-0">
-          <thead>
+          <thead className="bg-body-tertiary small uppercase">
             <tr>
               <th>Order ID</th>
               <th>Customer</th>
@@ -36,4 +36,4 @@ const RecentOrdersCard = ({ orders }) => (
   </div>
 );
 
-export default RecentOrdersCard;
+export default RecentTransactionsCard;

@@ -11,6 +11,7 @@ import {
   WEEK_DAYS
 } from '../data/reports';
 import { useToast } from '../../context/ToastContext';
+import { useDashboardData } from '../hooks/useDashboardData';
 
 const formatCurrency = (value) => `$${value.toLocaleString()}`;
 
@@ -21,32 +22,42 @@ const getRandomChange = (base, variance) => {
 
 const ReportsPage = () => {
   const toast = useToast();
+  const {
+    revenueDataset,
+    userGrowthDataset,
+    statsCards,
+    salesByLocation,
+    recentOrders,
+    loading
+  } = useDashboardData();
+
   const [dateRange, setDateRange] = useState('30d');
   const [reportType, setReportType] = useState('overview');
   const [exportFormat, setExportFormat] = useState('pdf');
-  const [kpis, setKpis] = useState(DEFAULT_KPIS);
   const [recentReports, setRecentReports] = useState(DEFAULT_RECENT_REPORTS);
-  const [topProducts] = useState(DEFAULT_TOP_PRODUCTS);
+
+  const kpis = useMemo(() => {
+    const rev = statsCards.find(c => c.label === 'Total Revenue')?.value || 0;
+    const users = statsCards.find(c => c.label === 'Total Users')?.value || 0;
+    const subs = statsCards.find(c => c.label === 'Active Subscriptions')?.value || 0;
+    
+    return {
+      revenue: rev,
+      revenueChange: 0,
+      orders: recentOrders.length,
+      ordersChange: 0,
+      customers: users,
+      customersChange: 0,
+      conversionRate: users > 0 ? ((subs / users) * 100).toFixed(1) : 0,
+      conversionChange: 0
+    };
+  }, [statsCards, recentOrders]);
 
   const notify = (message) => {
     toast.info(message);
   };
 
-  const randomizeKpis = () => {
-    setKpis((prev) => ({
-      revenue: getRandomChange(prev.revenue, 15000),
-      revenueChange: Number((Math.random() * 15).toFixed(1)),
-      orders: getRandomChange(prev.orders, 250),
-      ordersChange: Number((Math.random() * 10).toFixed(1)),
-      customers: getRandomChange(prev.customers, 150),
-      customersChange: Number((Math.random() * 20).toFixed(1)),
-      conversionRate: Number((Math.random() * 4 + 2).toFixed(1)),
-      conversionChange: Number((Math.random() * 1 - 0.5).toFixed(1))
-    }));
-  };
-
   const handleApplyFilters = () => {
-    randomizeKpis();
     notify('Filters applied successfully!');
   };
 
@@ -90,22 +101,27 @@ const ReportsPage = () => {
       tooltip: { y: { formatter: (value) => `$${value.toLocaleString()}` } },
       legend: { position: 'top' }
     }),
-    []
+    [revenueDataset.labels]
   );
+
+  const revenueSeries = useMemo(() => [
+    { name: 'Revenue', data: revenueDataset.revenue },
+    { name: 'Profit', data: revenueDataset.profit }
+  ], [revenueDataset]);
 
   const topProductsChart = useMemo(
     () => ({
       options: {
         chart: { type: 'donut' },
-        labels: topProducts.map((product) => product.name),
+        labels: salesByLocation.map((item) => item.name),
         colors: ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'],
         plotOptions: { pie: { donut: { size: '65%' } } },
         legend: { show: false },
-        tooltip: { y: { formatter: (value) => `$${value}k revenue` } }
+        tooltip: { y: { formatter: (value) => `${value} enrollments` } }
       },
-      series: topProducts.map((product) => product.revenue)
+      series: salesByLocation.map((item) => item.value)
     }),
-    [topProducts]
+    [salesByLocation]
   );
 
   const customerAcquisitionOptions = useMemo(
@@ -113,12 +129,16 @@ const ReportsPage = () => {
       chart: { type: 'bar', stacked: true },
       plotOptions: { bar: { columnWidth: '55%', borderRadius: 4 } },
       colors: ['#6366f1', '#e5e7eb'],
-      xaxis: { categories: WEEK_DAYS },
-      yaxis: { title: { text: 'Customers' } },
+      xaxis: { categories: userGrowthDataset.labels },
+      yaxis: { title: { text: 'New Users' } },
       legend: { position: 'top' }
     }),
-    []
+    [userGrowthDataset.labels]
   );
+
+  const customerAcquisitionSeries = useMemo(() => [
+    { name: 'New Users', data: userGrowthDataset.data }
+  ], [userGrowthDataset.data]);
 
   const regionSalesOptions = useMemo(
     () => ({
@@ -302,24 +322,23 @@ const ReportsPage = () => {
               </div>
             </div>
             <div className="card-body p-3 p-lg-4">
-              <ReactApexChart options={revenueChartOptions} series={REVENUE_TRENDS_SERIES} height={350} type="area" />
+              <ReactApexChart options={revenueChartOptions} series={revenueSeries} height={350} type="area" />
             </div>
           </div>
         </div>
         <div className="col-lg-4">
           <div className="card h-100">
             <div className="card-header">
-              <h5 className="card-title mb-0">Top Products</h5>
+              <h5 className="card-title mb-0">Top Roadmaps</h5>
             </div>
             <div className="card-body p-3 p-lg-4">
               <ReactApexChart options={topProductsChart.options} series={topProductsChart.series} type="donut" height={220} />
               <div className="mt-3">
-                {topProducts.map((product) => (
-                  <div key={product.name} className="d-flex justify-content-between align-items-center mb-2">
-                    <span className="small">{product.name}</span>
+                {salesByLocation.map((item) => (
+                  <div key={item.name} className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="small">{item.name}</span>
                     <div className="d-flex align-items-center">
-                      <span className="small text-muted me-2">{`$${product.revenue}k`}</span>
-                      <span className="small fw-medium">{product.units}</span>
+                      <span className="small fw-medium">{item.value} users</span>
                     </div>
                   </div>
                 ))}
@@ -333,10 +352,10 @@ const ReportsPage = () => {
         <div className="col-lg-6">
           <div className="card h-100">
             <div className="card-header">
-              <h5 className="card-title mb-0">Customer Acquisition</h5>
+              <h5 className="card-title mb-0">User Growth</h5>
             </div>
             <div className="card-body p-3 p-lg-4">
-              <ReactApexChart options={customerAcquisitionOptions} series={CUSTOMER_ACQUISITION_SERIES} type="bar" height={260} />
+              <ReactApexChart options={customerAcquisitionOptions} series={customerAcquisitionSeries} type="bar" height={260} />
             </div>
           </div>
         </div>

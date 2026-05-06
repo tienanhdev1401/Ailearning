@@ -11,4 +11,22 @@ router.get(
   DashboardController.getOverview
 );
 
+router.get(
+  "/transactions",
+  verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
+  DashboardController.getTransactions
+);
+
+router.get(
+  "/top-customers",
+  verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
+  DashboardController.getTopCustomers
+);
+
+router.get(
+  "/subscriptions",
+  verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
+  DashboardController.getSubscriptions
+);
+
 export default router;

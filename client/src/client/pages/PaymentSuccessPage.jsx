@@ -16,7 +16,7 @@ const PaymentSuccessPage = () => {
   const payDate = searchParams.get("vnp_PayDate");
 
   const formatAmount = (amt) => {
-    if (!amt) return "0 ₫";
+    if (!amt) return "0 VNĐ";
     const value = parseInt(amt) / 100;
     return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
   };

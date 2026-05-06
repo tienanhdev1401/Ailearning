@@ -6,6 +6,7 @@ const secondaryNav = [
   // { label: 'Calendar', icon: 'bi-calendar-event', path: '/admin/calendar' },
   { label: 'Roadmap', icon: 'bi-map', path: '/admin/roadmaps' },
   { label: 'Video Lesson', icon: 'bi-youtube', path: '/admin/lessons' },
+  { label: 'Finance', icon: 'bi-credit-card', path: '/admin/finance' },
 ];
 
 const makeUserNavItem = (role) => {

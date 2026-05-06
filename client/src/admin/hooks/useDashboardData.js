@@ -9,7 +9,12 @@ const emptyData = {
   recentOrders: [],
   activityFeed: [],
   storageUsage: { used: 0, total: 0 },
-  salesByLocation: []
+  salesByLocation: [],
+  contentStats: { lessons: 0, roadmaps: 0, minigames: 0, activities: 0 },
+  subscriptionDistribution: { labels: [], data: [] },
+  monthlyRevenue: [],
+  usageDataset: { labels: [], aiConversations: [], resolvedTickets: [] },
+  recentTickets: []
 };
 
 export const useDashboardData = () => {
@@ -47,6 +52,11 @@ export const useDashboardData = () => {
     statsCards,
     storageUsage: data.storageUsage,
     userGrowthDataset: data.userGrowthDataset,
+    contentStats: data.contentStats,
+    subscriptionDistribution: data.subscriptionDistribution,
+    monthlyRevenue: data.monthlyRevenue,
+    usageDataset: data.usageDataset,
+    recentTickets: data.recentTickets,
     loading,
     error,
     refresh: loadDashboard

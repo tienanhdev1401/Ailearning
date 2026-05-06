@@ -3,7 +3,7 @@ import Chart from '../../lib/chart';
 
 const COLORS = ['rgba(16, 185, 129, 0.85)', 'rgba(99, 102, 241, 0.85)', 'rgba(245, 158, 11, 0.85)', 'rgba(239, 68, 68, 0.85)'];
 
-const OrderStatusCard = ({ dataset }) => {
+const OrderStatusCard = ({ dataset = { labels: [], data: [] } }) => {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
 
@@ -14,10 +14,10 @@ const OrderStatusCard = ({ dataset }) => {
     chartRef.current = new Chart(canvasRef.current, {
       type: 'doughnut',
       data: {
-        labels: dataset.labels,
+        labels: dataset?.labels || [],
         datasets: [
           {
-            data: dataset.data,
+            data: dataset?.data || [],
             backgroundColor: COLORS,
             borderWidth: 0,
             cutout: '60%'
