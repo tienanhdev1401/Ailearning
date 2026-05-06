@@ -4,10 +4,12 @@ import styles from '../styles/GrammarCheckerPage.module.css'; // Import CSS Modu
 import api from '../../api/api';
 import { ThemeContext } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
+import TranslationTab from '../components/GrammarTools/TranslationTab';
 
 const GrammarCheckerPage = () => {
   const { isDarkMode } = useContext(ThemeContext);
   const toast = useToast();
+  const [activeTab, setActiveTab] = useState('grammar');
   const [inputTexts, setInputTexts] = useState([""]);
   const [results, setResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
@@ -15,6 +17,7 @@ const GrammarCheckerPage = () => {
   const [loadingIndex, setLoadingIndex] = useState(-1);
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [showTranslateHistory, setShowTranslateHistory] = useState(false);
 
   // Load history from localStorage on component mount
   useEffect(() => {
@@ -265,12 +268,15 @@ const GrammarCheckerPage = () => {
       >
         <header className={styles['grammar-checker-header']}>
           <h1 className={`${styles['grammar-checker-title']} ${isDarkMode ? styles.dark : ''}`}>
-             Grammar Checker AI
+             Công Cụ
           </h1>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <button
               type="button"
-              onClick={() => setShowHistory(!showHistory)}
+              onClick={() => {
+                if (activeTab === 'grammar') setShowHistory(v => !v);
+                else setShowTranslateHistory(v => !v);
+              }}
               aria-label="Toggle history"
               className={`${styles['btn-base']} ${styles['history-toggle-button']} ${isDarkMode ? styles.dark : ''}`}
             >
@@ -279,6 +285,60 @@ const GrammarCheckerPage = () => {
           </div>
         </header>
 
+        {/* Tab navigation */}
+        <div
+          role="tablist"
+          aria-label="Grammar tools"
+          style={{
+            display: 'flex',
+            gap: 8,
+            marginBottom: 24,
+            borderBottom: isDarkMode ? '1px solid #4a5568' : '1px solid #e2e8f0',
+          }}
+        >
+          {[
+            { id: 'grammar', label: '📝 Chấm ngữ pháp' },
+            { id: 'translate', label: '🌐 Dịch' },
+          ].map(tab => {
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={active}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  padding: '12px 20px',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  color: active
+                    ? (isDarkMode ? '#81E6D9' : '#667eea')
+                    : (isDarkMode ? '#a0aec0' : '#718096'),
+                  borderBottom: active
+                    ? `3px solid ${isDarkMode ? '#81E6D9' : '#667eea'}`
+                    : '3px solid transparent',
+                  marginBottom: -1,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {activeTab === 'translate' && (
+          <TranslationTab
+            showHistory={showTranslateHistory}
+            onCloseHistory={() => setShowTranslateHistory(false)}
+          />
+        )}
+
+        {activeTab === 'grammar' && (
         <section aria-labelledby="check-grammar-title">
           <h2 id="check-grammar-title" className={`${styles['check-grammar-title']} ${isDarkMode ? styles.dark : ''}`}>
              AI-Powered Grammar Correction
@@ -387,8 +447,9 @@ const GrammarCheckerPage = () => {
             </div>
           </div>
         </section>
+        )}
 
-        {showResults && results.some(result => result) && (
+        {activeTab === 'grammar' && showResults && results.some(result => result) && (
           <>
             <section aria-live="polite" aria-atomic="true" aria-label="Results">
                 <h3 className={`${styles['results-title']} ${isDarkMode ? styles.dark : ''}`}>
@@ -471,7 +532,7 @@ const GrammarCheckerPage = () => {
         )}
 
         {/* History Sidebar */}
-        {showHistory && (
+        {activeTab === 'grammar' && showHistory && (
           <div className={`${styles['history-sidebar']} ${isDarkMode ? styles.dark : ''}`}>
             <div className={styles['history-header']}>
               <h3>📚 Check History</h3>

@@ -15,6 +15,7 @@ import userRouter from './routes/user.routes'
 import authRouter from './routes/auth.routes'
 import oauthRoutes from './routes/oauth.routes'
 import grammarCheckerRouter from './routes/grammarChecker.routes'
+import translationRouter from './routes/translation.routes'
 import lessonRouter from './routes/lesson.routes'
 import pronunciationRouter from './routes/pronunciation.routes'
 import roadmapRouter from './routes/roadmap.routes'
@@ -89,6 +90,7 @@ app.use("/api/auth", oauthRoutes);
 app.use('/api/users', userRouter);
 
 app.use('/api', grammarCheckerRouter);
+app.use('/api/translation', translationRouter);
 app.use('/api/lessons', lessonRouter);
 app.use('/api/pronunciation', pronunciationRouter);
 app.use('/api/roadmaps', roadmapRouter);

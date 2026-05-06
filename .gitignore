@@ -59,10 +59,7 @@ Thumbs.db
 
 # production
 /build
-/client/build
 
 # media files
-/server/public/uploads/" > .gitignore
-
-f5-model-server/my_model/
+/server/public/uploads
 /W2V_GOP/

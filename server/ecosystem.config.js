@@ -16,8 +16,8 @@ module.exports = {
         COOKIE_SAMESITE: "strict",
 
         // Internal model services running on VPS (Docker published to 127.0.0.1)
-        GRAMMAR_SERVICE_URL: "http://127.0.0.1:5001",
         GOP_MODEL_URL: "http://127.0.0.1:5005",
+        TRANSLATION_SERVICE_URL: "http://127.0.0.1:5001",
       },
     },
   ],

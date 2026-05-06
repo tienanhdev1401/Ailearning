@@ -8,6 +8,7 @@ import successSound from "../sounds/success.mp3";
 import { useParams, useNavigate } from "react-router-dom";
 import lessonService from "../services/lessonService";
 import { useToast } from "../../context/ToastContext";
+import PronunciationScoreResult from "../components/Pronunciation/PronunciationScoreResult";
 
 export default function SpeakingVideoPraticePage() {
   // Lay lessonId từ URL param
@@ -140,7 +141,7 @@ export default function SpeakingVideoPraticePage() {
       }
     }
     fetchLessonData();
-  }, [lessonId]);
+  }, [lessonId, toast]);
 
   useEffect(() => { if (lesson && (lesson?.subtitles?.length || 0) > 0) updateWordsForSegment(0); }, [lesson, updateWordsForSegment]);
 
@@ -334,21 +335,32 @@ export default function SpeakingVideoPraticePage() {
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorPayload = await response.json().catch(() => null);
+          const rawErrorMessage =
+            errorPayload?.message ||
+            errorPayload?.detail?.reject_reason ||
+            errorPayload?.detail ||
+            `HTTP error! status: ${response.status}`;
+
+          const errorMessage =
+            typeof rawErrorMessage === "string" && rawErrorMessage.includes("Audio rejected")
+              ? "Đoạn ghi hơi ngắn sau khi lọc tạp âm. Bạn thử đọc chậm hơn hoặc ghi âm dài hơn một chút nhé."
+              : rawErrorMessage;
+          throw new Error(errorMessage);
         }
 
         const data = await response.json();
         setApiResult(data);
-        console.log(data);
+        console.log("[GOP score v2]", data);
 
-        const allGood = (data.words || []).every(w => w.label === 1);
+        const allGood = Boolean(data?.summary?.all_words_good);
         setSegmentSuccess(allGood);
         if (allGood) {
           try { new Audio(successSound).play(); } catch (e) { }
         }
       } catch (err) {
         console.error("Lỗi khi gọi API:", err);
-        toast.error("Lỗi khi gửi audio lên server.");
+        toast.error(err?.message || "Lỗi khi gửi audio lên server.");
       }
     } catch (err) {
       console.error("Lỗi stopRecording:", err);
@@ -436,7 +448,7 @@ export default function SpeakingVideoPraticePage() {
 
       <div className="row">
         {/* Video Section */}
-        <div className="col-lg-8" style={{ maxHeight: 580, overflowY: "auto" }}>
+        <div className="col-lg-8" style={{ maxHeight: "calc(100vh - 120px)", overflowY: "auto" }}>
           <div className="card bg-body border-0 shadow-sm">
             <div className="card-body">
               <h5 className="card-title">{lesson?.title || "Đang tải..."}</h5>
@@ -516,111 +528,46 @@ export default function SpeakingVideoPraticePage() {
                   </button>
                 </div>
 
-                {/* Subtitle + Phonetic + Buttons */}
-                <div className="segment-display mt-3 text-center">
+                {/* Subtitle + Pronunciation result */}
+                <div className="segment-display mt-3">
                   {lesson?.subtitles?.length > 0 && (
                     <>
-                      <div style={{ textAlign: "center", width: "100%", position: "relative", overflow: "visible" }}>
-                        {/* inline-block để nội dung được căn giữa, và làm container relative cho score */}
-                        <div style={{ display: "inline-block", position: "relative" }}>
-                          <div className="fw-bold fs-5">
-                            {renderSegmentText()}
-                          </div>
-
-                          {/* Điểm segment - nửa vòng tròn, đổi màu theo score */}
-                          {apiResult && typeof apiResult.overall_score === "number" && (() => {
-                            const score = apiResult.overall_score;
-                            let bgColor = "#e9f5ff";
-                            let borderColor = "#007bff";
-                            let textColor = "#007bff";
-
-                            if (score < 40) { // dưới 40% => đỏ
-                              bgColor = "rgba(220,53,69,0.1)";
-                              borderColor = "#dc3545";
-                              textColor = "#dc3545";
-                            } else if (score >= 40 && score < 80) { // 40%-79% => vàng
-                              bgColor = "rgba(255,193,7,0.12)";
-                              borderColor = "#ffc107";
-                              textColor = "#ffc107";
-                            } else if (score >= 80 && score < 100) { // 80%-99% => xanh biển
-                              bgColor = "rgba(13,110,253,0.12)";
-                              borderColor = "#0d6efd";
-                              textColor = "#0d6efd";
-                            } else if (score === 100) { // 100% => xanh lá
-                              bgColor = "rgba(25,135,84,0.12)";
-                              borderColor = "#198754";
-                              textColor = "#198754";
-                            }
-
-                            return (
-                              <span
-                                style={{
-                                  position: "absolute",
-                                  left: "100%",
-                                  top: "50%",
-                                  transform: "translate(8px, -50%)",
-                                  width: "50px",
-                                  height: "25px",
-                                  display: "flex",
-                                  justifyContent: "center",
-                                  alignItems: "center",
-                                  borderTopLeftRadius: "50px",
-                                  borderTopRightRadius: "50px",
-                                  backgroundColor: bgColor,
-                                  border: `2px solid ${borderColor}`,
-                                  borderBottom: "none",
-                                  color: textColor,
-                                  fontWeight: "bold",
-                                  fontSize: "1.05rem",
-                                  zIndex: 20,
-                                  whiteSpace: "nowrap"
-                                }}
-                              >
-                                {score}
-                              </span>
-                            );
-                          })()}
-                        </div>
+                      <div className="text-center fw-bold fs-5 mb-2">
+                        {renderSegmentText()}
                       </div>
 
-                      {/* Hiển thị IPA của từng từ nếu có kết quả API */}
-                      {apiResult && Array.isArray(apiResult.words) && (
-                        <div className="d-flex justify-content-center align-items-center gap-3 my-3">
-                          <div className="d-flex flex-column">
-                            {apiResult.words?.map((w, i) => (
-                              <div
-                                key={i}
-                                className="d-flex justify-content-center align-items-center my-1 text-center"
-                                style={{ gap: "1rem" }}
-                              >
-                                <div className="text-muted">
-                                  <strong>{w.word}</strong>
-                                </div>
-                                <div>
-                                  <span className="badge bg-light text-dark me-2">
-                                    🎯 IPA của bạn {w.predicted_ipa}
-                                  </span>
-                                  <span className="badge bg-light text-dark">
-                                    🎤 IPA của từ {w.target_ipa}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                      {/* Khi chưa có kết quả: chỉ hiện nút ghi âm + phát lại */}
+                      {!apiResult && (
+                        <div className="d-flex justify-content-center gap-2 mt-3">
+                          <button
+                            className="btn btn-outline-secondary btn-sm"
+                            onClick={playLastRecording}
+                            disabled={!lastRecording}
+                          >
+                            <i className="bi bi-play-circle me-2"></i>Phát lại ghi âm
+                          </button>
+                          <button
+                            className={`btn ${isRecording ? "btn-danger" : "btn-primary"} btn-sm`}
+                            onClick={handleRecordButton}
+                            disabled={sending}
+                          >
+                            <i className={`bi ${isRecording ? "bi-stop-fill" : "bi-mic-fill"} me-2`}></i>
+                            {sending ? "Đang gửi..." : isRecording ? "Dừng & Gửi" : "Ghi âm"}
+                          </button>
                         </div>
                       )}
 
-                      {/* Buttons */}
-                      <div className="d-flex justify-content-center gap-2 mt-3">
-                        <button className="btn btn-outline-secondary btn-sm" onClick={playLastRecording} disabled={!lastRecording}>
-                          <i className="bi bi-play-circle me-2"></i>Phát lại ghi âm
-                        </button>
-
-                        <button className={`btn ${isRecording ? 'btn-danger' : 'btn-primary'} btn-sm`} onClick={handleRecordButton} disabled={sending}>
-                          <i className={`bi ${isRecording ? 'bi-stop-fill' : 'bi-mic-fill'} me-2`}></i>
-                          {sending ? 'Đang gửi...' : (isRecording ? 'Dừng & Gửi' : 'Ghi âm')}
-                        </button>
-                      </div>
+                      {/* Khi có kết quả: hiển thị panel chấm điểm chi tiết */}
+                      {apiResult && (
+                        <PronunciationScoreResult
+                          result={apiResult}
+                          onPlayRecording={playLastRecording}
+                          onRecord={handleRecordButton}
+                          hasRecording={Boolean(lastRecording)}
+                          isRecording={isRecording}
+                          sending={sending}
+                        />
+                      )}
                     </>
                   )}
                 </div>
