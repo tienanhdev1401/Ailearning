@@ -13,8 +13,7 @@ import {
     FiSun,
     FiMoon,
     FiZap,
-    FiLayers,
-    FiTool,
+    FiLayers
 } from 'react-icons/fi';
 import { BsRobot } from "react-icons/bs";
 import { GiNotebook,GiCardPick} from "react-icons/gi";
