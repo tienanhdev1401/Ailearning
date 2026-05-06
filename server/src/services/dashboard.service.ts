@@ -170,7 +170,7 @@ export class DashboardService {
         icon: "bi-currency-dollar",
         iconVariant: "text-primary",
         bgClass: "bg-primary",
-        suffix: " ₫"
+        suffix: " VNĐ"
       },
       {
         label: "Total Users",
@@ -284,7 +284,7 @@ export class DashboardService {
         // Mocking ticket trend since we don't have historical ticket resolution repo yet
         // but we can use supportRepo counts if needed. For now just use a realistic mock
         // or query the supportRepo if it has createdAt.
-        return Math.floor(Math.random() * 50); 
+        return Math.floor(Math.random() * 50);
       })
     };
 
@@ -359,7 +359,7 @@ export class DashboardService {
     const recentOrders: RecentOrder[] = recentTransactions.map((tx) => ({
       id: `#${tx.id.slice(0, 8)}`,
       customer: tx.user?.name ?? "Unknown",
-      amount: `${Number(tx.amount).toLocaleString()} ₫`,
+      amount: `${Number(tx.amount).toLocaleString()} VNĐ`,
       status: transactionStatusBadge(tx.status),
       date: tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("vi-VN") : ""
     }));
@@ -442,15 +442,22 @@ export class DashboardService {
     const subscriptionCountsRaw = await subscriptionRepo
       .createQueryBuilder("s")
       .leftJoin("s.package", "p")
-      .select("p.name", "name")
+      .select("p.type", "type")
       .addSelect("COUNT(*)", "total")
       .where("s.isActive = :isActive", { isActive: true })
-      .groupBy("p.name")
-      .getRawMany<{ name: string; total: string }>();
+      .groupBy("p.type")
+      .getRawMany<{ type: string; total: string }>();
+
+    const typeLabels: Record<string, string> = {
+      AI_CONVERSATION: "AI Conversation",
+      ROADMAP_UNLOCK: "Roadmap Unlock",
+      VIDEO_LESSON: "Video Lesson",
+      GRAMMAR_CHECKER: "Grammar Checker"
+    };
 
     const subscriptionDistribution = {
-      labels: subscriptionCountsRaw.map((r) => r.name || "Unknown"),
-      data: subscriptionCountsRaw.map((r) => Number(r.total))
+      labels: subscriptionCountsRaw.map((row) => typeLabels[row.type] || row.type || "Other"),
+      data: subscriptionCountsRaw.map((row) => Number(row.total))
     };
 
     const ensureDataset = <T>(items: T[], fallback: T[]) => (items.length > 0 ? items : fallback);
@@ -479,6 +486,42 @@ export class DashboardService {
       usageDataset,
       recentTickets
     };
+  }
+
+  async getAllTransactions() {
+    const transactionRepo = AppDataSource.getRepository(Transaction);
+    return await transactionRepo.find({
+      relations: { user: true, package: true },
+      order: { createdAt: "DESC" }
+    });
+  }
+
+  async getAllSubscriptions() {
+    const subscriptionRepo = AppDataSource.getRepository(UserSubscription);
+    return await subscriptionRepo.find({
+      relations: { user: true, package: true },
+      order: { createdAt: "DESC" }
+    });
+  }
+
+  async getTopCustomers() {
+    const transactionRepo = AppDataSource.getRepository(Transaction);
+    // Query to sum amount per user for SUCCESS transactions
+    const topSpenders = await transactionRepo
+      .createQueryBuilder("transaction")
+      .leftJoin("transaction.user", "user")
+      .select("user.id", "id")
+      .addSelect("user.name", "name")
+      .addSelect("user.email", "email")
+      .addSelect("user.avatarUrl", "avatarUrl")
+      .addSelect("SUM(transaction.amount)", "totalSpent")
+      .where("transaction.status = :status", { status: "SUCCESS" })
+      .groupBy("user.id")
+      .orderBy("totalSpent", "DESC")
+      .limit(10)
+      .getRawMany();
+
+    return topSpenders;
   }
 }
 

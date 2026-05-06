@@ -13,6 +13,7 @@ import RoadmapsPage from "./admin/pages/RoadmapsPage";
 import RoadmapDaysPage from "./admin/pages/RoadmapDaysPage";
 import StaffPage from "./admin/pages/StaffPage";
 import MessagesPage from "./admin/pages/MessagesPage";
+import FinancePage from "./admin/pages/FinancePage";
 import ForgotPasswordPage from "./client/pages/ForgotPasswordPage";
 import ProtectedRoute from "./routers/ProtectedRoute";
 
@@ -261,6 +262,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
               <AdminLayout><ReportsPage /></AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/finance"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
+              <AdminLayout><FinancePage /></AdminLayout>
             </ProtectedRoute>
           }
         />

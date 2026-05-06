@@ -1,5 +1,4 @@
 import ActivityFeedCard from '../components/dashboard/ActivityFeedCard';
-import OrderStatusCard from '../components/dashboard/OrderStatusCard';
 import RecentTransactionsCard from '../components/dashboard/RecentTransactionsCard';
 import RecentTicketsCard from '../components/dashboard/RecentTicketsCard';
 import FinancialOverviewCard from '../components/dashboard/FinancialOverviewCard';
@@ -15,7 +14,6 @@ import { useDashboardData } from '../hooks/useDashboardData';
 const DashboardPage = () => {
   const {
     activityFeed,
-    orderStatusDataset,
     recentOrders,
     recentTickets,
     revenueDataset,
@@ -26,6 +24,7 @@ const DashboardPage = () => {
     contentStats,
     subscriptionDistribution,
     monthlyRevenue,
+    loading,
     error
   } = useDashboardData();
 
@@ -78,14 +77,11 @@ const DashboardPage = () => {
 
       {/* Row 4: Dist & Growth */}
       <div className="row g-4 mb-4">
-        <div className="col-lg-4">
-          <SubscriptionDistributionCard distribution={subscriptionDistribution} />
+        <div className="col-lg-6">
+          <SubscriptionDistributionCard distribution={subscriptionDistribution} loading={loading} />
         </div>
-        <div className="col-lg-4">
+        <div className="col-lg-6">
           <UserGrowthCard dataset={userGrowthDataset} />
-        </div>
-        <div className="col-lg-4">
-          <OrderStatusCard dataset={orderStatusDataset} />
         </div>
       </div>
 

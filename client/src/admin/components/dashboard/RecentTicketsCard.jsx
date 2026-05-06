@@ -9,7 +9,7 @@ const RecentTicketsCard = ({ tickets = [] }) => (
     <div className="card-body p-0">
       <div className="table-responsive">
         <table className="table table-hover align-middle mb-0">
-          <thead className="table-light small uppercase">
+          <thead className="bg-body-tertiary small uppercase">
             <tr>
               <th className="px-4">Ticket ID</th>
               <th>Customer</th>

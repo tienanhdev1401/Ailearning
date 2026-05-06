@@ -6,7 +6,7 @@ const RecentTransactionsCard = ({ orders }) => (
     <div className="card-body">
       <div className="table-responsive">
         <table className="table table-hover mb-0">
-          <thead>
+          <thead className="bg-body-tertiary small uppercase">
             <tr>
               <th>Order ID</th>
               <th>Customer</th>
