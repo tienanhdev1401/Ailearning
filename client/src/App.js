@@ -42,6 +42,7 @@ import ActivityManagerPage from "./admin/pages/ActivityManagerPage";
 import SupportChatWidget from "./component/SupportChatWidget";
 
 import LessonManagerPage from "./admin/pages/LessonManagerPage";
+import PromptManagementPage from "./admin/pages/PromptManagementPage";
 import PaymentSuccessPage from "./client/pages/PaymentSuccessPage";
 import PricingPage from "./client/pages/PricingPage";
 import VocabNotebookPage from "./client/pages/VocabNotebookPage";
@@ -325,6 +326,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
               <AdminLayout><ActivityManagerPage /></AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/prompts"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN]}>
+              <AdminLayout><PromptManagementPage /></AdminLayout>
             </ProtectedRoute>
           }
         />

@@ -38,9 +38,18 @@ export const buildNavigation = (role) => {
   const primary = [dashboardNav, makeUserNavItem(role), ...secondaryNav];
   const admin = [];
 
+  if (role === 'admin') {
+    admin.push({ label: 'Prompt AI', icon: 'bi-robot', path: '/admin/prompts' });
+  }
+
   const searchIndex = [
     { title: 'Users', path: '/admin/users', type: 'Page' },
-    ...(role === 'admin' ? [{ title: 'Staff', path: '/admin/staff', type: 'Page' }] : []),
+    ...(role === 'admin'
+      ? [
+          { title: 'Staff', path: '/admin/staff', type: 'Page' },
+          { title: 'Prompt AI', path: '/admin/prompts', type: 'Page' },
+        ]
+      : []),
     ...baseSearchIndex
   ];
 
