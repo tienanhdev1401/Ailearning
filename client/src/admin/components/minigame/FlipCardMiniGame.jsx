@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useToast } from "../../../context/ToastContext";
+import { ThemeContext } from "../../../context/ThemeContext";
 
 const FlipCardMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
   const toast = useToast();
+  const themeContext = useContext(ThemeContext);
+  const isDarkMode = themeContext?.isDarkMode ?? false;
   const [prompt, setPrompt] = useState(minigame?.prompt ?? "");
   const [cards, setCards] = useState((minigame?.resources?.cards && Array.isArray(minigame.resources.cards)) ? [...minigame.resources.cards] : []);
   const [saving, setSaving] = useState(false);
@@ -58,8 +61,8 @@ const FlipCardMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
   if (!minigame) return null;
 
   return (
-    <div className="card" style={{ maxHeight: "74vh", overflow: "auto" }}>
-      <div className="card-header d-flex justify-content-between align-items-center">
+    <div className={`card ${isDarkMode ? 'bg-dark text-light border-secondary' : ''}`} style={{ maxHeight: "74vh", overflow: "auto" }}>
+      <div className={`card-header d-flex justify-content-between align-items-center ${isDarkMode ? 'bg-dark border-secondary' : ''}`}>
         <div>
           <strong>Minigame #{minigame.id}</strong> <span className="text-muted">({minigame.type})</span>
         </div>
@@ -71,32 +74,32 @@ const FlipCardMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
 
       <div className="card-body">
         <div className="mb-3">
-          <label className="form-label">Prompt</label>
-          <textarea className="form-control" rows={2} value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+          <label className={`form-label fw-bold ${isDarkMode ? 'text-white' : ''}`}>Prompt</label>
+          <textarea className={`form-control ${isDarkMode ? 'bg-secondary text-white border-dark' : ''}`} rows={2} value={prompt} onChange={(e) => setPrompt(e.target.value)} />
         </div>
 
         <div className="mb-3">
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <h6 className="mb-0">Thẻ ghi nhớ (Cards)</h6>
+            <h6 className={`mb-0 fw-bold ${isDarkMode ? 'text-white' : ''}`}>Thẻ ghi nhớ (Cards)</h6>
             <button className="btn btn-sm btn-outline-primary" onClick={addCard}>Thêm thẻ</button>
           </div>
 
           {cards.length === 0 && <div className="text-muted mb-2">Chưa có thẻ nào</div>}
 
           {cards.map((card, idx) => (
-            <div key={idx} className="card mb-2 bg-light">
-              <div className="card-body">
-                <div className="row g-2 align-items-center">
+            <div key={idx} className={`card mb-2 ${isDarkMode ? 'bg-secondary border-dark text-white' : 'bg-light'}`}>
+              <div className="card-body p-3">
+                <div className="row g-2 align-items-end">
                   <div className="col-md-5">
-                    <label className="form-label small mb-1">Thuật ngữ (Term)</label>
-                    <input className="form-control" value={card.term} onChange={(e) => updateCard(idx, "term", e.target.value)} />
+                    <label className={`form-label small mb-1 fw-semibold ${isDarkMode ? 'text-white' : 'text-muted'}`}>Thuật ngữ (Term)</label>
+                    <input className={`form-control ${isDarkMode ? 'bg-dark text-white border-secondary' : ''}`} value={card.term} onChange={(e) => updateCard(idx, "term", e.target.value)} />
                   </div>
                   <div className="col-md-5">
-                    <label className="form-label small mb-1">Định nghĩa (Definition)</label>
-                    <input className="form-control" value={card.definition} onChange={(e) => updateCard(idx, "definition", e.target.value)} />
+                    <label className={`form-label small mb-1 fw-semibold ${isDarkMode ? 'text-white' : 'text-muted'}`}>Định nghĩa (Definition)</label>
+                    <input className={`form-control ${isDarkMode ? 'bg-dark text-white border-secondary' : ''}`} value={card.definition} onChange={(e) => updateCard(idx, "definition", e.target.value)} />
                   </div>
-                  <div className="col-md-2 d-flex justify-content-end align-self-end">
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => removeCard(idx)}>Xóa</button>
+                  <div className="col-md-2 d-flex justify-content-end">
+                    <button className="btn btn-sm btn-danger px-3" onClick={() => removeCard(idx)}>Xóa</button>
                   </div>
                 </div>
               </div>
