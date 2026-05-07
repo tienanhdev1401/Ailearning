@@ -3,6 +3,15 @@ import { AiConversation } from "../../models/aiConversation";
 import { AiEvaluation } from "../../models/aiEvaluation";
 import AI_MESSAGE_ROLE from "../../enums/aiMessageRole.enum";
 import { geminiService } from "./gemini.service";
+import { promptService } from "../ai/prompt.service";
+
+const FEATURE_AI_CHAT = "ai_chat";
+
+const FALLBACK_EVALUATION_TEMPLATE = `You are an English pronunciation and conversation tutor. Evaluate the learner's performance across the following dimensions: Pronunciation, Prosody (intonation & fluency), Grammar, Vocabulary.
+Return a JSON object containing numeric scores from 0 to 10 for each dimension using whole or half steps, a short summary (2-3 sentences) and an array of actionable suggestions. Use camelCase field names.
+
+Conversation transcript:
+{{transcript}}`;
 
 interface EvaluationPayload {
   pronunciationScore: number;
@@ -36,18 +45,30 @@ class EvaluationService {
       })
       .join("\n");
 
-    const prompt = `You are an English pronunciation and conversation tutor. Evaluate the learner's performance across the following dimensions: Pronunciation, Prosody (intonation & fluency), Grammar, Vocabulary.
-Return a JSON object containing numeric scores from 0 to 10 for each dimension using whole or half steps, a short summary (2-3 sentences) and an array of actionable suggestions. Use camelCase field names.
-
-Conversation transcript:
-${transcript}`;
+    let promptText: string;
+    let temperature = 0.3;
+    let maxOutputTokens = 512;
+    try {
+      const rendered = await promptService.render(
+        FEATURE_AI_CHAT,
+        "evaluation",
+        { transcript }
+      );
+      promptText = rendered.text;
+      temperature = rendered.resolved.config.temperature ?? temperature;
+      maxOutputTokens = rendered.resolved.config.maxOutputTokens ?? maxOutputTokens;
+    } catch (error) {
+      // Prompt not seeded yet — fall back to inline template so the system
+      // remains operational even on a fresh install.
+      promptText = promptService.renderTemplate(FALLBACK_EVALUATION_TEMPLATE, { transcript });
+    }
 
     const raw = await geminiService.generate({
-      prompt,
+      prompt: promptText,
       history: [],
-      temperature: 0.3,
+      temperature,
       responseMimeType: "application/json",
-      maxOutputTokens: 512,
+      maxOutputTokens,
     });
 
     let parsed: EvaluationPayload;

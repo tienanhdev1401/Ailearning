@@ -30,6 +30,11 @@ export class AiScenario {
   @Column({ type: "varchar", length: 32, nullable: true })
   difficulty!: string | null;
 
+  // Logical key linking a scenario to an AiScenarioGuidance row.
+  // Optional: when null, guidance falls back to the default record.
+  @Column({ type: "varchar", length: 64, nullable: true })
+  scenarioKey!: string | null;
+
   @Column({ type: "boolean", default: false })
   isCustom!: boolean;
 

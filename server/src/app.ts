@@ -31,8 +31,10 @@ import uploadRouter from './routes/upload.routes'
 import { swaggerUi, swaggerSpec } from "./config/swagger";
 import { setupSocket } from './socket';
 import aiChatRouter from "./routes/aiChat.routes";
+import aiPromptRouter from "./routes/aiPrompt.routes";
 import { ensureAiChatFolders } from "./services/ai-chat/audioStorage.service";
 import { seedAiScenarios } from "./seeds/aiScenarios.seed";
+import { seedAiPromptsAndGuidance } from "./seeds/aiPrompts.seed";
 import supportChatRouter from "./routes/supportChat.routes";
 import dashboardRouter from "./routes/dashboard.routes";
 import gopRouter from "./routes/gop.routes";
@@ -99,6 +101,7 @@ app.use('/api/days', dayRouter);
 app.use('/api/activities', activityRouter);
 app.use('/api/minigames', minigameRouter);
 app.use("/api/ai-chat", aiChatRouter);
+app.use("/api/admin/ai", aiPromptRouter);
 app.use("/api/support-chat", supportChatRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/gop", gopRouter);
@@ -124,9 +127,15 @@ app.use(errorHandlingMiddleware);
 // Kết nối và sync TypeORM
 const PORT = Number(process.env.PORT) || 5000;
 AppDataSource.initialize().then(() => {
-  seedAiScenarios().catch((error) =>
-    console.error("Failed to seed AI chat scenarios", error)
-  );
+  seedAiPromptsAndGuidance()
+    .then(() =>
+      seedAiScenarios().catch((error) =>
+        console.error("Failed to seed AI chat scenarios", error)
+      )
+    )
+    .catch((error) =>
+      console.error("Failed to seed AI prompts/guidance", error)
+    );
 
   // Khởi động tất cả schedulers
   startAllSchedulers();

@@ -16,14 +16,14 @@ import { User } from "../../models/user";
 import { emitAiChatEvent } from "../../socket";
 import { deepgramService } from "./deepgram.service";
 import type { DeepgramTranscriptionResult } from "./deepgram.service";
-import { renderPromptTemplate } from "./promptTemplates";
+import { promptService } from "../ai/prompt.service";
 import {
-  getDefaultScenarioKey,
-  getScenarioFallbacks,
-  getScenarioGuidance,
-  resolveScenarioKey,
-  ScenarioKey,
-} from "./scenarioConfig";
+  scenarioGuidanceService,
+  GuidanceView,
+} from "../ai/scenarioGuidance.service";
+
+const FEATURE_AI_CHAT = "ai_chat";
+type ScenarioKey = string;
 
 interface StartConversationPayload {
   userId: number;
@@ -130,10 +130,10 @@ ${contextNote}` : basePrompt;
 
     let openingMessage: AiMessage | null = null;
     try {
-      const scenarioKey = resolveScenarioKey(
-        scenario?.title ?? conversation.customTitle ?? "",
-        appliedPrompt
-      );
+      const scenarioKey = scenario?.scenarioKey
+        ?? (await scenarioGuidanceService.resolveKeyFromText(
+          `${scenario?.title ?? conversation.customTitle ?? ""} ${appliedPrompt}`
+        ));
       const openingText = await this.generateOpeningLine({
         prompt: appliedPrompt,
         scenarioTitle: scenario?.title ?? conversation.customTitle ?? undefined,
@@ -385,22 +385,30 @@ ${contextNote}` : basePrompt;
 
   private async generateOpeningLine(options: { prompt: string; scenarioTitle?: string; contextNote?: string | null; contextLabel?: string; scenarioKey: ScenarioKey; }) {
     const { prompt, scenarioTitle, contextNote, contextLabel, scenarioKey } = options;
-    const guidance = getScenarioGuidance(scenarioKey);
-    const fullPrompt = renderPromptTemplate("opening", {
-      persona: guidance.persona,
-      tone: guidance.tone,
-      scenarioPrompt: prompt,
-      extraFocus: contextNote ?? "(no additional context)",
-      openingObjective: guidance.opening,
-    });
+    const guidance = await scenarioGuidanceService.resolve(scenarioKey);
 
-    const fallback = this.buildFallbackOpening(scenarioKey, scenarioTitle, contextLabel);
+    // Per-scenario override falls back to the generic "opening" prompt.
+    const rendered = await promptService.render(
+      FEATURE_AI_CHAT,
+      `opening:${guidance.scenarioKey}`,
+      {
+        persona: guidance.persona,
+        tone: guidance.tone,
+        scenarioPrompt: prompt,
+        extraFocus: contextNote ?? "(no additional context)",
+        openingObjective: guidance.opening,
+      },
+      "opening"
+    );
+
+    const fallback = this.buildFallbackOpening(guidance, scenarioTitle, contextLabel);
 
     try {
       const response = await geminiService.generate({
-        prompt: fullPrompt,
-        temperature: 0.7,
-        maxOutputTokens: 180,
+        prompt: rendered.text,
+        temperature: rendered.resolved.config.temperature ?? 0.7,
+        topP: rendered.resolved.config.topP ?? undefined,
+        maxOutputTokens: rendered.resolved.config.maxOutputTokens ?? 180,
       });
 
       const trimmed = response?.trim();
@@ -411,9 +419,8 @@ ${contextNote}` : basePrompt;
     }
   }
 
-  private buildFallbackOpening(scenarioKey: ScenarioKey, scenarioTitle?: string, contextLabel?: string) {
-    const fallback = getScenarioFallbacks(scenarioKey);
-    return this.applyFallbackTemplate(fallback.opening, scenarioTitle, contextLabel);
+  private buildFallbackOpening(guidance: GuidanceView, scenarioTitle?: string, contextLabel?: string) {
+    return this.applyFallbackTemplate(guidance.fallbackOpening ?? undefined, scenarioTitle, contextLabel);
   }
 
   private async generateFollowUp(conversation: AiConversation, latestUserText: string) {
@@ -436,11 +443,11 @@ ${contextNote}` : basePrompt;
         return `${speaker}: ${message.transcript ?? message.content}`;
       })
       .join("\n");
-    const scenarioKey = resolveScenarioKey(
-      conversation.scenario?.title ?? conversation.customTitle ?? "",
-      scenarioBrief
-    );
-    const guidance = getScenarioGuidance(scenarioKey);
+    const scenarioKey = conversation.scenario?.scenarioKey
+      ?? (await scenarioGuidanceService.resolveKeyFromText(
+        `${conversation.scenario?.title ?? conversation.customTitle ?? ""} ${scenarioBrief}`
+      ));
+    const guidance = await scenarioGuidanceService.resolve(scenarioKey);
     const lastAiSnippet = this.getLastAiSnippet(conversation);
     const userTurnCount = conversation.messages.filter(
       (message) => message.role === AI_MESSAGE_ROLE.USER
@@ -455,27 +462,32 @@ ${contextNote}` : basePrompt;
       ? guidance.closing
       : guidance.progression;
 
-    const prompt = renderPromptTemplate("followUp", {
-      persona: guidance.persona,
-      tone: guidance.tone,
-      focus: guidance.focus,
-      progression: guidance.progression,
-      scenarioBrief,
-      historyLines: historyLines || "(No conversation history yet.)",
-      latestUserText,
-      userTurnCount: userTurnCount.toString(),
-      learnerWantsToClose: learnerWantsToClose ? "yes" : "no",
-      closureDirective,
-      avoidRepetitionInstruction,
-    });
-    const fallback = this.buildFollowUpFallback(conversation, latestUserText, scenarioKey);
+    const rendered = await promptService.render(
+      FEATURE_AI_CHAT,
+      `followUp:${guidance.scenarioKey}`,
+      {
+        persona: guidance.persona,
+        tone: guidance.tone,
+        focus: guidance.focus,
+        progression: guidance.progression,
+        scenarioBrief,
+        historyLines: historyLines || "(No conversation history yet.)",
+        latestUserText,
+        userTurnCount: userTurnCount.toString(),
+        learnerWantsToClose: learnerWantsToClose ? "yes" : "no",
+        closureDirective,
+        avoidRepetitionInstruction,
+      },
+      "followUp"
+    );
+    const fallback = this.buildFollowUpFallback(conversation, latestUserText, guidance);
 
     try {
       const response = await geminiService.generate({
-        prompt,
-        temperature: 0.68,
-        topP: 0.85,
-        maxOutputTokens: 220,
+        prompt: rendered.text,
+        temperature: rendered.resolved.config.temperature ?? 0.68,
+        topP: rendered.resolved.config.topP ?? 0.85,
+        maxOutputTokens: rendered.resolved.config.maxOutputTokens ?? 220,
       });
 
       const trimmed = response?.trim();
@@ -486,7 +498,7 @@ ${contextNote}` : basePrompt;
     }
   }
 
-  private buildFollowUpFallback(conversation: AiConversation, latestUserText: string, scenarioKey: ScenarioKey) {
+  private buildFollowUpFallback(conversation: AiConversation, latestUserText: string, guidance: GuidanceView) {
     const trimmedLatest = latestUserText.replace(/[\r\n]+/g, " ").trim();
 
     if (!trimmedLatest) {
@@ -494,7 +506,13 @@ ${contextNote}` : basePrompt;
     }
 
     const messageCount = conversation.messages.length;
-    const fallbackPool = getScenarioFallbacks(scenarioKey).followUps;
+    const fallbackPool = guidance.fallbackFollowUps?.length
+      ? guidance.fallbackFollowUps
+      : [
+          "That's useful detail. Could you expand on the steps you took so I can better understand?",
+          "Thanks for sharing. What outcome were you aiming for, and how close did you get?",
+          "I appreciate that context. What did you learn from handling it that way?",
+        ];
     return fallbackPool[messageCount % fallbackPool.length];
   }
 
@@ -503,7 +521,7 @@ ${contextNote}` : basePrompt;
     scenarioTitle?: string,
     contextLabel?: string
   ) {
-    const defaultFallback = getScenarioFallbacks(getDefaultScenarioKey()).opening ??
+    const defaultFallback =
       "Hello! I'm ready to kick off our role-play together. Could you start by introducing yourself so we can dive in?";
 
     const baseTemplate = template && template.trim().length ? template : defaultFallback;

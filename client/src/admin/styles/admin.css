@@ -219,6 +219,36 @@
 	background-color: rgba(var(--bs-primary-rgb), 0.03);
 }
 
+.prompt-management-page .prompt-table thead.table-light {
+	background-color: var(--bs-secondary-bg);
+}
+
+[data-bs-theme="dark"] .prompt-management-page .prompt-table {
+	--bs-table-color: #e2e8f0;
+	--bs-table-bg: transparent;
+	--bs-table-border-color: rgba(148, 163, 184, 0.2);
+	--bs-table-hover-color: #e2e8f0;
+	--bs-table-hover-bg: rgba(59, 130, 246, 0.12);
+}
+
+[data-bs-theme="dark"] .prompt-management-page .prompt-table thead.table-light {
+	background-color: rgba(30, 41, 59, 0.9);
+	color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .prompt-management-page .prompt-table thead.table-light th {
+	color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .prompt-management-page .card {
+	background-color: #111827 !important;
+	border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+[data-bs-theme="dark"] .prompt-management-page .card.shadow-sm {
+	box-shadow: 0 18px 40px rgba(2, 6, 23, 0.55) !important;
+}
+
 .hamburger-menu {
 	position: fixed;
 	top: calc(var(--header-height) + 1rem);
