@@ -8,12 +8,14 @@ import {
   FiPlus,
   FiArrowLeft,
   FiZap,
+  FiVolume2,
 } from "react-icons/fi";
 import { useParams, useNavigate } from "react-router-dom";
 import notebookService from "../../services/notebookService";
 import vocabNoteService from "../../services/vocabNoteService";
 import { ThemeContext } from "../../context/ThemeContext";
 import { useToast } from "../../context/ToastContext";
+import { speak } from "../../utils/tts";
 import styles from "../styles/NotebookDetail.module.css";
 
 const VocabNotebookPage = () => {
@@ -48,6 +50,17 @@ const VocabNotebookPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  // Auto-translate when user stops typing
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (newCard.term.trim() && !newCard.definition.trim()) {
+        handleLookup();
+      }
+    }, 1000);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [newCard.term]);
+
   const handleAddCard = async (e) => {
     e.preventDefault();
     if (!newCard.term.trim() || !newCard.definition.trim()) return;
@@ -71,24 +84,31 @@ const VocabNotebookPage = () => {
     if (!newCard.term.trim()) return;
     try {
       setLookupLoading(true);
-      const res = await fetch(
-        `https://api.dictionaryapi.dev/api/v2/entries/en/${newCard.term.trim()}`
-      );
-      if (!res.ok) throw new Error("Not found");
-      const data = await res.json();
 
-      const entry = data[0]?.meanings[0]?.definitions[0];
-      const definition = entry?.definition;
-      const example = entry?.example;
+      const textToTranslate = newCard.term.trim();
+      let vietnameseDef = "";
 
-      if (definition) {
-        let finalDef = definition;
-        if (example) finalDef += `\n(Ví dụ: ${example})`;
-        setNewCard((prev) => ({ ...prev, definition: finalDef }));
+      try {
+        const transRes = await fetch(
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(textToTranslate)}&langpair=en|vi`
+        );
+        if (transRes.ok) {
+          const transData = await transRes.json();
+          vietnameseDef = transData.responseData?.translatedText || "";
+        }
+      } catch (err) {
+        console.error("Translation failed:", err);
+      }
+
+      if (vietnameseDef) {
+        setNewCard((prev) => ({ ...prev, definition: vietnameseDef }));
+        toast.success("Đã tìm thấy bản dịch!");
+      } else {
+        toast.warning("Không tìm thấy bản dịch cho từ này.");
       }
     } catch (error) {
-      console.error("Dictionary lookup failed:", error);
-      toast.warning("Không tìm thấy định nghĩa cho từ này.");
+      console.error("Lookup failed:", error);
+      toast.error("Không thể lấy bản dịch. Vui lòng thử lại.");
     } finally {
       setLookupLoading(false);
     }
@@ -199,8 +219,24 @@ const VocabNotebookPage = () => {
                 <Card.Body>
                   <div className={styles.cardMain}>
                     <div className={styles.termContent}>
-                      <h3 className={styles.termTitle}>{note.term}</h3>
-                      <p className={styles.termDef}>{note.definition}</p>
+                      <div className="d-flex align-items-center gap-2 mb-1">
+                        <h3 className={styles.termTitle} style={{ margin: 0 }}>{note.term}</h3>
+                        <button 
+                          className="btn btn-link p-0 text-primary" 
+                          onClick={() => speak(note.term, "en")}
+                        >
+                          <FiVolume2 size={18} />
+                        </button>
+                      </div>
+                      <div className="d-flex align-items-center gap-2">
+                        <p className={styles.termDef} style={{ margin: 0 }}>{note.definition}</p>
+                        <button 
+                          className="btn btn-link p-0 text-secondary" 
+                          onClick={() => speak(note.definition, "vi")}
+                        >
+                          <FiVolume2 size={16} />
+                        </button>
+                      </div>
                     </div>
                     <Button
                       className={styles.deleteBtn}

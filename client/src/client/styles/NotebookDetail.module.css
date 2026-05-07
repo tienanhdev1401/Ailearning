@@ -337,11 +337,36 @@
 
 /* ---------- Modal ---------- */
 .modal {
+  --pp-bg-2: #111a2e;
+  --pp-surface-2: rgba(255, 255, 255, 0.06);
+  --pp-border: rgba(148, 163, 184, 0.14);
+  --pp-border-strong: rgba(148, 163, 184, 0.22);
+  --pp-text: #cbd5e1;
+  --pp-text-strong: #f1f5f9;
+  --pp-muted: #94a3b8;
+  --pp-accent: #2dd4bf;
+  --pp-accent-2: #34d399;
+  --pp-accent-soft: rgba(45, 212, 191, 0.12);
+  --pp-accent-border: rgba(45, 212, 191, 0.4);
+
   background: var(--pp-bg-2) !important;
   border: 1px solid var(--pp-border) !important;
   border-radius: 18px !important;
-  color: var(--pp-text-strong);
+  color: var(--pp-text-strong) !important;
   overflow: hidden;
+}
+
+[data-theme="light"] .modal {
+  --pp-bg-2: #f1f5f9;
+  --pp-surface-2: #ffffff;
+  --pp-border: #e5e7eb;
+  --pp-border-strong: #cbd5e1;
+  --pp-text: #475569;
+  --pp-text-strong: #0f172a;
+  --pp-muted: #64748b;
+  --pp-accent: #0d9488;
+  --pp-accent-soft: rgba(13, 148, 136, 0.10);
+  --pp-accent-border: rgba(13, 148, 136, 0.3);
 }
 
 .modal :global(.modal-header),
