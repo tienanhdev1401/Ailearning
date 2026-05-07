@@ -16,6 +16,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@andresaya/edge-tts": "^1.8.0",
     "@getbrevo/brevo": "^3.0.4",
     "archiver": "^6.0.2",
     "axios": "^1.11.0",

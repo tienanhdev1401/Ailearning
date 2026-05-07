@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useContext } from "react";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { CheckCircleFill, XCircleFill, ArrowRight, VolumeUp } from "react-bootstrap-icons";
 import styles from "../../styles/ABCDGame.module.css";
+import { speak as ttsSpeak } from "../../../utils/tts";
 
 const ABCDGame = ({ cards }) => {
   const { isDarkMode } = useContext(ThemeContext);
@@ -68,12 +69,8 @@ const ABCDGame = ({ cards }) => {
     setIsFinished(false);
   };
 
-  const speak = (text) => {
-    if (!text) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    window.speechSynthesis.speak(utterance);
+  const speak = (text, lang = "en") => {
+    ttsSpeak(text, lang);
   };
 
   if (isFinished) {

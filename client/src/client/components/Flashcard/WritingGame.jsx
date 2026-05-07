@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { CheckCircleFill, XCircleFill, ArrowRight, VolumeUp, Lightbulb } from "react-bootstrap-icons";
 import styles from "../../styles/WritingGame.module.css";
+import { speak as ttsSpeak } from "../../../utils/tts";
 
 const WritingGame = ({ cards }) => {
   const { isDarkMode } = useContext(ThemeContext);
@@ -61,12 +62,8 @@ const WritingGame = ({ cards }) => {
     setShowHint(false);
   };
 
-  const speak = (text) => {
-    if (!text) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    window.speechSynthesis.speak(utterance);
+  const speak = (text, lang = "en") => {
+    ttsSpeak(text, lang);
   };
 
   const getHint = () => {

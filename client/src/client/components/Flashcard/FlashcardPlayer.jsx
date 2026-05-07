@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useContext } from "react";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { VolumeUp, Star, StarFill, Lightbulb, ChevronLeft, ChevronRight } from "react-bootstrap-icons";
 import styles from "../../styles/FlashcardPlayer.module.css";
+import { speak as ttsSpeak } from "../../../utils/tts";
 import SaveToNotebookModal from "./SaveToNotebookModal";
 
 const FlashcardPlayer = ({ cards }) => {
@@ -42,13 +43,9 @@ const FlashcardPlayer = ({ cards }) => {
     });
   };
 
-  const speak = (e, text) => {
+  const speak = (e, text, lang = "en") => {
     e.stopPropagation();
-    if (!text) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    window.speechSynthesis.speak(utterance);
+    ttsSpeak(text, lang);
   };
 
   // Keyboard navigation
@@ -103,7 +100,7 @@ const FlashcardPlayer = ({ cards }) => {
           <div className={styles.cardBack}>
             <div className={styles.cardHeader}>
               <div className={styles.topActions} style={{ marginLeft: "auto" }}>
-                <button className={styles.iconBtn} onClick={(e) => speak(e, currentCard.definition)}>
+                <button className={styles.iconBtn} onClick={(e) => speak(e, currentCard.definition, "vi")}>
                   <VolumeUp size={20} />
                 </button>
                 <button className={styles.iconBtn} onClick={toggleStar}>
