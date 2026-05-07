@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Container, Row, Col, Card, Form, InputGroup, Button, Spinner, Modal } from "react-bootstrap";
-import { Search, Trash, JournalText, PlayFill, PlusLg, ArrowLeft, LightbulbFill } from "react-bootstrap-icons";
+import { Container, Card, Form, InputGroup, Button, Spinner, Modal } from "react-bootstrap";
+import {
+  FiSearch,
+  FiTrash2,
+  FiBookOpen,
+  FiPlay,
+  FiPlus,
+  FiArrowLeft,
+  FiZap,
+} from "react-icons/fi";
 import { useParams, useNavigate } from "react-router-dom";
 import notebookService from "../../services/notebookService";
 import vocabNoteService from "../../services/vocabNoteService";
@@ -11,9 +19,9 @@ import styles from "../styles/NotebookDetail.module.css";
 const VocabNotebookPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isDarkMode } = useContext(ThemeContext);
+  useContext(ThemeContext);
   const toast = useToast();
-  
+
   const [notebook, setNotebook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,6 +45,7 @@ const VocabNotebookPage = () => {
 
   useEffect(() => {
     fetchNotebook();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleAddCard = async (e) => {
@@ -62,7 +71,9 @@ const VocabNotebookPage = () => {
     if (!newCard.term.trim()) return;
     try {
       setLookupLoading(true);
-      const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${newCard.term.trim()}`);
+      const res = await fetch(
+        `https://api.dictionaryapi.dev/api/v2/entries/en/${newCard.term.trim()}`
+      );
       if (!res.ok) throw new Error("Not found");
       const data = await res.json();
 
@@ -72,10 +83,8 @@ const VocabNotebookPage = () => {
 
       if (definition) {
         let finalDef = definition;
-        if (example) {
-          finalDef += `\n(Ví dụ: ${example})`;
-        }
-        setNewCard(prev => ({ ...prev, definition: finalDef }));
+        if (example) finalDef += `\n(Ví dụ: ${example})`;
+        setNewCard((prev) => ({ ...prev, definition: finalDef }));
       }
     } catch (error) {
       console.error("Dictionary lookup failed:", error);
@@ -86,12 +95,15 @@ const VocabNotebookPage = () => {
   };
 
   const handleConfirmDelete = async (card) => {
-    const isConfirmed = await toast.confirm(`Bạn có chắc muốn xóa "${card.term}" khỏi sổ tay này?`, {
-      title: "Xác nhận xóa từ",
-      type: "danger",
-      confirmText: "Xóa",
-      cancelText: "Hủy"
-    });
+    const isConfirmed = await toast.confirm(
+      `Bạn có chắc muốn xóa "${card.term}" khỏi sổ tay này?`,
+      {
+        title: "Xác nhận xóa từ",
+        type: "danger",
+        confirmText: "Xóa",
+        cancelText: "Hủy",
+      }
+    );
 
     if (!isConfirmed) return;
 
@@ -105,14 +117,16 @@ const VocabNotebookPage = () => {
     }
   };
 
-  const filteredNotes = notebook?.notes?.filter(note =>
-    note.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    note.definition.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const filteredNotes =
+    notebook?.notes?.filter(
+      (note) =>
+        note.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        note.definition.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
 
   if (loading) {
     return (
-      <div className="text-center py-5">
+      <div className={`${styles.pageWrapper} ${styles.loadingWrapper}`}>
         <Spinner animation="border" variant="primary" />
       </div>
     );
@@ -122,34 +136,27 @@ const VocabNotebookPage = () => {
     <div className={styles.pageWrapper}>
       <header className={styles.header}>
         <Container>
-          <Button
-            variant="link"
-            className={styles.backBtn}
-            onClick={() => navigate("/notebooks")}
-          >
-            <ArrowLeft className="me-2" /> Quay lại danh sách
+          <Button className={styles.backBtn} onClick={() => navigate("/notebooks")}>
+            <FiArrowLeft size={16} /> Quay lại danh sách
           </Button>
 
           <div className={styles.headerContent}>
             <div className={styles.headerMain}>
               <h1 className={styles.title}>{notebook.title}</h1>
-              <p className={styles.description}>{notebook.description || "Danh sách từ vựng cá nhân"}</p>
+              <p className={styles.description}>
+                {notebook.description || "Danh sách từ vựng cá nhân"}
+              </p>
             </div>
             <div className={styles.headerActions}>
               <Button
-                variant="primary"
                 className={styles.studyBtn}
                 disabled={filteredNotes.length === 0}
                 onClick={() => navigate(`/flashcards/notebook/${id}`)}
               >
-                <PlayFill size={20} className="me-2" /> Học ngay
+                <FiPlay size={16} /> Học ngay
               </Button>
-              <Button
-                variant="outline-primary"
-                className={styles.addBtn}
-                onClick={() => setShowAddModal(true)}
-              >
-                <PlusLg className="me-2" /> Thêm từ
+              <Button className={styles.addBtn} onClick={() => setShowAddModal(true)}>
+                <FiPlus size={16} /> Thêm từ
               </Button>
             </div>
           </div>
@@ -159,7 +166,9 @@ const VocabNotebookPage = () => {
       <Container className="py-5">
         <div className={styles.searchSection}>
           <InputGroup className={styles.searchBar}>
-            <InputGroup.Text><Search /></InputGroup.Text>
+            <InputGroup.Text>
+              <FiSearch size={16} />
+            </InputGroup.Text>
             <Form.Control
               placeholder="Tìm kiếm trong sổ tay..."
               value={searchTerm}
@@ -171,8 +180,17 @@ const VocabNotebookPage = () => {
 
         {filteredNotes.length === 0 ? (
           <div className={styles.emptyState}>
-            <JournalText size={48} className="mb-3 opacity-50" />
-            <p>Không có từ vựng nào trong danh sách này.</p>
+            <div className={styles.emptyIcon}>
+              <FiBookOpen size={26} />
+            </div>
+            <h5 style={{ color: "var(--pp-text-strong)", margin: 0 }}>
+              {searchTerm ? "Không tìm thấy kết quả phù hợp" : "Sổ tay chưa có từ nào"}
+            </h5>
+            <p>
+              {searchTerm
+                ? "Thử với từ khoá khác hoặc thêm từ mới."
+                : "Bấm \"Thêm từ\" để bắt đầu xây dựng kho từ vựng của bạn."}
+            </p>
           </div>
         ) : (
           <div className={styles.termGrid}>
@@ -185,11 +203,11 @@ const VocabNotebookPage = () => {
                       <p className={styles.termDef}>{note.definition}</p>
                     </div>
                     <Button
-                      variant="link"
                       className={styles.deleteBtn}
                       onClick={() => handleConfirmDelete(note)}
+                      title="Xóa từ"
                     >
-                      <Trash />
+                      <FiTrash2 size={16} />
                     </Button>
                   </div>
                 </Card.Body>
@@ -200,9 +218,14 @@ const VocabNotebookPage = () => {
       </Container>
 
       {/* Add Card Modal */}
-      <Modal show={showAddModal} onHide={() => setShowAddModal(false)} centered>
+      <Modal
+        show={showAddModal}
+        onHide={() => setShowAddModal(false)}
+        centered
+        contentClassName={styles.modal}
+      >
         <Form onSubmit={handleAddCard}>
-          <Modal.Header closeButton>
+          <Modal.Header closeButton closeVariant="white">
             <Modal.Title>Thêm thuật ngữ mới</Modal.Title>
           </Modal.Header>
           <Modal.Body>
@@ -223,7 +246,7 @@ const VocabNotebookPage = () => {
                   disabled={lookupLoading || !newCard.term.trim()}
                   title="Gợi ý nghĩa từ điển"
                 >
-                  {lookupLoading ? <Spinner size="sm" animation="border" /> : <LightbulbFill />}
+                  {lookupLoading ? <Spinner size="sm" animation="border" /> : <FiZap size={16} />}
                 </Button>
               </InputGroup>
             </Form.Group>
@@ -231,7 +254,7 @@ const VocabNotebookPage = () => {
               <Form.Label>Định nghĩa</Form.Label>
               <Form.Control
                 as="textarea"
-                rows={3}
+                rows={4}
                 placeholder="Ví dụ: Xin chào"
                 value={newCard.definition}
                 onChange={(e) => setNewCard({ ...newCard, definition: e.target.value })}
@@ -240,8 +263,10 @@ const VocabNotebookPage = () => {
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowAddModal(false)}>Hủy</Button>
-            <Button variant="primary" type="submit" disabled={submitting}>
+            <Button variant="secondary" onClick={() => setShowAddModal(false)}>
+              Hủy
+            </Button>
+            <Button className={styles.studyBtn} type="submit" disabled={submitting}>
               {submitting ? "Đang lưu..." : "Lưu lại"}
             </Button>
           </Modal.Footer>

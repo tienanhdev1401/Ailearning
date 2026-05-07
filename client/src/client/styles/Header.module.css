@@ -51,7 +51,7 @@
     align-items: center;
     gap: 20px;
     height: 68px;
-    font-family: 'Poppins', 'Inter', system-ui, sans-serif;
+    font-family: inherit;
 }
 
 /* ---------- Logo ---------- */

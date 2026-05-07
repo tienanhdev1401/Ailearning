@@ -292,7 +292,7 @@ export default function PronunciationScoreResult({
           <div className={styles.legend}>
             <span>
               <span className={styles.legendDot} style={{ background: BAND_COLORS.good.solid }} />
-              Tốt (≥ 4.0)
+              Tốt (≥ 80)
             </span>
             <span>
               <span className={styles.legendDot} style={{ background: BAND_COLORS.medium.solid }} />
@@ -300,7 +300,7 @@ export default function PronunciationScoreResult({
             </span>
             <span>
               <span className={styles.legendDot} style={{ background: BAND_COLORS.weak.solid }} />
-              Yếu (&lt; 2.8)
+              Yếu (&lt; 50)
             </span>
           </div>
           {activePhoneIdx !== null && phones[activePhoneIdx] && (

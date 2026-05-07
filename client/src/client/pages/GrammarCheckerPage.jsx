@@ -252,7 +252,6 @@ const GrammarCheckerPage = () => {
   
   return (
     <div style={{
-      fontFamily: 'Arial, sans-serif',
       backgroundColor: isDarkMode ? '#1a202c' : '#f8f9fa',
       margin: 0,
       color: isDarkMode ? '#e2e8f0' : '#333',

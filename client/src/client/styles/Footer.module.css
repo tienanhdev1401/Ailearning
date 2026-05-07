@@ -3,7 +3,7 @@
   background: linear-gradient(135deg, #0a1419 0%, #14202a 100%);
   border-top: 2px solid rgba(0, 255, 255, 0.3);
   color: #e0e6eb;
-  font-family: 'Poppins', sans-serif;
+  font-family: inherit;
 }
 
 [data-theme="light"] .footer {

@@ -5,7 +5,7 @@
   flex-direction: column;
   gap: 25px;
   color: var(--match-text);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
   align-items: center;
   justify-content: center;
   border-radius: 24px;

@@ -161,13 +161,15 @@
 .navBtn {
   background: none;
   border: none;
-  color: #3b82f6;
+  color: #145e51;
   padding: 12px;
   border-radius: 50%;
   transition: all 0.2s ease;
   cursor: pointer;
 }
-
+:global([data-theme="dark"]) .navBtn {
+  color: #05e6c4;
+}
 .navBtn:disabled {
   color: #cbd5e1;
   cursor: not-allowed;
@@ -198,7 +200,6 @@
 .progressSection {
   width: 100%;
 }
-
 .progressBar {
   height: 6px;
   width: 100%;
@@ -207,16 +208,14 @@
   overflow: hidden;
 }
 
-:global([data-theme="dark"]) .progressBar {
-  background: #334155;
-}
-
 .progressFill {
   height: 100%;
-  background: #3b82f6;
+  background: #145e51;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
+:global([data-theme="dark"]) .progressFill {
+  background: #05e6c4;
+}
 @media (max-width: 768px) {
   .cardStage {
     height: 300px;

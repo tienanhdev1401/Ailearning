@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Container, Row, Col, Card, Button, Modal, Form, Spinner } from "react-bootstrap";
-import { PlusLg, JournalBookmarkFill, ThreeDotsVertical, Trash, Pencil, BoxArrowInRight } from "react-bootstrap-icons";
+import { FiPlus, FiBook, FiTrash2, FiArrowRight } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import notebookService from "../../services/notebookService";
 import { ThemeContext } from "../../context/ThemeContext";
 import styles from "../styles/NotebookListPage.module.css";
 
 const NotebookListPage = () => {
-  const { isDarkMode } = useContext(ThemeContext);
+  useContext(ThemeContext);
   const navigate = useNavigate();
   const [notebooks, setNotebooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ const NotebookListPage = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!newNotebook.title.trim()) return;
-    
+
     try {
       setSubmitting(true);
       await notebookService.createNotebook(newNotebook.title, newNotebook.description);
@@ -68,11 +68,11 @@ const NotebookListPage = () => {
             <p className={styles.heroSubtitle}>
               Tạo và quản lý các bộ từ vựng cá nhân để ôn tập hiệu quả hơn mỗi ngày.
             </p>
-            <Button 
-              className={styles.createBtn} 
+            <Button
+              className={styles.createBtn}
               onClick={() => setShowCreateModal(true)}
             >
-              <PlusLg className="me-2" /> Tạo sổ tay mới
+              <FiPlus size={18} /> Tạo sổ tay mới
             </Button>
           </div>
         </Container>
@@ -85,33 +85,35 @@ const NotebookListPage = () => {
           </div>
         ) : notebooks.length === 0 ? (
           <div className={styles.emptyState}>
-            <JournalBookmarkFill size={64} className="mb-4 opacity-50" />
+            <div className={styles.emptyIcon}>
+              <FiBook size={32} />
+            </div>
             <h3>Chưa có sổ tay nào</h3>
-            <p>Bắt đầu bằng cách tạo sổ tay đầu tiên của bạn để lưu trữ từ vựng.</p>
-            <Button variant="primary" onClick={() => setShowCreateModal(true)}>
-              Tạo ngay
+            <p>Bắt đầu bằng cách tạo sổ tay đầu tiên để lưu trữ từ vựng.</p>
+            <Button className={styles.createBtn} onClick={() => setShowCreateModal(true)}>
+              <FiPlus size={18} /> Tạo ngay
             </Button>
           </div>
         ) : (
           <Row className="g-4">
             {notebooks.map((notebook) => (
               <Col key={notebook.id} xs={12} md={6} lg={4}>
-                <Card 
+                <Card
                   className={styles.notebookCard}
                   onClick={() => navigate(`/notebooks/${notebook.id}`)}
                 >
                   <Card.Body>
                     <div className={styles.cardHeader}>
                       <div className={styles.iconBox}>
-                        <JournalBookmarkFill />
+                        <FiBook size={20} />
                       </div>
                       <div className={styles.cardActions}>
-                        <Button 
-                          variant="link" 
+                        <Button
                           className={styles.deleteAction}
                           onClick={(e) => handleDelete(e, notebook.id)}
+                          title="Xóa sổ tay"
                         >
-                          <Trash size={18} />
+                          <FiTrash2 size={16} />
                         </Button>
                       </div>
                     </div>
@@ -123,7 +125,7 @@ const NotebookListPage = () => {
                       <span className={styles.cardStats}>
                         {notebook.notes?.length || 0} thuật ngữ
                       </span>
-                      <BoxArrowInRight className={styles.arrowIcon} />
+                      <FiArrowRight className={styles.arrowIcon} size={18} />
                     </div>
                   </Card.Body>
                 </Card>
@@ -134,14 +136,14 @@ const NotebookListPage = () => {
       </Container>
 
       {/* Create Modal */}
-      <Modal 
-        show={showCreateModal} 
+      <Modal
+        show={showCreateModal}
         onHide={() => setShowCreateModal(false)}
         centered
-        contentClassName={isDarkMode ? styles.darkModal : ""}
+        contentClassName={styles.darkModal}
       >
         <Form onSubmit={handleCreate}>
-          <Modal.Header closeButton closeVariant={isDarkMode ? "white" : undefined}>
+          <Modal.Header closeButton closeVariant="white">
             <Modal.Title>Tạo sổ tay mới</Modal.Title>
           </Modal.Header>
           <Modal.Body>
@@ -171,9 +173,9 @@ const NotebookListPage = () => {
             <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
               Hủy
             </Button>
-            <Button 
-              variant="primary" 
-              type="submit" 
+            <Button
+              className={styles.createBtn}
+              type="submit"
               disabled={submitting || !newNotebook.title.trim()}
             >
               {submitting ? "Đang tạo..." : "Xác nhận"}

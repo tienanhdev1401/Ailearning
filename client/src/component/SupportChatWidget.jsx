@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { LuMessageCircleMore } from "react-icons/lu";
 import styles from "../client/styles/SupportChatWidget.module.css";
 import { SupportChatService } from "../services/supportChatService";
 import { createSupportChatSocket } from "../utils/supportChatSocket";
@@ -559,8 +560,14 @@ const SupportChatWidget = () => {
       )}
 
       {!isAdminRoute && (
-        <button type="button" className={styles.fab} onClick={toggleWidget}>
-          <span>Trợ lý</span>
+        <button
+          type="button"
+          className={styles.fab}
+          onClick={toggleWidget}
+          aria-label="Mở trợ lý hỗ trợ"
+          title="Trợ lý hỗ trợ"
+        >
+          <LuMessageCircleMore className={styles.fabIcon} />
           {unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}
         </button>
       )}

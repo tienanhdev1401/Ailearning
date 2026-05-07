@@ -1,10 +1,46 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Container, Row, Col, Card, Button, Badge, Spinner, Alert, Modal } from "react-bootstrap";
-import { Gem, CheckCircleFill, Stars, RocketTakeoff, PlayCircleFill, Spellcheck, ExclamationTriangleFill, InfoCircleFill, XCircleFill } from "react-bootstrap-icons";
+import { Container, Row, Col, Spinner, Modal } from "react-bootstrap";
+import {
+  FiCheck,
+  FiZap,
+  FiCpu,
+  FiMap,
+  FiPlayCircle,
+  FiEdit3,
+  FiAward,
+  FiInfo,
+  FiAlertTriangle,
+  FiXCircle,
+  FiStar,
+  FiShield,
+} from "react-icons/fi";
 import packageService from "../../services/packageService";
 import paymentService from "../../services/paymentService";
 import subscriptionService from "../../services/subscriptionService";
 import { ThemeContext } from "../../context/ThemeContext";
+import styles from "../styles/PricingPage.module.css";
+
+const GROUP_META = {
+  AI_CONVERSATION: {
+    label: "Gói AI Conversation",
+    icon: <FiCpu size={20} />,
+  },
+  ROADMAP_UNLOCK: {
+    label: "Gói Mở khóa Lộ trình",
+    icon: <FiMap size={20} />,
+  },
+  VIDEO_LESSON: {
+    label: "Gói Video Khóa học",
+    icon: <FiPlayCircle size={20} />,
+  },
+  GRAMMAR_CHECKER: {
+    label: "Gói Kiểm tra Ngữ pháp",
+    icon: <FiEdit3 size={20} />,
+  },
+};
+
+const formatVND = (n) =>
+  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n);
 
 const PricingPage = () => {
   const [packages, setPackages] = useState([]);
@@ -20,32 +56,21 @@ const PricingPage = () => {
     onConfirm: null,
   });
 
-  const { isDarkMode } = useContext(ThemeContext);
+  // ThemeContext is consumed so [data-theme] body attr drives CSS-variable swaps.
+  useContext(ThemeContext);
 
-  const theme = {
-    pageBg: isDarkMode ? "#0f1117" : "#f8f9fa",
-    cardBg: isDarkMode ? "#1a1d2e" : "#ffffff",
-    cardBorder: isDarkMode ? "#2a2d3e" : "transparent",
-    titleColor: isDarkMode ? "#ffffff" : "#212529",
-    textColor: isDarkMode ? "#adb5bd" : "#6c757d",
-    featureIconBg: isDarkMode ? "#2a2d3e" : "#ffffff",
-    listItemColor: isDarkMode ? "#dee2e6" : "#212529",
-  };
-
-  const showModal = (type, title, message, onConfirm = null) => {
+  const showModal = (type, title, message, onConfirm = null) =>
     setModalConfig({ show: true, type, title, message, onConfirm });
-  };
 
-  const handleCloseModal = () => {
-    setModalConfig(prev => ({ ...prev, show: false }));
-  };
+  const handleCloseModal = () =>
+    setModalConfig((prev) => ({ ...prev, show: false }));
 
   useEffect(() => {
     const fetchPackages = async () => {
       try {
         const [packagesData, subsData] = await Promise.all([
           packageService.getAllPackages(),
-          subscriptionService.getMySubscriptions()
+          subscriptionService.getMySubscriptions(),
         ]);
         setPackages(packagesData);
         setUserSubscriptions(subsData);
@@ -59,13 +84,14 @@ const PricingPage = () => {
     fetchPackages();
   }, []);
 
-  const handleBuy = async (packageId) => {
-    const pkg = packages.find(p => p.id === packageId);
+  const handleBuy = (packageId) => {
+    const pkg = packages.find((p) => p.id === packageId);
     if (!pkg) return;
 
-    const activeSub = userSubscriptions.find(sub =>
-      sub.package?.type === pkg.type &&
-      (!sub.endDate || new Date(sub.endDate) > new Date())
+    const activeSub = userSubscriptions.find(
+      (sub) =>
+        sub.package?.type === pkg.type &&
+        (!sub.endDate || new Date(sub.endDate) > new Date())
     );
 
     if (activeSub) {
@@ -96,180 +122,223 @@ const PricingPage = () => {
 
   if (loading) {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center" style={{ background: theme.pageBg }}>
+      <div className={styles.loading}>
         <Spinner animation="border" variant="primary" />
       </div>
     );
   }
 
+  // Group packages by type
+  const grouped = packages.reduce((acc, pkg) => {
+    if (!acc[pkg.type]) acc[pkg.type] = [];
+    acc[pkg.type].push(pkg);
+    return acc;
+  }, {});
+
   return (
-    <div className="py-5 min-vh-100" style={{ background: theme.pageBg }}>
+    <div className={styles.page}>
       <Container>
-        <div className="text-center mb-5 mt-4">
-          <Badge bg="primary" className="px-3 py-2 mb-3 rounded-pill">
-            Nâng cấp tài khoản
-          </Badge>
-          <h1 className="display-4 fw-bold" style={{ color: theme.titleColor }}>Mở khóa sức mạnh Ailearning PRO</h1>
-          <p className="lead mx-auto" style={{ maxWidth: "700px", color: theme.textColor }}>
-            Học tập không giới hạn với sự hỗ trợ của AI, mở khóa những lộ trình chuyên sâu và nâng tầm kỹ năng tiếng Anh của bạn.
+        {/* Hero */}
+        <header className={styles.hero}>
+          <span className={styles.eyebrow}>
+            <FiZap size={13} /> Nâng cấp tài khoản
+          </span>
+          <h1 className={styles.title}>
+            Mở khóa sức mạnh{" "}
+            <span className={styles.titleAccent}>AelanG PRO</span>
+          </h1>
+          <p className={styles.subtitle}>
+            Học tập không giới hạn cùng AI, mở khóa lộ trình chuyên sâu và nâng tầm
+            kỹ năng tiếng Anh của bạn.
           </p>
-        </div>
+        </header>
 
-        {error && <Alert variant="danger">{error}</Alert>}
+        {error && <div className={styles.errorAlert}>{error}</div>}
 
-        {Object.entries(
-          packages.reduce((acc, pkg) => {
-            if (!acc[pkg.type]) acc[pkg.type] = [];
-            acc[pkg.type].push(pkg);
-            return acc;
-          }, {})
-        ).map(([type, group]) => (
-          <div key={type} className="mb-5">
-            <div className="d-flex align-items-center mb-4">
-              <div className="bg-primary text-white rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style={{ width: "45px", height: "45px" }}>
-                {type === "AI_CONVERSATION" && <Stars size={24} />}
-                {type === "ROADMAP_UNLOCK" && <RocketTakeoff size={24} />}
-                {type === "VIDEO_LESSON" && <PlayCircleFill size={24} />}
-                {type === "GRAMMAR_CHECKER" && <Spellcheck size={24} />}
+        {/* Packages */}
+        {Object.entries(grouped).map(([type, group]) => {
+          const meta = GROUP_META[type] || { label: type, icon: <FiStar /> };
+          // Mark the middle (or first) package of each group as "popular"
+          const featuredIndex = group.length >= 3 ? 1 : 0;
+
+          return (
+            <section key={type} className={styles.group}>
+              <div className={styles.groupHeader}>
+                <div className={styles.groupIcon}>{meta.icon}</div>
+                <h2 className={styles.groupTitle}>{meta.label}</h2>
+                <span className={styles.groupCount}>
+                  {group.length} gói có sẵn
+                </span>
               </div>
-              <h2 className="h3 fw-bold mb-0" style={{ color: theme.titleColor }}>
-                {type === "AI_CONVERSATION" && "Gói AI Conversation"}
-                {type === "ROADMAP_UNLOCK" && "Gói Mở khóa Lộ trình"}
-                {type === "VIDEO_LESSON" && "Gói Video Khóa học"}
-                {type === "GRAMMAR_CHECKER" && "Gói Kiểm tra Ngữ pháp"}
-              </h2>
-            </div>
 
-            <Row className="g-4">
-              {group.map((pkg) => (
-                <Col key={pkg.id} md={6} lg={4}>
-                  <Card
-                    className="h-100 shadow-sm rounded-4 overflow-hidden position-relative"
-                    style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}` }}
-                  >
-                    <Card.Body className="p-4 d-flex flex-column">
-                      <Card.Title className="h4 fw-bold mb-3" style={{ color: theme.titleColor }}>{pkg.name}</Card.Title>
-                      <Card.Text className="small mb-4" style={{ minHeight: "3rem", color: theme.textColor }}>
-                        {pkg.description || "Tận hưởng các tính năng cao cấp từ Ailearning để tăng tốc quá trình học tập của bạn."}
-                      </Card.Text>
-
-                      <div className="mb-4 mt-auto">
-                        <span className="h2 fw-bold text-primary mb-0">
-                          {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(pkg.price)}
-                        </span>
-                        {pkg.durationInDays && (
-                          <span className="ms-2" style={{ color: theme.textColor }}>/ {pkg.durationInDays} ngày</span>
-                        )}
-                        {!pkg.durationInDays && (
-                          <span className="ms-2" style={{ color: theme.textColor }}>/ Vĩnh viễn</span>
-                        )}
-                      </div>
-
-                      <ul className="list-unstyled mb-4">
-                        <li className="mb-2 d-flex align-items-center">
-                          <CheckCircleFill className="text-success me-2 flex-shrink-0" size={16} />
-                          <span className="small" style={{ color: theme.listItemColor }}>Kích hoạt {pkg.name}</span>
-                        </li>
-                        <li className="mb-2 d-flex align-items-center">
-                          <CheckCircleFill className="text-success me-2 flex-shrink-0" size={16} />
-                          <span className="small" style={{ color: theme.listItemColor }}>{pkg.durationInDays ? `Hiệu lực ${pkg.durationInDays} ngày` : "Sở hữu trọn đời"}</span>
-                        </li>
-                      </ul>
-
-                      <Button
-                        variant="outline-primary"
-                        className="rounded-pill fw-bold"
-                        onClick={() => handleBuy(pkg.id)}
-                        disabled={processingId === pkg.id}
+              <Row className="g-4">
+                {group.map((pkg, idx) => {
+                  const featured = idx === featuredIndex && group.length > 1;
+                  return (
+                    <Col key={pkg.id} md={6} lg={4}>
+                      <article
+                        className={`${styles.card} ${featured ? styles.cardFeatured : ""}`}
                       >
-                        {processingId === pkg.id ? (
-                          <Spinner animation="border" size="sm" className="me-2" />
-                        ) : (
-                          <Gem className="me-2" />
+                        {featured && (
+                          <span className={styles.popularBadge}>
+                            <FiStar size={11} /> Phổ biến nhất
+                          </span>
                         )}
-                        Mua ngay
-                      </Button>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </div>
-        ))}
 
-        <section className="mt-5 pt-5">
-          <Row className="text-center g-4">
+                        <h3 className={styles.cardName}>{pkg.name}</h3>
+                        <p className={styles.cardDesc}>
+                          {pkg.description ||
+                            "Tận hưởng các tính năng cao cấp từ AelanG để tăng tốc quá trình học tập của bạn."}
+                        </p>
+
+                        <div className={styles.priceBlock}>
+                          <span className={styles.price}>{formatVND(pkg.price)}</span>
+                          <span className={styles.priceUnit}>
+                            / {pkg.durationInDays ? `${pkg.durationInDays} ngày` : "Vĩnh viễn"}
+                          </span>
+                        </div>
+
+                        <ul className={styles.featureList}>
+                          <li className={styles.featureItem}>
+                            <span className={styles.featureCheck}>
+                              <FiCheck />
+                            </span>
+                            <span>Kích hoạt đầy đủ tính năng của {pkg.name}</span>
+                          </li>
+                          <li className={styles.featureItem}>
+                            <span className={styles.featureCheck}>
+                              <FiCheck />
+                            </span>
+                            <span>
+                              {pkg.durationInDays
+                                ? `Hiệu lực ${pkg.durationInDays} ngày kể từ khi kích hoạt`
+                                : "Sở hữu trọn đời, không phát sinh phí gia hạn"}
+                            </span>
+                          </li>
+                          <li className={styles.featureItem}>
+                            <span className={styles.featureCheck}>
+                              <FiCheck />
+                            </span>
+                            <span>Hỗ trợ kỹ thuật ưu tiên 24/7</span>
+                          </li>
+                        </ul>
+
+                        <button
+                          className={`${styles.cta} ${featured ? styles.ctaPrimary : ""}`}
+                          onClick={() => handleBuy(pkg.id)}
+                          disabled={processingId === pkg.id}
+                        >
+                          {processingId === pkg.id ? (
+                            <Spinner animation="border" size="sm" />
+                          ) : (
+                            <>
+                              <FiZap size={15} />
+                              Mua ngay
+                            </>
+                          )}
+                        </button>
+                      </article>
+                    </Col>
+                  );
+                })}
+              </Row>
+            </section>
+          );
+        })}
+
+        {/* Benefits */}
+        <section className={styles.benefits}>
+          <Row className="g-4">
             <Col md={4}>
-              <div className="p-3">
-                <div className="rounded-circle shadow-sm d-inline-flex align-items-center justify-content-center mb-3" style={{ width: "60px", height: "60px", background: theme.featureIconBg }}>
-                  <Stars className="text-primary" size={24} />
+              <div className={styles.benefitCard}>
+                <div className={styles.benefitIcon}>
+                  <FiCpu size={22} />
                 </div>
-                <h5 className="fw-bold" style={{ color: theme.titleColor }}>AI Tutor Thông Minh</h5>
-                <p className="small" style={{ color: theme.textColor }}>Luyện nói và giao tiếp với trí tuệ nhân tạo mọi lúc, mọi nơi.</p>
+                <h5 className={styles.benefitTitle}>AI Tutor thông minh</h5>
+                <p className={styles.benefitDesc}>
+                  Luyện nói và giao tiếp với trí tuệ nhân tạo mọi lúc, mọi nơi.
+                </p>
               </div>
             </Col>
             <Col md={4}>
-              <div className="p-3">
-                <div className="rounded-circle shadow-sm d-inline-flex align-items-center justify-content-center mb-3" style={{ width: "60px", height: "60px", background: theme.featureIconBg }}>
-                  <RocketTakeoff className="text-primary" size={24} />
+              <div className={styles.benefitCard}>
+                <div className={styles.benefitIcon}>
+                  <FiMap size={22} />
                 </div>
-                <h5 className="fw-bold" style={{ color: theme.titleColor }}>Lộ trình Chuyên Sâu</h5>
-                <p className="small" style={{ color: theme.textColor }}>Các khóa học được thiết kế chuyên biệt để bạn đạt mục tiêu nhanh nhất.</p>
+                <h5 className={styles.benefitTitle}>Lộ trình chuyên sâu</h5>
+                <p className={styles.benefitDesc}>
+                  Các khóa học được thiết kế chuyên biệt giúp bạn đạt mục tiêu nhanh nhất.
+                </p>
               </div>
             </Col>
             <Col md={4}>
-              <div className="p-3">
-                <div className="rounded-circle shadow-sm d-inline-flex align-items-center justify-content-center mb-3" style={{ width: "60px", height: "60px", background: theme.featureIconBg }}>
-                  <BagCheckFill className="text-primary" size={24} />
+              <div className={styles.benefitCard}>
+                <div className={styles.benefitIcon}>
+                  <FiShield size={22} />
                 </div>
-                <h5 className="fw-bold" style={{ color: theme.titleColor }}>Mở Khóa Vĩnh Viễn</h5>
-                <p className="small" style={{ color: theme.textColor }}>Mua một lần, sở hữu mãi mãi cho các lộ trình học tập cụ thể.</p>
+                <h5 className={styles.benefitTitle}>Bảo mật & ổn định</h5>
+                <p className={styles.benefitDesc}>
+                  Thanh toán an toàn, dữ liệu mã hoá và truy cập 24/7 không gián đoạn.
+                </p>
               </div>
             </Col>
           </Row>
         </section>
       </Container>
 
-      <Modal show={modalConfig.show} onHide={handleCloseModal} centered>
-        <Modal.Header closeButton={modalConfig.type !== "confirm"} className="border-0 pb-0" style={{ background: theme.cardBg }}>
-          <Modal.Title className="fw-bold" style={{ color: theme.titleColor }}>{modalConfig.title}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="text-center py-4" style={{ background: theme.cardBg }}>
-          <div className="mb-3">
-            {modalConfig.type === "confirm" && <ExclamationTriangleFill size={64} className="text-warning" />}
-            {modalConfig.type === "error" && <XCircleFill size={64} className="text-danger" />}
-            {modalConfig.type === "info" && <InfoCircleFill size={64} className="text-primary" />}
+      {/* Modal */}
+      <Modal
+        show={modalConfig.show}
+        onHide={handleCloseModal}
+        centered
+        contentClassName={styles.modalContent}
+      >
+        <Modal.Body className="text-center py-4">
+          <div
+            className={`${styles.modalIcon} ${
+              modalConfig.type === "confirm"
+                ? styles.modalIconWarning
+                : modalConfig.type === "error"
+                ? styles.modalIconError
+                : styles.modalIconInfo
+            }`}
+          >
+            {modalConfig.type === "confirm" && <FiAlertTriangle size={28} />}
+            {modalConfig.type === "error" && <FiXCircle size={28} />}
+            {modalConfig.type === "info" && <FiInfo size={28} />}
           </div>
-          <p className="fs-5 px-3" style={{ color: theme.textColor }}>{modalConfig.message}</p>
+          <h4 className={styles.modalTitle}>{modalConfig.title}</h4>
+          <p className={`${styles.modalMessage} mt-2 mb-0`}>{modalConfig.message}</p>
         </Modal.Body>
-        <Modal.Footer className="border-0 pt-0 justify-content-center pb-4" style={{ background: theme.cardBg }}>
+        <Modal.Footer className="border-0 justify-content-center pb-4">
           {modalConfig.type === "confirm" ? (
             <>
-              <Button variant="secondary" onClick={handleCloseModal} className="rounded-pill px-4 fw-bold me-2">
+              <button className={styles.modalBtn} onClick={handleCloseModal}>
                 Hủy bỏ
-              </Button>
-              <Button
-                variant="primary"
+              </button>
+              <button
+                className={`${styles.modalBtn} ${styles.modalBtnPrimary}`}
                 onClick={() => {
                   handleCloseModal();
                   if (modalConfig.onConfirm) modalConfig.onConfirm();
                 }}
-                className="rounded-pill px-4 fw-bold"
               >
+                <FiAward size={15} style={{ marginRight: 6 }} />
                 Tiếp tục thanh toán
-              </Button>
+              </button>
             </>
           ) : (
-            <Button variant="primary" onClick={handleCloseModal} className="rounded-pill px-5 fw-bold">
+            <button
+              className={`${styles.modalBtn} ${styles.modalBtnPrimary}`}
+              onClick={handleCloseModal}
+            >
               Đóng
-            </Button>
+            </button>
           )}
         </Modal.Footer>
       </Modal>
     </div>
   );
 };
-
-const BagCheckFill = ({ className, size }) => <i className={`bi bi-bag-check-fill ${className}`} style={{ fontSize: size }}></i>;
 
 export default PricingPage;

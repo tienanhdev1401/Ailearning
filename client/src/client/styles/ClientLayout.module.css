@@ -1,8 +1,26 @@
+:root {
+  --app-font: 'Be Vietnam Pro', 'Poppins', system-ui, -apple-system, 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+html,
+body,
+:global(#root),
+button,
+input,
+textarea,
+select {
+  font-family: var(--app-font);
+}
+
 body {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--app-font);
   background-color: #19212b;
   color: #e0e6eb;
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body[data-theme="light"] {
