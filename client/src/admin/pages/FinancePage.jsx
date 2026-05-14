@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import dashboardService from '../services/dashboardService';
+import { PACKAGE_TYPE } from '../../enums/packageType.enum';
 
 const Avatar = ({ user, size = '40px', className = '' }) => {
   const colors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
@@ -35,6 +36,7 @@ const FinancePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('ALL');
 
   useEffect(() => {
     loadAllData();
@@ -80,15 +82,19 @@ const FinancePage = () => {
     }
   };
 
-  const filteredTransactions = transactions.filter(t =>
-    t.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    t.id?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredTransactions = transactions.filter(t => {
+    const matchesSearch = t.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      t.id?.toLowerCase().includes(search.toLowerCase());
+    const matchesType = typeFilter === 'ALL' || t.package?.type === typeFilter;
+    return matchesSearch && matchesType;
+  });
 
-  const filteredSubscriptions = subscriptions.filter(s =>
-    s.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    s.package?.name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredSubscriptions = subscriptions.filter(s => {
+    const matchesSearch = s.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      s.package?.name?.toLowerCase().includes(search.toLowerCase());
+    const matchesType = typeFilter === 'ALL' || s.package?.type === typeFilter;
+    return matchesSearch && matchesType;
+  });
 
   const totalRevenue = transactions
     .filter(t => t.status === 'SUCCESS')
@@ -193,20 +199,34 @@ const FinancePage = () => {
         </div>
         <div className="card-body p-4">
           {activeTab !== 'top-customers' && (
-            <div className="mb-4 d-flex justify-content-between align-items-center">
-              <div className="input-group" style={{ maxWidth: '350px' }}>
-                <span className="input-group-text bg-body-tertiary border-0">
-                  <i className="bi bi-search text-muted" />
-                </span>
-                <input
-                  type="text"
-                  className="form-control bg-body-tertiary border-0 shadow-none text-body"
-                  placeholder="Search user or ID..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
+              <div className="d-flex gap-3 w-100 flex-wrap">
+                <div className="input-group" style={{ maxWidth: '350px' }}>
+                  <span className="input-group-text bg-body-tertiary border-0">
+                    <i className="bi bi-search text-muted" />
+                  </span>
+                  <input
+                    type="text"
+                    className="form-control bg-body-tertiary border-0 shadow-none text-body"
+                    placeholder="Search user or ID..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ minWidth: '200px' }}>
+                  <select 
+                    className="form-select bg-body-tertiary border-0 shadow-none text-body"
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value)}
+                  >
+                    <option value="ALL">All Package Types</option>
+                    <option value={PACKAGE_TYPE.ROADMAP_UNLOCK}>Roadmap Unlocks</option>
+                    <option value={PACKAGE_TYPE.AI_CONVERSATION}>AI Conversations</option>
+                    <option value={PACKAGE_TYPE.VIDEO_LESSON}>Video Lessons</option>
+                    <option value={PACKAGE_TYPE.GRAMMAR_CHECKER}>Grammar Checker</option>
+                  </select>
+                </div>
               </div>
-            </div>
           )}
 
           {loading ? (
