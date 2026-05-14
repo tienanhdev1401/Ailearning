@@ -199,34 +199,34 @@ const FinancePage = () => {
         </div>
         <div className="card-body p-4">
           {activeTab !== 'top-customers' && (
-              <div className="d-flex gap-3 w-100 flex-wrap">
-                <div className="input-group" style={{ maxWidth: '350px' }}>
-                  <span className="input-group-text bg-body-tertiary border-0">
-                    <i className="bi bi-search text-muted" />
-                  </span>
-                  <input
-                    type="text"
-                    className="form-control bg-body-tertiary border-0 shadow-none text-body"
-                    placeholder="Search user or ID..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-                </div>
-
-                <div style={{ minWidth: '200px' }}>
-                  <select 
-                    className="form-select bg-body-tertiary border-0 shadow-none text-body"
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value)}
-                  >
-                    <option value="ALL">All Package Types</option>
-                    <option value={PACKAGE_TYPE.ROADMAP_UNLOCK}>Roadmap Unlocks</option>
-                    <option value={PACKAGE_TYPE.AI_CONVERSATION}>AI Conversations</option>
-                    <option value={PACKAGE_TYPE.VIDEO_LESSON}>Video Lessons</option>
-                    <option value={PACKAGE_TYPE.GRAMMAR_CHECKER}>Grammar Checker</option>
-                  </select>
-                </div>
+            <div className="d-flex gap-3 w-100 flex-wrap">
+              <div className="input-group" style={{ maxWidth: '350px' }}>
+                <span className="input-group-text bg-body-tertiary border-0">
+                  <i className="bi bi-search text-muted" />
+                </span>
+                <input
+                  type="text"
+                  className="form-control bg-body-tertiary border-0 shadow-none text-body"
+                  placeholder="Search user or ID..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
               </div>
+
+              <div style={{ minWidth: '200px' }}>
+                <select
+                  className="form-select bg-body-tertiary border-0 shadow-none text-body"
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                >
+                  <option value="ALL">All Package Types</option>
+                  <option value={PACKAGE_TYPE.ROADMAP_UNLOCK}>Roadmap Unlocks</option>
+                  <option value={PACKAGE_TYPE.AI_CONVERSATION}>AI Conversations</option>
+                  <option value={PACKAGE_TYPE.VIDEO_LESSON}>Video Lessons</option>
+                  <option value={PACKAGE_TYPE.GRAMMAR_CHECKER}>Grammar Checker</option>
+                </select>
+              </div>
+            </div>
           )}
 
           {loading ? (

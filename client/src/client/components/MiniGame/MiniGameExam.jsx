@@ -1,11 +1,15 @@
 import React, { useMemo, useState } from "react";
 import styles from "../../styles/MiniGameExam.module.css";
+import { shuffleArray } from "../../../utils/array";
 
 const calcScore = (questions, answers) => {
   if (!questions.length) return { percent: 0, correct: 0 };
   const correctCount = questions.reduce((acc, question, index) => {
-    const picked = answers[index];
-    return picked === question.correctIndex ? acc + 1 : acc;
+    const pickedIdx = answers[index];
+    if (typeof pickedIdx !== "number") return acc;
+    
+    const pickedOption = question.shuffledOptions[pickedIdx];
+    return pickedOption.originalIndex === question.correctIndex ? acc + 1 : acc;
   }, 0);
   const percent = Math.round((correctCount / questions.length) * 100);
   return { percent, correct: correctCount };
@@ -14,11 +18,18 @@ const calcScore = (questions, answers) => {
 const MiniGameExam = ({ data, onNext }) => {
   const questions = useMemo(() => {
     const list = Array.isArray(data?.resources?.questions) ? data.resources.questions : [];
-    return list.map((question, index) => ({
-      ...question,
-      options: Array.isArray(question.options) ? question.options : [],
-      id: index,
-    }));
+    return list.map((question, index) => {
+      const originalOptions = Array.isArray(question.options) ? question.options : [];
+      const shuffledOptions = shuffleArray(
+        originalOptions.map((opt, idx) => ({ text: opt, originalIndex: idx }))
+      );
+      
+      return {
+        ...question,
+        shuffledOptions,
+        id: index,
+      };
+    });
   }, [data]);
 
   const [answers, setAnswers] = useState({});
@@ -65,9 +76,9 @@ const MiniGameExam = ({ data, onNext }) => {
                 Câu {index + 1}: {question.question}
               </h3>
               <div className={styles.optionList}>
-                {question.options.map((option, optionIndex) => {
+                {question.shuffledOptions.map((option, optionIndex) => {
                   const isSelected = selected === optionIndex;
-                  const isCorrectOption = showCorrect && question.correctIndex === optionIndex;
+                  const isCorrectOption = showCorrect && question.correctIndex === option.originalIndex;
                   const isWrongSelection = showCorrect && isSelected && !isCorrectOption;
 
                   const optionClasses = [styles.optionButton];
@@ -83,7 +94,7 @@ const MiniGameExam = ({ data, onNext }) => {
                       className={optionClasses.join(" ")}
                       onClick={() => handleSelect(index, optionIndex)}
                     >
-                      {String.fromCharCode(65 + optionIndex)}. {option}
+                      {String.fromCharCode(65 + optionIndex)}. {option.text}
                     </button>
                   );
                 })}

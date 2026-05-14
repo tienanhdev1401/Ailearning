@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import styles from "../../styles/MiniGameFlipCard.module.css";
 import { ThemeContext } from "../../../context/ThemeContext";
 import vocabNoteService from "../../../services/vocabNoteService";
+import { shuffleArray } from "../../../utils/array";
+import { speak } from "../../../utils/tts";
 
 const MiniGameFlipCard = ({ data, onNext }) => {
   const navigate = useNavigate();
@@ -20,14 +22,6 @@ const MiniGameFlipCard = ({ data, onNext }) => {
   const [savingCards, setSavingCards] = useState({}); // Keep track of saved status: { index: loading|success|error }
   const [toastMessage, setToastMessage] = useState(null);
 
-  const speak = (text) => {
-    if (!text) return;
-    window.speechSynthesis.cancel(); // Stop current speech
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    window.speechSynthesis.speak(utterance);
-  };
-
   // Initialize practice options when index changes in practice mode
   useEffect(() => {
     const activeCards = mode === "practice" ? practiceCards : cards;
@@ -36,13 +30,11 @@ const MiniGameFlipCard = ({ data, onNext }) => {
       const otherCards = activeCards.filter((_, idx) => idx !== currentIndex);
 
       // Get 3 random wrong definitions
-      const wrongOptions = [...otherCards]
-        .sort(() => 0.5 - Math.random())
+      const wrongOptions = shuffleArray([...otherCards])
         .slice(0, Math.min(3, otherCards.length))
         .map(c => c.definition);
 
-      const allOptions = [currentCard.definition, ...wrongOptions]
-        .sort(() => 0.5 - Math.random());
+      const allOptions = shuffleArray([currentCard.definition, ...wrongOptions]);
 
       setShuffledOptions(allOptions);
       setSelectedOption(null);
@@ -92,7 +84,7 @@ const MiniGameFlipCard = ({ data, onNext }) => {
       setTimeout(() => setCurrentIndex(currentIndex + 1), 300);
     } else {
       // Shuffle cards for practice mode
-      setPracticeCards([...cards].sort(() => 0.5 - Math.random()));
+      setPracticeCards(shuffleArray([...cards]));
       setMode("practice");
       setCurrentIndex(0);
     }
@@ -211,8 +203,8 @@ const MiniGameFlipCard = ({ data, onNext }) => {
                 </button>
                 <button
                   className={styles.speakerBtn}
-                  onClick={(e) => { e.stopPropagation(); speak(cards[currentIndex].term); }}
-                  title="Phát âm"
+                  onClick={(e) => { e.stopPropagation(); speak(cards[currentIndex].term, 'en'); }}
+                  title="Phát âm tiếng Anh"
                 >
                   🔊
                 </button>
@@ -221,6 +213,14 @@ const MiniGameFlipCard = ({ data, onNext }) => {
                 <div className="mt-4 small" style={{ color: isDarkMode ? '#6c757d' : '#999' }}>Chạm để xem nghĩa</div>
               </div>
               <div className={styles.cardBack}>
+                <button
+                  className={styles.speakerBtn}
+                  onClick={(e) => { e.stopPropagation(); speak(cards[currentIndex].definition, 'vi'); }}
+                  title="Đọc tiếng Việt"
+                  style={{ position: 'absolute', top: '12px', right: '12px' }}
+                >
+                  🔊
+                </button>
                 <span className={styles.cardLabel}>Định nghĩa</span>
                 <div className={styles.cardContent}>{cards[currentIndex].definition}</div>
               </div>
@@ -249,8 +249,8 @@ const MiniGameFlipCard = ({ data, onNext }) => {
               "{practiceCards[currentIndex]?.term}" nghĩa là gì?
               <button
                 className={styles.speakerBtnInline}
-                onClick={() => speak(practiceCards[currentIndex]?.term)}
-                title="Phát âm"
+                onClick={() => speak(practiceCards[currentIndex]?.term, 'en')}
+                title="Phát âm tiếng Anh"
               >
                 🔊
               </button>
@@ -266,7 +266,19 @@ const MiniGameFlipCard = ({ data, onNext }) => {
                   onClick={() => handleSelectOption(option)}
                   disabled={feedback !== null}
                 >
-                  {option}
+                  <span>{option}</span>
+                  {feedback !== null && (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      style={{ marginLeft: '6px', cursor: 'pointer', fontSize: '1rem' }}
+                      onClick={(e) => { e.stopPropagation(); speak(option, 'vi'); }}
+                      onKeyDown={(e) => e.key === 'Enter' && speak(option, 'vi')}
+                      title="Đọc tiếng Việt"
+                    >
+                      🔊
+                    </span>
+                  )}
                 </button>
               ))}
             </div>

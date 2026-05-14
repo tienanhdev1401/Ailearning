@@ -1,14 +1,21 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import styles from "../../styles/MiniGameListenSelect.module.css";
+import { shuffleArray } from "../../../utils/array";
 
 const MiniGameListenSelect = ({ data, onNext, onFail }) => {
   const resources = data?.resources || {};
-  const options = Array.isArray(resources.options) ? resources.options : [];
+  const originalOptions = Array.isArray(resources.options) ? resources.options : [];
   const audioUrl = resources.audioUrl || "";
   const correctIndex = Number(resources.correctIndex ?? 0);
 
+  // Shuffle options and keep track of original indices
+  const options = useMemo(() => {
+    const zipped = originalOptions.map((opt, idx) => ({ ...opt, originalIndex: idx }));
+    return shuffleArray(zipped);
+  }, [originalOptions]);
+
   const [playing, setPlaying] = useState(false);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(null); // stores index in the SHUFFLED array
   const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const audioRef = useRef(null);
@@ -35,7 +42,8 @@ const MiniGameListenSelect = ({ data, onNext, onFail }) => {
 
   const handleSubmit = () => {
     if (selected === null) return;
-    const ok = Number(selected) === Number(correctIndex);
+    const selectedOpt = options[selected];
+    const ok = Number(selectedOpt.originalIndex) === Number(correctIndex);
     setIsCorrect(ok);
     setSubmitted(true);
     if (!ok && onFail) onFail();
@@ -66,7 +74,7 @@ const MiniGameListenSelect = ({ data, onNext, onFail }) => {
       <div className={styles.optionsGrid}>
         {options.map((opt, idx) => {
           const isSel = selected === idx;
-          const showCorrect = submitted && Number(idx) === Number(correctIndex);
+          const showCorrect = submitted && Number(opt.originalIndex) === Number(correctIndex);
           const showWrong = submitted && isSel && !showCorrect;
           const cls = [styles.optionCard];
           if (submitted) {
