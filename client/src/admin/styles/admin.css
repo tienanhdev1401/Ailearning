@@ -181,6 +181,58 @@
 	padding: 1.5rem;
 }
 
+/* Global Admin Page Header */
+.admin-page-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 2.5rem;
+	padding-top: 0.5rem;
+}
+
+.admin-page-header .header-info h1 {
+	font-size: 1.75rem;
+	font-weight: 700;
+	color: var(--bs-body-color);
+	margin-bottom: 0.25rem;
+	letter-spacing: -0.02em;
+}
+
+.admin-page-header .header-info p {
+	color: var(--bs-secondary-color);
+	font-size: 0.9375rem;
+	margin-bottom: 0;
+	opacity: 0.8;
+}
+
+.admin-page-header .header-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+/* Standard Premium Button */
+.btn-premium {
+	background: #2563eb;
+	color: white;
+	border: none;
+	padding: 0.65rem 1.5rem;
+	border-radius: 0.75rem;
+	font-weight: 600;
+	transition: var(--transition-base);
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.btn-premium:hover {
+	background: #1d4ed8;
+	transform: translateY(-1px);
+	box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+	color: white;
+}
+
 .admin-wrapper .stats-icon {
 	width: 48px;
 	height: 48px;

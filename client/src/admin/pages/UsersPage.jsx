@@ -456,23 +456,17 @@ const UsersPage = () => {
 
   return (
     <div className="container-fluid p-4 p-lg-5">
-      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-5">
-        <div>
-          <h1 className="h3 mb-1">Quản lý người dùng</h1>
-          <p className="text-muted mb-0">Theo dõi vai trò, trạng thái và hoạt động người dùng.</p>
+      <div className="admin-page-header">
+        <div className="header-info">
+          <h1 className="mb-0">Quản lý người dùng</h1>
+          <p>Theo dõi vai trò, trạng thái và hoạt động người dùng.</p>
         </div>
-        <div className="d-flex flex-wrap gap-2">
-          {/* <button type="button" className="btn btn-outline-secondary" onClick={handleOpenImportModal}>
-            <i className="bi bi-upload me-2" />Import Users
-          </button>
-          <button type="button" className="btn btn-outline-secondary" onClick={handleExport}>
-            <i className="bi bi-download me-2" />Export
-          </button> */}
+        <div className="header-actions">
           <button type="button" className="btn btn-outline-secondary" onClick={loadUsers}>
             <i className="bi bi-arrow-clockwise me-1" />Tải lại
           </button>
-          <button type="button" className="btn btn-primary" onClick={() => handleOpenUserModal()}>
-            <i className="bi bi-person-plus me-2" />Thêm người dùng
+          <button type="button" className="btn-premium" onClick={() => handleOpenUserModal()}>
+            <i className="bi bi-person-plus" />Thêm người dùng
           </button>
         </div>
       </div>

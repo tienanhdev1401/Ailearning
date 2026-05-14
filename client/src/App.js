@@ -45,6 +45,7 @@ import LessonManagerPage from "./admin/pages/LessonManagerPage";
 import PromptManagementPage from "./admin/pages/PromptManagementPage";
 import PaymentSuccessPage from "./client/pages/PaymentSuccessPage";
 import PricingPage from "./client/pages/PricingPage";
+import PackagesPage from "./admin/pages/PackagesPage";
 import VocabNotebookPage from "./client/pages/VocabNotebookPage";
 import FlashcardPage from "./client/pages/FlashcardPage";
 import FlashcardListPage from "./client/pages/FlashcardListPage";
@@ -326,6 +327,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.STAFF]}>
               <AdminLayout><ActivityManagerPage /></AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/packages"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLE.ADMIN]}>
+              <AdminLayout><PackagesPage /></AdminLayout>
             </ProtectedRoute>
           }
         />

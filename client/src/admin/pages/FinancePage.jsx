@@ -98,15 +98,16 @@ const FinancePage = () => {
 
   return (
     <div className="container-fluid p-4 p-lg-5 min-vh-100">
-      <div className="d-flex justify-content-between align-items-center mb-5">
-        <div>
-          <h1 className="h3 mb-1 fw-bold text-body">Finance Hub</h1>
-          <p className="text-muted mb-0">Monitor your business health and customer lifecycle.</p>
+      <div className="admin-page-header">
+        <div className="header-info">
+          <h1 className="mb-0">Finance Hub</h1>
+          <p>Monitor your business health and customer lifecycle.</p>
         </div>
-        <button className="btn btn-outline-primary shadow-sm px-4 py-2" onClick={loadAllData}>
-          <i className="bi bi-arrow-clockwise me-2" />
-          <span className="fw-medium">Sync Data</span>
-        </button>
+        <div className="header-actions">
+          <button className="btn btn-outline-primary" onClick={loadAllData}>
+            <i className="bi bi-arrow-clockwise me-2" />Sync Data
+          </button>
+        </div>
       </div>
 
       {/* Quick Stats Cards */}

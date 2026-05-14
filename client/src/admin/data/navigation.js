@@ -6,7 +6,6 @@ const secondaryNav = [
   // { label: 'Calendar', icon: 'bi-calendar-event', path: '/admin/calendar' },
   { label: 'Roadmap', icon: 'bi-map', path: '/admin/roadmaps' },
   { label: 'Video Lesson', icon: 'bi-youtube', path: '/admin/lessons' },
-  { label: 'Finance', icon: 'bi-credit-card', path: '/admin/finance' },
 ];
 
 const makeUserNavItem = (role) => {
@@ -31,7 +30,8 @@ const baseSearchIndex = [
   { title: 'Chat', path: '/admin/messages', type: 'Page' },
   // { title: 'Calendar', path: '/admin/calendar', type: 'Page' },
   { title: 'Roadmaps', path: '/admin/roadmaps', type: 'Page' },
-  { title: 'Video Lessons', path: '/admin/lessons', type: 'Page' }
+  { title: 'Video Lessons', path: '/admin/lessons', type: 'Page' },
+  { title: 'Finance', path: '/admin/finance', type: 'Page' }
 ];
 
 export const buildNavigation = (role) => {
@@ -39,6 +39,8 @@ export const buildNavigation = (role) => {
   const admin = [];
 
   if (role === 'admin') {
+    admin.push({ label: 'Finance', icon: 'bi-credit-card', path: '/admin/finance' });
+    admin.push({ label: 'Packages', icon: 'bi-box-seam', path: '/admin/packages' });
     admin.push({ label: 'Prompt AI', icon: 'bi-robot', path: '/admin/prompts' });
   }
 
@@ -46,9 +48,10 @@ export const buildNavigation = (role) => {
     { title: 'Users', path: '/admin/users', type: 'Page' },
     ...(role === 'admin'
       ? [
-          { title: 'Staff', path: '/admin/staff', type: 'Page' },
-          { title: 'Prompt AI', path: '/admin/prompts', type: 'Page' },
-        ]
+        { title: 'Staff', path: '/admin/staff', type: 'Page' },
+        { title: 'Packages', path: '/admin/packages', type: 'Page' },
+        { title: 'Prompt AI', path: '/admin/prompts', type: 'Page' },
+      ]
       : []),
     ...baseSearchIndex
   ];

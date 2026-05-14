@@ -203,10 +203,17 @@ const LessonManagerPage = ()=> {
   };
 
   return (
-    <div className="container py-4">
-      <div className="d-flex align-items-center mb-3">
-        <h3 className="me-auto">Admin — Lesson Management</h3>
-        <button className="btn btn-primary" onClick={openCreate}><i className="bi bi-plus-lg me-2"></i>New Lesson</button>
+    <div className="container-fluid p-4 p-lg-5">
+      <div className="admin-page-header">
+        <div className="header-info">
+          <h1 className="mb-0">Lesson Management</h1>
+          <p>Tổ chức và biên soạn nội dung bài học video.</p>
+        </div>
+        <div className="header-actions">
+          <button className="btn-premium" onClick={openCreate}>
+            <i className="bi bi-plus-lg" />New Lesson
+          </button>
+        </div>
       </div>
 
       {loading ? (
