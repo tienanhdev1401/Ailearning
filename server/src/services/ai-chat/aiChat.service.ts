@@ -1,6 +1,4 @@
 import { Repository } from "typeorm";
-import path from "path";
-import fs from "fs";
 import { AppDataSource } from "../../config/database";
 import { AiScenario } from "../../models/aiScenario";
 import { AiConversation } from "../../models/aiConversation";
@@ -11,7 +9,7 @@ import AI_CONVERSATION_STATUS from "../../enums/aiConversationStatus.enum";
 import AI_MESSAGE_ROLE from "../../enums/aiMessageRole.enum";
 import { geminiService } from "./gemini.service";
 import { evaluationService } from "./evaluation.service";
-import { saveUploadedAudio } from "./audioStorage.service";
+import { pronunciationService } from "./pronunciation.service";
 import { User } from "../../models/user";
 import { emitAiChatEvent } from "../../socket";
 import { deepgramService } from "./deepgram.service";
@@ -186,45 +184,33 @@ ${contextNote}` : basePrompt;
     await this.messageRepo.save(aiMessage);
     emitAiChatEvent(conversation.id, "ai_message", this.toMessagePayload(aiMessage));
 
-    let evaluation: AiEvaluation | null = null;
-    try {
-      evaluation = await evaluationService.evaluateConversation(conversation.id);
-      if (evaluation) {
-        emitAiChatEvent(conversation.id, "evaluation_update", evaluation);
-      }
-    } catch (error) {
-      console.error("Evaluation failed", error);
-    }
-
+    // Overall evaluation is now produced only once the learner ends the
+    // session (see markConversationCompleted). Per-turn evaluation is skipped
+    // to save Gemini quota and avoid noisy mid-session score fluctuation.
     return {
       userMessage: this.toMessagePayload(userMessage),
       aiMessage: this.toMessagePayload(aiMessage),
-      evaluation: this.toEvaluationPayload(evaluation),
+      evaluation: null,
     };
   }
 
   async addVoiceMessage(payload: VoiceMessagePayload) {
     const conversation = await this.assertConversationOwner(payload.conversationId, payload.userId);
 
-    const audioPath = await saveUploadedAudio(conversation.id, payload.file);
-    const absolutePath = path.resolve(audioPath);
-
-    try {
-      const stats = await fs.promises.stat(absolutePath);
-      if (!stats.size) {
-        console.warn(`[AiChat] Uploaded audio is empty: ${absolutePath}`);
-        throw new Error("Chúng tôi chưa thu được âm thanh trong bản ghi. Bạn hãy thử nói rõ hơn và giữ nút lâu hơn một chút nhé.");
-      }
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("thu được âm thanh")) {
-        throw error;
-      }
-      console.warn(`[AiChat] Unable to read uploaded audio: ${absolutePath}`, error);
+    const buffer = payload.file.buffer;
+    if (!buffer || buffer.length === 0) {
+      throw new Error("Chúng tôi chưa thu được âm thanh trong bản ghi. Bạn hãy thử nói rõ hơn và giữ nút lâu hơn một chút nhé.");
     }
+
+    const filename = payload.file.originalname || `turn-${Date.now()}.wav`;
+    const contentType = payload.file.mimetype || "audio/wav";
 
     let transcription: DeepgramTranscriptionResult;
     try {
-      transcription = await deepgramService.transcribe(absolutePath);
+      transcription = await deepgramService.transcribeBuffer(buffer, {
+        contentType,
+        filename,
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.warn(`[AiChat] Voice transcription failed: ${message}`);
@@ -236,13 +222,31 @@ ${contextNote}` : basePrompt;
       throw new Error("Chưa nhận được nội dung từ ghi âm. Bạn có thể thử nói lại to và rõ hơn không?");
     }
 
+    // Score this turn against W2V_GOP using the in-memory buffer.
+    let pronunciationScoreJson: string | null = null;
+    try {
+      const turnScore = await pronunciationService.scoreTurn({
+        text: transcriptText,
+        audio: buffer,
+        filename,
+        contentType,
+      });
+      pronunciationScoreJson = JSON.stringify(turnScore);
+    } catch (error) {
+      console.warn(
+        `[AiChat] Pronunciation scoring failed for conversation ${conversation.id}:`,
+        error instanceof Error ? error.message : error
+      );
+    }
+
     const userMessage = this.messageRepo.create({
       conversation,
       role: AI_MESSAGE_ROLE.USER,
       content: transcriptText,
       transcript: transcriptText,
       durationSeconds: transcription.duration ?? null,
-      audioPath,
+      audioPath: null,
+      pronunciationScore: pronunciationScoreJson,
     });
     await this.messageRepo.save(userMessage);
     emitAiChatEvent(conversation.id, "user_message", this.toMessagePayload(userMessage));
@@ -264,20 +268,13 @@ ${contextNote}` : basePrompt;
     await this.messageRepo.save(aiMessage);
     emitAiChatEvent(conversation.id, "ai_message", this.toMessagePayload(aiMessage));
 
-    let evaluation: AiEvaluation | null = null;
-    try {
-      evaluation = await evaluationService.evaluateConversation(conversation.id);
-      if (evaluation) {
-        emitAiChatEvent(conversation.id, "evaluation_update", evaluation);
-      }
-    } catch (error) {
-      console.error("Evaluation failed", error);
-    }
-
+    // Overall evaluation runs only at session end. Per-turn pronunciation
+    // scoring already happened above via pronunciationService.scoreTurn and
+    // is cached on the message row for the end-of-session aggregation.
     return {
       userMessage: this.toMessagePayload(userMessage),
       aiMessage: this.toMessagePayload(aiMessage),
-      evaluation: this.toEvaluationPayload(evaluation),
+      evaluation: null,
       transcription,
     };
   }
@@ -288,14 +285,41 @@ ${contextNote}` : basePrompt;
     conversation.endedAt = new Date();
     await this.conversationRepo.save(conversation);
 
+    // Build the per-turn pronunciation report FIRST so its evidence (avg
+    // score, weak phones/words) can be injected into the Gemini overall
+    // evaluation prompt below.
+    let pronunciationReport: Awaited<ReturnType<typeof pronunciationService.buildReport>> | null = null;
+    try {
+      pronunciationReport = await pronunciationService.buildReport(conversation.id);
+    } catch (error) {
+      console.error("Pronunciation analysis failed", error);
+    }
+
     let evaluation: AiEvaluation | null = null;
     try {
-      evaluation = await evaluationService.evaluateConversation(conversation.id);
-      if (evaluation) {
-        emitAiChatEvent(conversation.id, "evaluation_update", evaluation);
-      }
+      evaluation = await evaluationService.evaluateConversation(
+        conversation.id,
+        pronunciationReport
+      );
     } catch (error) {
       console.error("Evaluation failed", error);
+    }
+
+    if (pronunciationReport) {
+      try {
+        const target = evaluation ?? (await this.evaluationRepo.findOne({
+          where: { conversation: { id: conversation.id } },
+          relations: ["conversation"],
+        })) ?? this.evaluationRepo.create({ conversation });
+        target.pronunciationReport = JSON.stringify(pronunciationReport);
+        evaluation = await this.evaluationRepo.save(target);
+      } catch (error) {
+        console.error("Persisting pronunciation report failed", error);
+      }
+    }
+
+    if (evaluation) {
+      emitAiChatEvent(conversation.id, "evaluation_update", this.toEvaluationPayload(evaluation));
     }
 
     return this.toEvaluationPayload(evaluation);
@@ -359,17 +383,6 @@ ${contextNote}` : basePrompt;
     return this.toEvaluationPayload(conversation.evaluation);
   }
 
-  async gatherAudioFiles(conversationId: number, userId: number) {
-    const conversation = await this.getConversationWithMessages(conversationId, userId);
-    return conversation.messages
-      .filter((message) => !!message.audioPath)
-      .map((message) => ({
-        id: message.id,
-        audioPath: message.audioPath!,
-        createdAt: message.createdAt,
-      }));
-  }
-
   private async assertConversationOwner(conversationId: number, userId: number) {
     const conversation = await this.conversationRepo.findOne({
       where: { id: conversationId },
@@ -408,7 +421,7 @@ ${contextNote}` : basePrompt;
         prompt: rendered.text,
         temperature: rendered.resolved.config.temperature ?? 0.7,
         topP: rendered.resolved.config.topP ?? undefined,
-        maxOutputTokens: rendered.resolved.config.maxOutputTokens ?? 180,
+        maxOutputTokens: rendered.resolved.config.maxOutputTokens ?? 600,
       });
 
       const trimmed = response?.trim();
@@ -487,13 +500,22 @@ ${contextNote}` : basePrompt;
         prompt: rendered.text,
         temperature: rendered.resolved.config.temperature ?? 0.68,
         topP: rendered.resolved.config.topP ?? 0.85,
-        maxOutputTokens: rendered.resolved.config.maxOutputTokens ?? 220,
+        maxOutputTokens: rendered.resolved.config.maxOutputTokens ?? 700,
       });
 
       const trimmed = response?.trim();
-      return trimmed?.length ? trimmed : fallback;
+      if (trimmed?.length) {
+        return trimmed;
+      }
+      console.warn(
+        `[AiChat] Gemini follow-up returned empty for conversation ${conversation.id}. Using fallback.`
+      );
+      return fallback;
     } catch (error) {
-      console.error("Gemini follow-up failed", error);
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(
+        `[AiChat] Gemini follow-up failed for conversation ${conversation.id}: ${message}`
+      );
       return fallback;
     }
   }
@@ -505,15 +527,30 @@ ${contextNote}` : basePrompt;
       return "Could you tell me a bit more so we can keep the conversation moving?";
     }
 
-    const messageCount = conversation.messages.length;
+    // Echo back a fragment of what the learner said so the fallback does not
+    // feel canned even if Gemini fails repeatedly.
+    const snippet = trimmedLatest.length > 70
+      ? `${trimmedLatest.slice(0, 70).trim()}...`
+      : trimmedLatest;
+
     const fallbackPool = guidance.fallbackFollowUps?.length
       ? guidance.fallbackFollowUps
       : [
-          "That's useful detail. Could you expand on the steps you took so I can better understand?",
-          "Thanks for sharing. What outcome were you aiming for, and how close did you get?",
-          "I appreciate that context. What did you learn from handling it that way?",
+          `Interesting — when you mentioned "${snippet}", what made that stand out for you?`,
+          `Thanks for sharing. Could you walk me through what happened around "${snippet}"?`,
+          `Got it. Tell me more about how "${snippet}" played out — what came next?`,
+          `That's useful context. What was the trickiest part of "${snippet}" for you?`,
+          `Nice. If you had to do "${snippet}" again, what would you change?`,
         ];
-    return fallbackPool[messageCount % fallbackPool.length];
+
+    // Mix in a turn-based offset so consecutive fallbacks don't repeat verbatim,
+    // and a small random jitter so refreshing the same turn varies the wording.
+    const userTurns = conversation.messages.filter(
+      (m) => m.role === AI_MESSAGE_ROLE.USER
+    ).length;
+    const jitter = Math.floor(Math.random() * fallbackPool.length);
+    const index = (userTurns + jitter) % fallbackPool.length;
+    return fallbackPool[index];
   }
 
   private applyFallbackTemplate(
@@ -554,6 +591,15 @@ ${contextNote}` : basePrompt;
       return null;
     }
 
+    let parsedPronunciationReport: unknown = null;
+    if (evaluation.pronunciationReport) {
+      try {
+        parsedPronunciationReport = JSON.parse(evaluation.pronunciationReport);
+      } catch (error) {
+        parsedPronunciationReport = null;
+      }
+    }
+
     return {
       id: evaluation.id,
       pronunciationScore: evaluation.pronunciationScore,
@@ -562,6 +608,7 @@ ${contextNote}` : basePrompt;
       vocabularyScore: evaluation.vocabularyScore,
       summary: evaluation.summary,
       rawDetails: evaluation.rawDetails,
+      pronunciationReport: parsedPronunciationReport,
       createdAt: evaluation.createdAt,
       updatedAt: evaluation.updatedAt,
     };

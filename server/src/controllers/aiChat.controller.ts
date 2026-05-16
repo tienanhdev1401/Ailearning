@@ -1,8 +1,5 @@
 import { Request, Response } from "express";
-import archiver from "archiver";
-import path from "path";
 import { aiChatService } from "../services/ai-chat/aiChat.service";
-import { resolveAudioPath } from "../services/ai-chat/audioStorage.service";
 import { deepgramService } from "../services/ai-chat/deepgram.service";
 import AI_CONVERSATION_MODE from "../enums/aiConversationMode.enum";
 
@@ -172,47 +169,6 @@ export const getEvaluation = async (req: Request, res: Response) => {
     res.json(evaluation);
   } catch (error: any) {
     res.status(404).json({ message: error.message ?? "Evaluation not found" });
-  }
-};
-
-export const downloadAudioArchive = async (req: Request, res: Response) => {
-  try {
-    const userId = getUserId(req);
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const conversationId = Number(req.params.id);
-    const files = await aiChatService.gatherAudioFiles(conversationId, userId);
-
-    if (!files.length) {
-      return res.status(404).json({ message: "No audio recordings for this session" });
-    }
-
-    const zipName = `ai-session-${conversationId}-audio.zip`;
-    res.setHeader("Content-Type", "application/zip");
-    res.setHeader("Content-Disposition", `attachment; filename=\"${zipName}\"`);
-
-    const archive = archiver("zip", {
-      zlib: { level: 9 },
-    });
-
-  archive.on("error", (err: Error) => {
-      res.status(500).end();
-      console.error("Archive error", err);
-    });
-
-    archive.pipe(res);
-
-    files.forEach((file) => {
-      const absolute = resolveAudioPath(file.audioPath);
-      const fileName = `${file.id}-${path.basename(file.audioPath)}`;
-      archive.file(absolute, { name: fileName });
-    });
-
-    archive.finalize();
-  } catch (error: any) {
-    res.status(400).json({ message: error.message ?? "Failed to generate archive" });
   }
 };
 

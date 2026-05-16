@@ -52,6 +52,12 @@ interface LegacyScenarioConfig {
 const FEATURE_AI_CHAT = "ai_chat";
 
 const EVALUATION_TEMPLATE = `You are an English pronunciation and conversation tutor. Evaluate the learner's performance across the following dimensions: Pronunciation, Prosody (intonation & fluency), Grammar, Vocabulary.
+
+Use the objective pronunciation evidence below (from an acoustic GOP model) as the authoritative input for the Pronunciation and Prosody scores. Translate the GOP 0-100 average into the 0-10 scale roughly as: 80+ -> 8-10, 56-79 -> 5-7, below 56 -> 0-4. If no pronunciation evidence is provided, give a neutral 5 for Pronunciation and Prosody and mention this in the summary.
+
+Pronunciation evidence:
+{{pronunciationEvidence}}
+
 Return a JSON object containing numeric scores from 0 to 10 for each dimension using whole or half steps, a short summary (2-3 sentences) and an array of actionable suggestions. Use camelCase field names.
 
 Conversation transcript:
@@ -99,7 +105,7 @@ export async function seedAiPromptsAndGuidance() {
           model: null,
           temperature: 0.7,
           topP: null,
-          maxOutputTokens: 180,
+          maxOutputTokens: 600,
           isActive: true,
         })
       );
@@ -143,12 +149,12 @@ export async function seedAiPromptsAndGuidance() {
         name: "AI Chat — Evaluation",
         description: "Scores the learner's conversation across pronunciation, prosody, grammar and vocabulary.",
         template: EVALUATION_TEMPLATE,
-        variables: JSON.stringify(["transcript"]),
+        variables: JSON.stringify(["transcript", "pronunciationEvidence"]),
         provider: "gemini",
         model: null,
         temperature: 0.3,
         topP: null,
-        maxOutputTokens: 512,
+        maxOutputTokens: 1500,
         isActive: true,
       })
     );

@@ -900,6 +900,503 @@
   }
 }
 
+/* =========================================================
+   Pronunciation report — ELSA-inspired
+   ========================================================= */
+.reportCard {
+  --good: #22c55e;
+  --good-soft: rgba(34, 197, 94, 0.14);
+  --medium: #f59e0b;
+  --medium-soft: rgba(245, 158, 11, 0.14);
+  --weak: #ef4444;
+  --weak-soft: rgba(239, 68, 68, 0.14);
+
+  margin-top: 6px;
+  border-radius: 22px;
+  padding: 22px;
+  background:
+    radial-gradient(420px 220px at 100% 0%, rgba(45, 212, 191, 0.18), transparent 60%),
+    radial-gradient(420px 220px at 0% 100%, rgba(56, 189, 248, 0.12), transparent 60%),
+    linear-gradient(180deg, var(--pp-surface-2), var(--pp-surface));
+  border: 1px solid var(--pp-border);
+  display: grid;
+  gap: 18px;
+  position: relative;
+  overflow: hidden;
+  animation: reportFadeIn 0.45s ease-out;
+}
+
+@keyframes reportFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reportHero {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 22px;
+  align-items: center;
+}
+
+.reportRing {
+  --ring-size: 140px;
+  --ring-stroke: 12px;
+  --ring-color: var(--pp-accent);
+  width: var(--ring-size);
+  height: var(--ring-size);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.reportRing svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.reportRingTrack {
+  fill: none;
+  stroke: var(--pp-surface-strong);
+  stroke-width: var(--ring-stroke);
+}
+
+[data-theme="light"] .reportRingTrack {
+  stroke: #e5e7eb;
+}
+
+.reportRingProgress {
+  fill: none;
+  stroke: var(--ring-color);
+  stroke-width: var(--ring-stroke);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  filter: drop-shadow(0 0 6px rgba(45, 212, 191, 0.35));
+}
+
+.reportRingCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.reportRingValue {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--pp-text-strong);
+  line-height: 1;
+}
+
+.reportRingMax {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--pp-muted);
+  margin-top: 2px;
+}
+
+.reportHeroBody {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.reportHeroLabel {
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pp-muted);
+  font-weight: 700;
+}
+
+.reportHeroTitle {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--pp-text-strong);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.reportHeroChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.reportChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--pp-surface-strong);
+  border: 1px solid var(--pp-border);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--pp-text);
+}
+
+.reportChip strong {
+  color: var(--pp-text-strong);
+  font-weight: 700;
+}
+
+.reportChipDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--pp-accent);
+}
+
+.reportSection {
+  display: grid;
+  gap: 10px;
+}
+
+.reportSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pp-muted);
+  font-weight: 700;
+  margin: 0;
+}
+
+.reportSectionTitle::before {
+  content: "";
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--pp-accent);
+}
+
+/* ----- Per-turn cards ----- */
+.turnList {
+  display: grid;
+  gap: 10px;
+}
+
+.turnCard {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--pp-surface);
+  border: 1px solid var(--pp-border);
+  transition: border-color 0.2s ease, transform 0.15s ease;
+}
+
+.turnCard:hover {
+  border-color: var(--pp-border-strong);
+  transform: translateY(-1px);
+}
+
+.turnIndex {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  background: var(--pp-surface-strong);
+  color: var(--pp-text-strong);
+  border: 1px solid var(--pp-border);
+}
+
+.turnBody {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.turnText {
+  font-size: 0.92rem;
+  color: var(--pp-text-strong);
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.turnBar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--pp-surface-strong);
+  overflow: hidden;
+}
+
+[data-theme="light"] .turnBar {
+  background: #e5e7eb;
+}
+
+.turnBarFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--pp-accent), var(--pp-accent-2));
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.turnBarFill.bandGood { background: linear-gradient(90deg, #34d399, var(--good)); }
+.turnBarFill.bandMedium { background: linear-gradient(90deg, #fbbf24, var(--medium)); }
+.turnBarFill.bandWeak { background: linear-gradient(90deg, #f87171, var(--weak)); }
+
+.turnScore {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  background: var(--pp-accent-soft);
+  color: var(--pp-accent);
+  border: 1px solid var(--pp-accent-border);
+  white-space: nowrap;
+}
+
+.turnScore.bandGood {
+  background: var(--good-soft);
+  color: var(--good);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.turnScore.bandMedium {
+  background: var(--medium-soft);
+  color: var(--medium);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.turnScore.bandWeak {
+  background: var(--weak-soft);
+  color: var(--weak);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.turnScoreUnit {
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.65;
+}
+
+.turnSkipped {
+  font-size: 0.8rem;
+  color: var(--pp-muted);
+  font-style: italic;
+}
+
+/* ----- Word / phone chip grid ----- */
+.chipGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.wordChip,
+.phoneChip {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--pp-surface);
+  border: 1px solid var(--pp-border);
+  position: relative;
+  transition: transform 0.15s ease, border-color 0.2s ease;
+}
+
+.wordChip:hover,
+.phoneChip:hover {
+  transform: translateY(-2px);
+  border-color: var(--pp-border-strong);
+}
+
+.wordChipHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.wordChipWord {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--pp-text-strong);
+  word-break: break-word;
+}
+
+.phoneChipPhone {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--pp-text-strong);
+  letter-spacing: -0.02em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.wordChipIpa {
+  font-size: 0.78rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--pp-muted);
+  word-break: break-all;
+}
+
+.wordChipFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  gap: 8px;
+}
+
+.scoreBadge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  background: var(--medium-soft);
+  color: var(--medium);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.scoreBadge.bandGood {
+  background: var(--good-soft);
+  color: var(--good);
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.scoreBadge.bandWeak {
+  background: var(--weak-soft);
+  color: var(--weak);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.countTag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--pp-muted);
+  letter-spacing: 0.02em;
+}
+
+/* ----- Empty / failure state ----- */
+.reportNotice {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--pp-surface);
+  border: 1px solid var(--pp-border);
+  font-size: 0.88rem;
+  color: var(--pp-text);
+}
+
+.reportNoticeIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pp-accent-soft);
+  color: var(--pp-accent);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ----- Evaluation panel upgrade (Gemini scores) ----- */
+.evalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.evalTile {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--pp-surface);
+  border: 1px solid var(--pp-border);
+  display: grid;
+  gap: 8px;
+}
+
+.evalTileLabel {
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pp-muted);
+  font-weight: 700;
+}
+
+.evalTileValue {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.evalTileScore {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--pp-text-strong);
+  letter-spacing: -0.02em;
+}
+
+.evalTileMax {
+  font-size: 0.85rem;
+  color: var(--pp-muted);
+  font-weight: 600;
+}
+
+.evalTileBar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--pp-surface-strong);
+  overflow: hidden;
+}
+
+[data-theme="light"] .evalTileBar {
+  background: #e5e7eb;
+}
+
+.evalTileFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--pp-accent), var(--pp-accent-2));
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.evalTileFill.bandGood { background: linear-gradient(90deg, #34d399, var(--good, #22c55e)); }
+.evalTileFill.bandMedium { background: linear-gradient(90deg, #fbbf24, var(--medium, #f59e0b)); }
+.evalTileFill.bandWeak { background: linear-gradient(90deg, #f87171, var(--weak, #ef4444)); }
+
+@media (max-width: 720px) {
+  .reportHero {
+    grid-template-columns: 1fr;
+    text-align: center;
+    justify-items: center;
+  }
+  .reportRing {
+    --ring-size: 120px;
+  }
+  .turnCard {
+    grid-template-columns: 32px 1fr;
+  }
+  .turnCard .turnScore {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
 @media (max-width: 720px) {
   .wrapper {
     padding: 24px 16px 40px;

@@ -1,5 +1,4 @@
 import axios from "axios";
-import FormData from "form-data";
 import fs from "fs";
 
 export interface DeepgramTranscriptionResult {
@@ -29,8 +28,7 @@ class DeepgramService {
   private readonly ttsFormat: string;
 
   constructor() {
-    this.apiKey = process.env.DEEPGRAM_API_KEY;
-    this.endpoint = process.env.DEEPGRAM_API_URL ?? "https://api.deepgram.com/v1/listen";
+    this.apiKey = process.env.DEEPGRAM_API_KEY;    this.endpoint = process.env.DEEPGRAM_API_URL ?? "https://api.deepgram.com/v1/listen";
     this.model = process.env.DEEPGRAM_MODEL ?? "nova-2";
     this.ttsEndpoint = process.env.DEEPGRAM_TTS_URL ?? "https://api.deepgram.com/v1/speak";
     this.ttsVoice = process.env.DEEPGRAM_TTS_VOICE ?? "aura-asteria-en";
@@ -44,22 +42,29 @@ class DeepgramService {
   }
 
   async transcribe(filePath: string): Promise<DeepgramTranscriptionResult> {
+    return this.transcribeBuffer(fs.readFileSync(filePath));
+  }
+
+  async transcribeBuffer(
+    buffer: Buffer,
+    options?: { contentType?: string; filename?: string }
+  ): Promise<DeepgramTranscriptionResult> {
     this.ensureConfigured();
 
-    const formData = new FormData();
-    formData.append("file", fs.createReadStream(filePath));
+    const contentType = options?.contentType ?? "audio/wav";
 
     try {
-      const { data } = await axios.post(this.endpoint, formData, {
+      const { data } = await axios.post(this.endpoint, buffer, {
         headers: {
           Authorization: `Token ${this.apiKey}`,
-          ...formData.getHeaders(),
+          "Content-Type": contentType,
         },
         params: {
           model: this.model,
           smart_format: true,
         },
         maxBodyLength: Infinity,
+        maxContentLength: Infinity,
       });
 
       const alternative = data?.results?.channels?.[0]?.alternatives?.[0];

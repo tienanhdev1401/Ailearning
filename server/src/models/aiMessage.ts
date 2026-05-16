@@ -40,6 +40,9 @@ export class AiMessage {
   @Column({ type: "varchar", length: 255, nullable: true })
   audioPath!: string | null;
 
+  @Column({ type: "longtext", nullable: true })
+  pronunciationScore!: string | null;
+
   @CreateDateColumn()
   createdAt!: Date;
 }

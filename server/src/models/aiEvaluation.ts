@@ -42,6 +42,9 @@ export class AiEvaluation {
   @Column({ type: "longtext", nullable: true })
   rawDetails!: string | null;
 
+  @Column({ type: "longtext", nullable: true })
+  pronunciationReport!: string | null;
+
   @CreateDateColumn()
   createdAt!: Date;
 

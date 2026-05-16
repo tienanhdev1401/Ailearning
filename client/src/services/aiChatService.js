@@ -47,13 +47,6 @@ export const AiChatService = {
     return data;
   },
 
-  downloadAudioArchive: async (sessionId) => {
-    const response = await api.get(`/ai-chat/sessions/${sessionId}/audio-archive`, {
-      responseType: "blob",
-    });
-    return response.data;
-  },
-
   synthesizeSpeech: async (text, voice) => {
     const payload = voice ? { text, voice } : { text };
     const { data } = await api.post("/ai-chat/speech", payload);

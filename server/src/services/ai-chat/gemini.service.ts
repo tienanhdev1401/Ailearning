@@ -12,6 +12,12 @@ interface GeminiGenerateOptions {
   topP?: number;
   maxOutputTokens?: number;
   responseMimeType?: string;
+  /**
+   * For Gemini 2.5+ "thinking" models. Set 0 (default) to disable internal
+   * reasoning so the entire output budget is spent on the final answer.
+   * Set to a positive number to allow up to N reasoning tokens.
+   */
+  thinkingBudget?: number;
 }
 
 export class GeminiService {
@@ -47,8 +53,9 @@ export class GeminiService {
       history = [],
       temperature = 0.8,
       topP = 0.9,
-      maxOutputTokens = 640,
+      maxOutputTokens = 750,
       responseMimeType,
+      thinkingBudget = 0,
     } = options;
 
     const generationConfig: Record<string, unknown> = {
@@ -59,6 +66,13 @@ export class GeminiService {
 
     if (responseMimeType) {
       generationConfig["responseMimeType"] = responseMimeType;
+    }
+
+    // Gemini 2.5+ "thinking" models burn output tokens on internal reasoning by
+    // default, which truncates real responses. Pin the budget so the full
+    // maxOutputTokens stays available for the visible answer.
+    if (this.supportsThinkingConfig()) {
+      generationConfig["thinkingConfig"] = { thinkingBudget };
     }
 
     const payload: Record<string, unknown> = {
@@ -74,11 +88,27 @@ export class GeminiService {
 
     try {
       const { data } = await this.http.post(":generateContent", payload);
+      const candidate = data?.candidates?.[0];
       const text =
-        data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text ?? "").join("") ?? "";
+        candidate?.content?.parts
+          ?.map((part: { text?: string }) => part.text ?? "")
+          .join("") ?? "";
 
       if (!text) {
-        throw new Error("Gemini API returned empty response");
+        const finishReason = candidate?.finishReason;
+        const blockReason = data?.promptFeedback?.blockReason;
+        const detail = [finishReason && `finishReason=${finishReason}`, blockReason && `blockReason=${blockReason}`]
+          .filter(Boolean)
+          .join(", ");
+        throw new Error(`Gemini API returned empty response${detail ? ` (${detail})` : ""}`);
+      }
+
+      // Detect truncation explicitly so callers can react/log instead of
+      // silently saving a half-finished JSON.
+      if (candidate?.finishReason && candidate.finishReason !== "STOP") {
+        console.warn(
+          `[Gemini] Response finished with reason=${candidate.finishReason} (model=${this.model}, maxOutputTokens=${maxOutputTokens}). Output may be truncated.`
+        );
       }
 
       return text.trim();
@@ -86,6 +116,11 @@ export class GeminiService {
       const message = error?.response?.data?.error?.message ?? error?.message ?? "Gemini request failed";
       throw new Error(`GeminiService error: ${message}`);
     }
+  }
+
+  /** Gemini 2.5 family supports thinkingConfig; older 1.x/2.0 ignore it. */
+  private supportsThinkingConfig(): boolean {
+    return /gemini-2\.5/i.test(this.model);
   }
 }
 

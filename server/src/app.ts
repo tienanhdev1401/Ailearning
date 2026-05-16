@@ -32,7 +32,6 @@ import { swaggerUi, swaggerSpec } from "./config/swagger";
 import { setupSocket } from './socket';
 import aiChatRouter from "./routes/aiChat.routes";
 import aiPromptRouter from "./routes/aiPrompt.routes";
-import { ensureAiChatFolders } from "./services/ai-chat/audioStorage.service";
 import { seedAiScenarios } from "./seeds/aiScenarios.seed";
 import { seedAiPromptsAndGuidance } from "./seeds/aiPrompts.seed";
 import supportChatRouter from "./routes/supportChat.routes";
@@ -83,9 +82,6 @@ app.use(limiter);
 // Khởi tạo socket
 const server = http.createServer(app);
 setupSocket(server);
-ensureAiChatFolders().catch((error) =>
-  console.error("Failed to prepare AI chat folders", error)
-);
 
 app.use('/api/auth', authRouter);
 app.use("/api/auth", oauthRoutes);
@@ -124,7 +120,87 @@ app.use(errorHandlingMiddleware);
 
 // Kết nối và sync TypeORM
 const PORT = Number(process.env.PORT) || 5000;
-AppDataSource.initialize().then(() => {
+async function ensureAiChatSchema() {
+  try {
+    const dbName = AppDataSource.options.database as string | undefined;
+    if (!dbName) return;
+    const rows: Array<{ count: number }> = await AppDataSource.query(
+      `SELECT COUNT(*) AS count FROM information_schema.columns
+       WHERE table_schema = ? AND table_name = 'ai_messages' AND column_name = 'pronunciationScore'`,
+      [dbName]
+    );
+    const exists = Number(rows?.[0]?.count ?? 0) > 0;
+    if (!exists) {
+      console.log("[Schema] Adding missing column ai_messages.pronunciationScore");
+      await AppDataSource.query(
+        "ALTER TABLE `ai_messages` ADD COLUMN `pronunciationScore` LONGTEXT NULL"
+      );
+    }
+
+    const evalRows: Array<{ count: number }> = await AppDataSource.query(
+      `SELECT COUNT(*) AS count FROM information_schema.columns
+       WHERE table_schema = ? AND table_name = 'ai_evaluations' AND column_name = 'pronunciationReport'`,
+      [dbName]
+    );
+    if (Number(evalRows?.[0]?.count ?? 0) === 0) {
+      console.log("[Schema] Adding missing column ai_evaluations.pronunciationReport");
+      await AppDataSource.query(
+        "ALTER TABLE `ai_evaluations` ADD COLUMN `pronunciationReport` LONGTEXT NULL"
+      );
+    }
+
+    // Bump legacy maxOutputTokens values that are too low for Gemini 2.5
+    // thinking models. Idempotent: only raises if the stored value is below
+    // the new floor.
+    const promptFloors: Array<{ key: string; floor: number }> = [
+      { key: "opening", floor: 600 },
+      { key: "followUp", floor: 700 },
+      { key: "evaluation", floor: 1500 },
+    ];
+    for (const { key, floor } of promptFloors) {
+      const result: any = await AppDataSource.query(
+        "UPDATE `ai_prompts` SET `maxOutputTokens` = ? WHERE `feature` = 'ai_chat' AND `key` = ? AND (`maxOutputTokens` IS NULL OR `maxOutputTokens` < ?)",
+        [floor, key, floor]
+      );
+      const affected = Number(result?.affectedRows ?? 0);
+      if (affected > 0) {
+        console.log(`[Schema] Raised ai_prompts.${key}.maxOutputTokens to ${floor}`);
+      }
+    }
+
+    // Upgrade the legacy evaluation prompt so it consumes the W2V_GOP
+    // pronunciation evidence variable. Detect by missing placeholder; replace
+    // the whole template + variables list in one shot.
+    const evalPromptRows: Array<{ id: number; template: string; variables: string | null }> =
+      await AppDataSource.query(
+        "SELECT id, template, variables FROM `ai_prompts` WHERE `feature` = 'ai_chat' AND `key` = 'evaluation' LIMIT 1"
+      );
+    const existing = evalPromptRows?.[0];
+    if (existing && !/\{\{\s*pronunciationEvidence\s*\}\}/i.test(existing.template ?? "")) {
+      const NEW_EVAL_TEMPLATE = `You are an English pronunciation and conversation tutor. Evaluate the learner's performance across the following dimensions: Pronunciation, Prosody (intonation & fluency), Grammar, Vocabulary.
+
+Use the objective pronunciation evidence below (from an acoustic GOP model) as the authoritative input for the Pronunciation and Prosody scores. Translate the GOP 0-100 average into the 0-10 scale roughly as: 80+ -> 8-10, 56-79 -> 5-7, below 56 -> 0-4. If no pronunciation evidence is provided, give a neutral 5 for Pronunciation and Prosody and mention this in the summary.
+
+Pronunciation evidence:
+{{pronunciationEvidence}}
+
+Return a JSON object containing numeric scores from 0 to 10 for each dimension using whole or half steps, a short summary (2-3 sentences) and an array of actionable suggestions. Use camelCase field names.
+
+Conversation transcript:
+{{transcript}}`;
+      await AppDataSource.query(
+        "UPDATE `ai_prompts` SET `template` = ?, `variables` = ? WHERE id = ?",
+        [NEW_EVAL_TEMPLATE, JSON.stringify(["transcript", "pronunciationEvidence"]), existing.id]
+      );
+      console.log("[Schema] Upgraded ai_prompts.evaluation template to include pronunciationEvidence");
+    }
+  } catch (error) {
+    console.error("[Schema] ensureAiChatSchema failed:", error);
+  }
+}
+
+AppDataSource.initialize().then(async () => {
+  await ensureAiChatSchema();
   seedAiPromptsAndGuidance()
     .then(() =>
       seedAiScenarios().catch((error) =>

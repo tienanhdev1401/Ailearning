@@ -10,12 +10,14 @@ import {
   getSessionHistory,
   completeSession,
   getEvaluation,
-  downloadAudioArchive,
   synthesizeSpeech,
 } from "../controllers/aiChat.controller";
 
 const router = Router();
-const audioUpload = multer({ dest: "uploads/ai-chat/tmp" });
+const audioUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB safety cap per turn
+});
 
 router.get("/scenarios", verifyTokenAndRole(), listScenarios);
 router.post("/scenarios", verifyTokenAndRole(), createScenario);
@@ -31,7 +33,6 @@ router.post(
 );
 router.post("/sessions/:id/complete", verifyTokenAndRole(), completeSession);
 router.get("/sessions/:id/evaluation", verifyTokenAndRole(), getEvaluation);
-router.get("/sessions/:id/audio-archive", verifyTokenAndRole(), downloadAudioArchive);
 router.post("/speech", verifyTokenAndRole(), synthesizeSpeech);
 
 export default router;
