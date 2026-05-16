@@ -315,15 +315,12 @@ const PromptManagementPage = () => {
     }
   };
 
-  // ---------------- Render ----------------
   return (
-    <div className="prompt-management-page bg-body text-body min-vh-100">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <div className="ms-5">
-          <h4 className="mb-1">Quản lý Prompt AI</h4>
-          <small className="text-muted">
-            Quản lý prompt cho mọi tính năng AI sinh nội dung (Gemini, GPT, Claude, ...).
-          </small>
+    <div className="container-fluid p-4 p-lg-5 prompt-management-page">
+      <div className="admin-page-header">
+        <div className="header-info">
+          <h1 className="mb-0">Quản lý Prompt AI</h1>
+          <p>Quản lý prompt cho mọi tính năng AI sinh nội dung (Gemini, GPT, Claude, ...).</p>
         </div>
       </div>
 

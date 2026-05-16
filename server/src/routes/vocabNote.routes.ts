@@ -11,6 +11,7 @@ const router = Router();
 
 router.post("/", verifyTokenAndRole(), validateDto(CreateVocabNoteDto), VocabNoteController.addNote);
 router.get("/me", verifyTokenAndRole(), VocabNoteController.getMyNotes);
+router.get("/search", verifyTokenAndRole(), VocabNoteController.searchMyNotes);
 router.delete("/:id", verifyTokenAndRole(), VocabNoteController.deleteNote);
 
 export default router;

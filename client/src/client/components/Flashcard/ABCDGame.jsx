@@ -2,9 +2,12 @@ import React, { useState, useEffect, useCallback, useContext } from "react";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { CheckCircleFill, XCircleFill, ArrowRight, VolumeUp } from "react-bootstrap-icons";
 import styles from "../../styles/ABCDGame.module.css";
+import { speak as ttsSpeak } from "../../../utils/tts";
+import { shuffleArray } from "../../../utils/array";
 
 const ABCDGame = ({ cards }) => {
   const { isDarkMode } = useContext(ThemeContext);
+  const [shuffledCards] = useState(() => shuffleArray(cards));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [options, setOptions] = useState([]);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -13,28 +16,26 @@ const ABCDGame = ({ cards }) => {
   const [isFinished, setIsFinished] = useState(false);
 
   const initQuestion = useCallback(() => {
-    if (currentIndex >= cards.length) {
+    if (currentIndex >= shuffledCards.length) {
       setIsFinished(true);
       return;
     }
 
-    const currentCard = cards[currentIndex];
-    const otherCards = cards.filter((_, idx) => idx !== currentIndex);
+    const currentCard = shuffledCards[currentIndex];
+    const otherCards = shuffledCards.filter((_, idx) => idx !== currentIndex);
     
-    // Get 3 random wrong definitions
-    const wrongOptions = [...otherCards]
-      .sort(() => 0.5 - Math.random())
+    // Get 3 random wrong definitions using proper shuffle
+    const wrongOptions = shuffleArray([...otherCards])
       .slice(0, 3)
       .map(c => c.definition);
     
     // Combine and shuffle
-    const allOptions = [currentCard.definition, ...wrongOptions]
-      .sort(() => 0.5 - Math.random());
+    const allOptions = shuffleArray([currentCard.definition, ...wrongOptions]);
     
     setOptions(allOptions);
     setSelectedOption(null);
     setFeedback(null);
-  }, [currentIndex, cards]);
+  }, [currentIndex, shuffledCards]);
 
   useEffect(() => {
     initQuestion();
@@ -44,7 +45,7 @@ const ABCDGame = ({ cards }) => {
     if (feedback) return;
     
     setSelectedOption(option);
-    const isCorrect = option === cards[currentIndex].definition;
+    const isCorrect = option === shuffledCards[currentIndex].definition;
     
     if (isCorrect) {
       setFeedback('correct');
@@ -55,7 +56,7 @@ const ABCDGame = ({ cards }) => {
   };
 
   const handleNext = () => {
-    if (currentIndex < cards.length - 1) {
+    if (currentIndex < shuffledCards.length - 1) {
       setCurrentIndex(prev => prev + 1);
     } else {
       setIsFinished(true);
@@ -68,28 +69,24 @@ const ABCDGame = ({ cards }) => {
     setIsFinished(false);
   };
 
-  const speak = (text) => {
-    if (!text) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    window.speechSynthesis.speak(utterance);
+  const speak = (text, lang = "en") => {
+    ttsSpeak(text, lang);
   };
 
   if (isFinished) {
     return (
       <div className={styles.resultScreen}>
         <div className={styles.scoreCircle}>
-          <div className={styles.scoreText}>{Math.round((score / cards.length) * 100)}%</div>
+          <div className={styles.scoreText}>{Math.round((score / shuffledCards.length) * 100)}%</div>
         </div>
         <h2 className={styles.resultTitle}>Hoàn thành!</h2>
-        <p className={styles.resultDesc}>Bạn đã trả lời đúng <strong>{score}</strong> trên tổng số <strong>{cards.length}</strong> câu.</p>
+        <p className={styles.resultDesc}>Bạn đã trả lời đúng <strong>{score}</strong> trên tổng số <strong>{shuffledCards.length}</strong> câu.</p>
         <button className={styles.primaryBtn} onClick={restart}>Thử lại</button>
       </div>
     );
   }
 
-  const progress = ((currentIndex) / cards.length) * 100;
+  const progress = ((currentIndex) / shuffledCards.length) * 100;
 
   return (
     <div className={styles.gameContainer}>
@@ -99,12 +96,12 @@ const ABCDGame = ({ cards }) => {
 
       <div className={styles.questionBox}>
         <div className={styles.questionHeader}>
-          <button className={styles.speakBtn} onClick={() => speak(cards[currentIndex].term)}>
+          <button className={styles.speakBtn} onClick={() => speak(shuffledCards[currentIndex].term)}>
             <VolumeUp size={24} />
           </button>
-          <span className={styles.questionCount}>Câu {currentIndex + 1} / {cards.length}</span>
+          <span className={styles.questionCount}>Câu {currentIndex + 1} / {shuffledCards.length}</span>
         </div>
-        <h2 className={styles.termText}>"{cards[currentIndex].term}" nghĩa là gì?</h2>
+        <h2 className={styles.termText}>"{shuffledCards[currentIndex].term}" nghĩa là gì?</h2>
       </div>
 
       <div className={styles.optionsGrid}>
@@ -140,7 +137,7 @@ const ABCDGame = ({ cards }) => {
       {feedback && (
         <div className={styles.footer}>
           <div className={`${styles.feedbackMsg} ${feedback === 'correct' ? styles.msgCorrect : styles.msgWrong}`}>
-            {feedback === 'correct' ? "Chính xác! Làm tốt lắm." : `Chưa đúng. Đáp án là: ${cards[currentIndex].definition}`}
+            {feedback === 'correct' ? "Chính xác! Làm tốt lắm." : `Chưa đúng. Đáp án là: ${shuffledCards[currentIndex].definition}`}
           </div>
           <button className={styles.nextBtn} onClick={handleNext}>
             {currentIndex < cards.length - 1 ? "Tiếp theo" : "Xem kết quả"} <ArrowRight />

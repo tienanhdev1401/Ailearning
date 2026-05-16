@@ -4,6 +4,7 @@ import api from "../../api/api";
 import styles from "../styles/LoginPage.module.css";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../context/ToastContext";
+import { showErrorAlert } from "../components/AlertErrorModel";
 
 // Icon mắt
 const EYE_OPEN_ICON = "/assets/img/icon/eye-close-up-svgrepo-com.svg";
@@ -44,7 +45,7 @@ const ForgotPasswordPage = () => {
       setShowOtpModal(true);
       clearForm();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Không thể gửi OTP.");
+      showErrorAlert(err);
     } finally {
       setIsSendingOtp(false);
     }
@@ -82,7 +83,7 @@ const ForgotPasswordPage = () => {
       setShowOtpModal(false);
       navigate("/login");
     } catch (err) {
-      toast.error(err.response?.data?.message || "OTP không hợp lệ hoặc đã hết hạn.");
+      showErrorAlert(err);
     } finally {
       setIsVerifyingOtp(false);
     }
@@ -226,8 +227,11 @@ const ForgotPasswordPage = () => {
           <p>
             Nhập 6 chữ số OTP đã được gửi tới email: <b>{email}</b>
           </p>
-          <p>Thời gian còn lại: <b>{otpCountdown}s</b></p>
-          <div className="d-flex justify-content-center gap-2">
+          <div className={styles.countdownBox}>
+            <span>Thời gian còn lại:</span>
+            <span className={styles.countdownValue}>{otpCountdown}s</span>
+          </div>
+          <div className={styles.otpContainer}>
             {otp.map((digit, index) => (
               <input
                 key={index}
@@ -237,23 +241,17 @@ const ForgotPasswordPage = () => {
                 maxLength="1"
                 value={digit}
                 onChange={(e) => handleChangeOtp(e.target.value, index)}
-                className="form-control text-center"
-                style={{
-                  width: "45px",
-                  height: "45px",
-                  fontSize: "20px",
-                  borderRadius: "10px",
-                }}
+                className={styles.otpDigit}
                 disabled={otpCountdown === 0}
               />
             ))}
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowOtpModal(false)}>
+          <Button variant="light" onClick={() => setShowOtpModal(false)} style={{ borderRadius: '12px', padding: '10px 20px' }}>
             Hủy
           </Button>
-          <Button variant="primary" onClick={handleVerifyOtp} disabled={isVerifyingOtp || otpCountdown === 0}>
+          <Button className={styles.primaryButton} onClick={handleVerifyOtp} disabled={isVerifyingOtp || otpCountdown === 0} style={{ padding: '10px 25px', boxShadow: 'none' }}>
             {isVerifyingOtp && (
               <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
             )}

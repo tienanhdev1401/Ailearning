@@ -26,6 +26,10 @@ const TermList = ({ cards }) => {
             <div className={styles.termContent}>
               <div className={styles.termLeft}>
                 <div className={styles.termText}>{card.term}</div>
+                <div className="d-flex flex-wrap gap-2 mt-1">
+                  {card.phonetic && <span className={styles.phonetic}>{card.phonetic}</span>}
+                  {card.partOfSpeech && <span className={styles.partOfSpeech}>{card.partOfSpeech}</span>}
+                </div>
               </div>
               <div className={styles.divider}></div>
               <div className={styles.termRight}>

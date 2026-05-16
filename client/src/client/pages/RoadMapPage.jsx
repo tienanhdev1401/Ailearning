@@ -1308,7 +1308,9 @@ const RoadMapPage = () => {
         onHide={() => setShowVipModal(false)}
         message={`Lộ trình "${roadmap?.levelName}" đã đạt giới hạn học thử. Hãy sở hữu ngay gói mở khóa để tiếp tục hành trình học tập nhé!`}
       />
-      <DailyChallengeWidget roadmapId={id} isFloating={true} />
+      {!miniGameView.activity && !selectedDay && (
+        <DailyChallengeWidget roadmapId={id} isFloating={true} />
+      )}
     </div>
   );
 };

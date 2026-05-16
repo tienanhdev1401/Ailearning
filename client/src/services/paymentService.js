@@ -15,6 +15,18 @@ const paymentService = {
             }
         );
         return response.data;
+    },
+    getMyTransactions: async () => {
+        const token = localStorage.getItem('accessToken');
+        const response = await axios.get(
+            `${API_URL}/payments/my`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+        return response.data;
     }
 };
 

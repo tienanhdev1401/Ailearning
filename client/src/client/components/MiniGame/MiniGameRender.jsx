@@ -10,25 +10,27 @@ import MiniGameFlipCard from "../MiniGame/MiniGameFlipCard";
 import MiniGameWatchVideo from "../MiniGame/MiniGameWatchVideo";
 
 const MiniGameRenderer = ({ game, onNext, onFail }) => {
+  const gameKey = game.id || game.lessonId || JSON.stringify(game.prompt);
+
   switch (game.type) {
     case "match_image_word":
-      return <MiniGameMatchImageWord data={game} onNext={onNext} onFail={onFail} />;
+      return <MiniGameMatchImageWord key={gameKey} data={game} onNext={onNext} onFail={onFail} />;
     case "sentence_builder":
-      return <MiniGameSentenceBuilder data={game} onNext={onNext} onFail={onFail} />;
+      return <MiniGameSentenceBuilder key={gameKey} data={game} onNext={onNext} onFail={onFail} />;
     case "lesson":
-      return <MiniGameLesson data={game} onNext={onNext} />;
+      return <MiniGameLesson key={gameKey} data={game} onNext={onNext} />;
     case "exam":
-      return <MiniGameExam data={game} onNext={onNext} />;
+      return <MiniGameExam key={gameKey} data={game} onNext={onNext} />;
     case "listen_select":
-      return <MiniGameListenSelect data={game} onNext={onNext} onFail={onFail} />;
+      return <MiniGameListenSelect key={gameKey} data={game} onNext={onNext} onFail={onFail} />;
     case "true_false":
-      return <MiniGameTrueFalse data={game} onNext={onNext} onFail={onFail} />;
+      return <MiniGameTrueFalse key={gameKey} data={game} onNext={onNext} onFail={onFail} />;
     case "typing_challenge":
-      return <MiniGameTypingChallenge data={game} onNext={onNext} onFail={onFail} />;
+      return <MiniGameTypingChallenge key={gameKey} data={game} onNext={onNext} onFail={onFail} />;
     case "flip_card":
-      return <MiniGameFlipCard data={game} onNext={onNext} />;
+      return <MiniGameFlipCard key={gameKey} data={game} onNext={onNext} />;
     case "watch_video":
-      return <MiniGameWatchVideo data={game} onNext={onNext} />;
+      return <MiniGameWatchVideo key={gameKey} data={game} onNext={onNext} />;
     default:
       return <div className="text-center mt-5">❌ Chưa hỗ trợ loại minigame: {game.type}</div>;
   }

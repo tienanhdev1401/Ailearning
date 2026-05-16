@@ -1,28 +1,44 @@
 import React, { useState, useEffect, useCallback, useContext } from "react";
 import { ThemeContext } from "../../../context/ThemeContext";
-import { VolumeUp, Star, StarFill, Lightbulb, ChevronLeft, ChevronRight } from "react-bootstrap-icons";
+import { VolumeUp, Star, StarFill, Lightbulb, ChevronLeft, ChevronRight, Shuffle } from "react-bootstrap-icons";
 import styles from "../../styles/FlashcardPlayer.module.css";
+import { speak as ttsSpeak } from "../../../utils/tts";
 import SaveToNotebookModal from "./SaveToNotebookModal";
+import { shuffleArray } from "../../../utils/array";
 
 const FlashcardPlayer = ({ cards }) => {
   const { isDarkMode } = useContext(ThemeContext);
+  const [shuffledCards, setShuffledCards] = useState(cards);
+  const [isShuffled, setIsShuffled] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [starredIndices, setStarredIndices] = useState(new Set());
   const [showSaveModal, setShowSaveModal] = useState(false);
 
-  const currentCard = cards[currentIndex] || {};
+  const currentCard = shuffledCards[currentIndex] || {};
+
+  const handleToggleShuffle = useCallback(() => {
+    if (isShuffled) {
+      setShuffledCards(cards);
+      setIsShuffled(false);
+    } else {
+      setShuffledCards(shuffleArray(cards));
+      setIsShuffled(true);
+    }
+    setCurrentIndex(0);
+    setIsFlipped(false);
+  }, [isShuffled, cards]);
 
   const handleFlip = useCallback(() => {
     setIsFlipped((prev) => !prev);
   }, []);
 
   const handleNext = useCallback(() => {
-    if (currentIndex < cards.length - 1) {
+    if (currentIndex < shuffledCards.length - 1) {
       setIsFlipped(false);
       setTimeout(() => setCurrentIndex((prev) => prev + 1), 150);
     }
-  }, [currentIndex, cards.length]);
+  }, [currentIndex, shuffledCards.length]);
 
   const handlePrev = useCallback(() => {
     if (currentIndex > 0) {
@@ -42,13 +58,9 @@ const FlashcardPlayer = ({ cards }) => {
     });
   };
 
-  const speak = (e, text) => {
+  const speak = (e, text, lang = "en") => {
     e.stopPropagation();
-    if (!text) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    window.speechSynthesis.speak(utterance);
+    ttsSpeak(text, lang);
   };
 
   // Keyboard navigation
@@ -93,6 +105,14 @@ const FlashcardPlayer = ({ cards }) => {
             </div>
             <div className={styles.cardBody}>
               <div className={styles.termText}>{currentCard.term}</div>
+              <div className="d-flex flex-wrap justify-content-center gap-2 mt-3">
+                {currentCard.phonetic && (
+                  <span className={styles.phonetic}>{currentCard.phonetic}</span>
+                )}
+                {currentCard.partOfSpeech && (
+                  <span className={styles.partOfSpeech}>{currentCard.partOfSpeech}</span>
+                )}
+              </div>
             </div>
             <div className={styles.cardFooter}>
               <span>Chạm hoặc nhấn phím Cách để lật</span>
@@ -103,7 +123,7 @@ const FlashcardPlayer = ({ cards }) => {
           <div className={styles.cardBack}>
             <div className={styles.cardHeader}>
               <div className={styles.topActions} style={{ marginLeft: "auto" }}>
-                <button className={styles.iconBtn} onClick={(e) => speak(e, currentCard.definition)}>
+                <button className={styles.iconBtn} onClick={(e) => speak(e, currentCard.definition, "vi")}>
                   <VolumeUp size={20} />
                 </button>
                 <button className={styles.iconBtn} onClick={toggleStar}>
@@ -132,12 +152,12 @@ const FlashcardPlayer = ({ cards }) => {
             <ChevronLeft size={24} />
           </button>
           <div className={styles.counter}>
-            {currentIndex + 1} / {cards.length}
+            {currentIndex + 1} / {shuffledCards.length}
           </div>
           <button 
             className={styles.navBtn} 
             onClick={handleNext} 
-            disabled={currentIndex === cards.length - 1}
+            disabled={currentIndex === shuffledCards.length - 1}
           >
             <ChevronRight size={24} />
           </button>
@@ -145,8 +165,19 @@ const FlashcardPlayer = ({ cards }) => {
         
         <div className={styles.progressSection}>
           <div className={styles.progressBar}>
-            <div className={styles.progressFill} style={{ width: `${progress}%` }}></div>
+            <div className={styles.progressFill} style={{ width: `${((currentIndex + 1) / shuffledCards.length) * 100}%` }}></div>
           </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '8px' }}>
+          <button
+            className={styles.navBtn}
+            onClick={handleToggleShuffle}
+            title={isShuffled ? 'Hủy xáo trộn' : 'Xáo trộn thẻ'}
+            style={{ gap: '6px', fontSize: '13px', padding: '6px 14px', opacity: isShuffled ? 1 : 0.6 }}
+          >
+            <Shuffle size={16} /> {isShuffled ? 'Bỏ xáo trộn' : 'Xáo trộn'}
+          </button>
         </div>
       </div>
 

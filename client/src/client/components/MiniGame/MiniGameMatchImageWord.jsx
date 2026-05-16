@@ -1,12 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import styles from "../../styles/MiniGameMatchImageWord.module.css";
+import { shuffleArray } from "../../../utils/array";
 
 const MiniGameMatchImageWord = ({ data, onNext, onFail }) => {
   const imageList = Array.isArray(data?.resources?.images) ? data.resources.images : [];
+  
+  const [shuffledImages, setShuffledImages] = useState([]);
+  const [shuffledWords, setShuffledWords] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedWord, setSelectedWord] = useState("");
   const [completedPairs, setCompletedPairs] = useState([]);
   const [feedback, setFeedback] = useState(null);
+
+  // Initialize and reshuffle when data changes
+  React.useEffect(() => {
+    setShuffledImages(shuffleArray(imageList));
+    setShuffledWords(shuffleArray(imageList.map(img => img.correctWord)));
+    setCompletedPairs([]);
+    setSelectedImage(null);
+    setSelectedWord("");
+    setFeedback(null);
+  }, [data]);
 
   const handleSelectImage = (img) => {
     if (completedPairs.includes(img.id)) return;
@@ -66,7 +80,7 @@ const MiniGameMatchImageWord = ({ data, onNext, onFail }) => {
       )}
 
       <div className={styles.imagesGrid}>
-        {imageList.map((img) => (
+        {shuffledImages.map((img) => (
           <div
             key={img.id}
             className={`${styles.imageCard} ${
@@ -90,18 +104,22 @@ const MiniGameMatchImageWord = ({ data, onNext, onFail }) => {
 
       <div className={styles.wordsContainer}>
         <div className={styles.wordsGrid}>
-          {imageList.map((img) => (
-            <button
-              key={img.correctWord}
-              className={`${styles.wordButton} ${
-                completedPairs.includes(img.id) ? styles.wordCompleted : ""
-              } ${selectedWord === img.correctWord ? styles.wordSelected : ""}`}
-              onClick={() => handleSelectWord(img.correctWord)}
-              disabled={completedPairs.includes(img.id)}
-            >
-              {img.correctWord}
-            </button>
-          ))}
+          {shuffledWords.map((word) => {
+            const originalImg = imageList.find(i => i.correctWord === word);
+            const isCompleted = originalImg && completedPairs.includes(originalImg.id);
+            return (
+              <button
+                key={word}
+                className={`${styles.wordButton} ${
+                  isCompleted ? styles.wordCompleted : ""
+                } ${selectedWord === word ? styles.wordSelected : ""}`}
+                onClick={() => handleSelectWord(word)}
+                disabled={isCompleted}
+              >
+                {word}
+              </button>
+            );
+          })}
         </div>
       </div>
 

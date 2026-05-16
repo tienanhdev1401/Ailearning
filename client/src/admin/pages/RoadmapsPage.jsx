@@ -242,14 +242,18 @@ const RoadmapsPage = () => {
     }
   };
 
-  // RENDER UI
   return (
-    <div className="bg-body text-body min-vh-100">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="ms-5">Quản lý Roadmaps</h4>
-        <button className="btn btn-primary me-2" onClick={openAdd}>
-          Tạo roadmap
-        </button>
+    <div className="container-fluid p-4 p-lg-5">
+      <div className="admin-page-header">
+        <div className="header-info">
+          <h1 className="mb-0">Quản lý Roadmaps</h1>
+          <p>Thiết kế và quản lý lộ trình học tập tối ưu.</p>
+        </div>
+        <div className="header-actions">
+          <button className="btn-premium" onClick={openAdd}>
+            <i className="bi bi-plus-lg" />Tạo roadmap
+          </button>
+        </div>
       </div>
 
       <div className="card mb-3 bg-body border-0 shadow-sm">

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import dashboardService from '../services/dashboardService';
+import { PACKAGE_TYPE } from '../../enums/packageType.enum';
 
 const Avatar = ({ user, size = '40px', className = '' }) => {
   const colors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
@@ -35,6 +36,7 @@ const FinancePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('ALL');
 
   useEffect(() => {
     loadAllData();
@@ -80,15 +82,19 @@ const FinancePage = () => {
     }
   };
 
-  const filteredTransactions = transactions.filter(t =>
-    t.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    t.id?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredTransactions = transactions.filter(t => {
+    const matchesSearch = t.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      t.id?.toLowerCase().includes(search.toLowerCase());
+    const matchesType = typeFilter === 'ALL' || t.package?.type === typeFilter;
+    return matchesSearch && matchesType;
+  });
 
-  const filteredSubscriptions = subscriptions.filter(s =>
-    s.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    s.package?.name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredSubscriptions = subscriptions.filter(s => {
+    const matchesSearch = s.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      s.package?.name?.toLowerCase().includes(search.toLowerCase());
+    const matchesType = typeFilter === 'ALL' || s.package?.type === typeFilter;
+    return matchesSearch && matchesType;
+  });
 
   const totalRevenue = transactions
     .filter(t => t.status === 'SUCCESS')
@@ -98,15 +104,16 @@ const FinancePage = () => {
 
   return (
     <div className="container-fluid p-4 p-lg-5 min-vh-100">
-      <div className="d-flex justify-content-between align-items-center mb-5">
-        <div>
-          <h1 className="h3 mb-1 fw-bold text-body">Finance Hub</h1>
-          <p className="text-muted mb-0">Monitor your business health and customer lifecycle.</p>
+      <div className="admin-page-header">
+        <div className="header-info">
+          <h1 className="mb-0">Finance Hub</h1>
+          <p>Monitor your business health and customer lifecycle.</p>
         </div>
-        <button className="btn btn-outline-primary shadow-sm px-4 py-2" onClick={loadAllData}>
-          <i className="bi bi-arrow-clockwise me-2" />
-          <span className="fw-medium">Sync Data</span>
-        </button>
+        <div className="header-actions">
+          <button className="btn btn-outline-primary" onClick={loadAllData}>
+            <i className="bi bi-arrow-clockwise me-2" />Sync Data
+          </button>
+        </div>
       </div>
 
       {/* Quick Stats Cards */}
@@ -192,7 +199,7 @@ const FinancePage = () => {
         </div>
         <div className="card-body p-4">
           {activeTab !== 'top-customers' && (
-            <div className="mb-4 d-flex justify-content-between align-items-center">
+            <div className="d-flex gap-3 w-100 flex-wrap">
               <div className="input-group" style={{ maxWidth: '350px' }}>
                 <span className="input-group-text bg-body-tertiary border-0">
                   <i className="bi bi-search text-muted" />
@@ -204,6 +211,20 @@ const FinancePage = () => {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
+              </div>
+
+              <div style={{ minWidth: '200px' }}>
+                <select
+                  className="form-select bg-body-tertiary border-0 shadow-none text-body"
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                >
+                  <option value="ALL">All Package Types</option>
+                  <option value={PACKAGE_TYPE.ROADMAP_UNLOCK}>Roadmap Unlocks</option>
+                  <option value={PACKAGE_TYPE.AI_CONVERSATION}>AI Conversations</option>
+                  <option value={PACKAGE_TYPE.VIDEO_LESSON}>Video Lessons</option>
+                  <option value={PACKAGE_TYPE.GRAMMAR_CHECKER}>Grammar Checker</option>
+                </select>
               </div>
             </div>
           )}

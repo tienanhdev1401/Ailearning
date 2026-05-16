@@ -1,4 +1,4 @@
-import { IsArray, ValidateNested, IsString, IsNotEmpty } from "class-validator";
+import { IsArray, ValidateNested, IsString, IsNotEmpty, IsOptional } from "class-validator";
 import { Type } from "class-transformer";
 
 export class FlipCardItem {
@@ -9,6 +9,14 @@ export class FlipCardItem {
   @IsString({ message: "Định nghĩa phải là chuỗi" })
   @IsNotEmpty({ message: "Định nghĩa không được để trống" })
   definition!: string;
+
+  @IsOptional()
+  @IsString({ message: "Phiên âm phải là chuỗi" })
+  phonetic?: string;
+
+  @IsOptional()
+  @IsString({ message: "Loại từ phải là chuỗi" })
+  partOfSpeech?: string;
 }
 
 export class FlipCardResources {

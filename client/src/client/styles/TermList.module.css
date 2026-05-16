@@ -87,6 +87,27 @@
   color: #f8fafc;
 }
 
+.phonetic {
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #64748b;
+}
+
+:global([data-theme="dark"]) .phonetic {
+  color: #94a3b8;
+}
+
+.partOfSpeech {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #3b82f6;
+  padding: 1px 6px;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 4px;
+  background: rgba(59, 130, 246, 0.05);
+}
+
 .definitionText {
   font-size: 16px;
   color: #475569;

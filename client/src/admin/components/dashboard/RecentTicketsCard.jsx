@@ -1,10 +1,15 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 
 const RecentTicketsCard = ({ tickets = [] }) => (
   <div className="card h-100">
     <div className="card-header d-flex justify-content-between align-items-center">
-      <h5 className="card-title mb-0">Support Tickets</h5>
-      <span className="badge bg-warning-subtle text-warning-emphasis">Recent Requests</span>
+      <div className="d-flex align-items-center gap-2">
+        <h5 className="card-title mb-0">Support Tickets</h5>
+        <span className="badge bg-warning-subtle text-warning-emphasis">Recent Requests</span>
+      </div>
+      <Link to="/admin/messages" className="btn btn-sm btn-link text-decoration-none p-0 text-primary fw-semibold">
+        View All <i className="bi bi-arrow-right-short fs-5 align-middle"></i>
+      </Link>
     </div>
     <div className="card-body p-0">
       <div className="table-responsive">

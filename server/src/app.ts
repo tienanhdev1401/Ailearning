@@ -45,6 +45,7 @@ import subscriptionRouter from './routes/subscription.routes'
 import vocabNoteRouter from './routes/vocabNote.routes'
 import notebookRouter from './routes/notebook.routes'
 import dailyChallengeRouter from './routes/dailyChallenge.routes'
+import ttsRouter from './routes/tts.routes';
 
 import { startAllSchedulers } from './schedulers/index';
 
@@ -109,6 +110,7 @@ app.use('/api/subscriptions', subscriptionRouter);
 app.use('/api/vocab-notes', vocabNoteRouter);
 app.use('/api/notebooks', notebookRouter);
 app.use('/api/daily-challenge', dailyChallengeRouter);
+app.use('/api/tts', ttsRouter);
 
 
 

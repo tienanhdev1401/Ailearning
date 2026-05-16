@@ -8,12 +8,14 @@ import {
   FiPlus,
   FiArrowLeft,
   FiZap,
+  FiVolume2,
 } from "react-icons/fi";
 import { useParams, useNavigate } from "react-router-dom";
 import notebookService from "../../services/notebookService";
 import vocabNoteService from "../../services/vocabNoteService";
 import { ThemeContext } from "../../context/ThemeContext";
 import { useToast } from "../../context/ToastContext";
+import { speak } from "../../utils/tts";
 import styles from "../styles/NotebookDetail.module.css";
 
 const VocabNotebookPage = () => {
@@ -26,7 +28,7 @@ const VocabNotebookPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newCard, setNewCard] = useState({ term: "", definition: "" });
+  const [newCard, setNewCard] = useState({ term: "", definition: "", phonetic: "", partOfSpeech: "" });
   const [submitting, setSubmitting] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(false);
 
@@ -48,13 +50,32 @@ const VocabNotebookPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  // Auto-lookup when user stops typing
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (newCard.term.trim() && !newCard.definition.trim()) {
+        handleLookup();
+      }
+    }, 1200);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [newCard.term]);
+
   const handleAddCard = async (e) => {
     e.preventDefault();
     if (!newCard.term.trim() || !newCard.definition.trim()) return;
     try {
       setSubmitting(true);
-      await notebookService.addCard(id, newCard.term, newCard.definition);
-      setNewCard({ term: "", definition: "" });
+      // Update this call to include new fields
+      await notebookService.addCard(
+        id, 
+        newCard.term, 
+        newCard.definition, 
+        "Cá nhân", // source
+        newCard.phonetic, 
+        newCard.partOfSpeech
+      );
+      setNewCard({ term: "", definition: "", phonetic: "", partOfSpeech: "" });
       setShowAddModal(false);
       toast.success("Đã thêm từ mới thành công!");
       fetchNotebook();
@@ -71,24 +92,48 @@ const VocabNotebookPage = () => {
     if (!newCard.term.trim()) return;
     try {
       setLookupLoading(true);
-      const res = await fetch(
-        `https://api.dictionaryapi.dev/api/v2/entries/en/${newCard.term.trim()}`
-      );
-      if (!res.ok) throw new Error("Not found");
-      const data = await res.json();
+      const word = newCard.term.trim();
 
-      const entry = data[0]?.meanings[0]?.definitions[0];
-      const definition = entry?.definition;
-      const example = entry?.example;
+      // 1. Fetch Dictionary Info (Phonetic & Part of Speech)
+      const dictPromise = fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+      
+      // 2. Fetch Translation (Google Translate API)
+      const transPromise = fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q=${encodeURIComponent(word)}`);
 
-      if (definition) {
-        let finalDef = definition;
-        if (example) finalDef += `\n(Ví dụ: ${example})`;
-        setNewCard((prev) => ({ ...prev, definition: finalDef }));
+      const [dictRes, transRes] = await Promise.all([dictPromise, transPromise]);
+      
+      let phonetic = "";
+      let partOfSpeech = "";
+      let translation = "";
+
+      if (dictRes.ok) {
+        const dictData = await dictRes.json();
+        if (Array.isArray(dictData) && dictData.length > 0) {
+          const entry = dictData[0];
+          phonetic = entry.phonetic || (entry.phonetics && entry.phonetics.find(p => p.text)?.text) || "";
+          partOfSpeech = entry.meanings?.[0]?.partOfSpeech || "";
+        }
       }
+
+      if (transRes.ok) {
+        const transData = await transRes.json();
+        if (Array.isArray(transData) && transData[0] && transData[0][0]) {
+          translation = transData[0][0][0];
+        }
+      }
+
+      setNewCard(prev => ({
+        ...prev,
+        phonetic: phonetic || prev.phonetic,
+        partOfSpeech: partOfSpeech || prev.partOfSpeech,
+        definition: translation || prev.definition
+      }));
+
+      if (translation) toast.success("Đã hoàn thành tra cứu!");
+
     } catch (error) {
-      console.error("Dictionary lookup failed:", error);
-      toast.warning("Không tìm thấy định nghĩa cho từ này.");
+      console.error("Lookup failed:", error);
+      toast.error("Không thể lấy dữ liệu tra cứu.");
     } finally {
       setLookupLoading(false);
     }
@@ -199,8 +244,30 @@ const VocabNotebookPage = () => {
                 <Card.Body>
                   <div className={styles.cardMain}>
                     <div className={styles.termContent}>
-                      <h3 className={styles.termTitle}>{note.term}</h3>
-                      <p className={styles.termDef}>{note.definition}</p>
+                      <div className="d-flex align-items-center gap-2 mb-1">
+                        <h3 className={styles.termTitle} style={{ margin: 0 }}>{note.term}</h3>
+                        <button 
+                          className="btn btn-link p-0 text-primary" 
+                          onClick={() => speak(note.term, "en")}
+                        >
+                          <FiVolume2 size={18} />
+                        </button>
+                      </div>
+                      
+                      <div className="d-flex flex-wrap gap-2 mb-2">
+                        {note.phonetic && <span className={styles.phoneticTag}>{note.phonetic}</span>}
+                        {note.partOfSpeech && <span className={styles.typeTag}>{note.partOfSpeech}</span>}
+                      </div>
+
+                      <div className="d-flex align-items-center gap-2">
+                        <p className={styles.termDef} style={{ margin: 0 }}>{note.definition}</p>
+                        <button 
+                          className="btn btn-link p-0 text-secondary" 
+                          onClick={() => speak(note.definition, "vi")}
+                        >
+                          <FiVolume2 size={16} />
+                        </button>
+                      </div>
                     </div>
                     <Button
                       className={styles.deleteBtn}
@@ -237,6 +304,7 @@ const VocabNotebookPage = () => {
                   placeholder="Ví dụ: Hello"
                   value={newCard.term}
                   onChange={(e) => setNewCard({ ...newCard, term: e.target.value })}
+                  onBlur={() => { if(newCard.term) handleLookup(); }}
                   required
                   autoFocus
                 />
@@ -250,11 +318,33 @@ const VocabNotebookPage = () => {
                 </Button>
               </InputGroup>
             </Form.Group>
+
+            <div className="row g-2 mb-3">
+              <Form.Group className="col-md-7">
+                <Form.Label>Phiên âm</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="/.../"
+                  value={newCard.phonetic}
+                  onChange={(e) => setNewCard({ ...newCard, phonetic: e.target.value })}
+                />
+              </Form.Group>
+              <Form.Group className="col-md-5">
+                <Form.Label>Loại từ</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="n, v, adj..."
+                  value={newCard.partOfSpeech}
+                  onChange={(e) => setNewCard({ ...newCard, partOfSpeech: e.target.value })}
+                />
+              </Form.Group>
+            </div>
+
             <Form.Group className="mb-3">
               <Form.Label>Định nghĩa</Form.Label>
               <Form.Control
                 as="textarea"
-                rows={4}
+                rows={3}
                 placeholder="Ví dụ: Xin chào"
                 value={newCard.definition}
                 onChange={(e) => setNewCard({ ...newCard, definition: e.target.value })}

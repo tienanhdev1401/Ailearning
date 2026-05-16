@@ -7,6 +7,8 @@ interface FlipCardResources {
   cards: {
     term: string;
     definition: string;
+    phonetic?: string;
+    partOfSpeech?: string;
   }[];
 }
 

@@ -1,14 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import styles from "../../styles/MiniGameSentenceBuilder.module.css";
-
-const shuffleArray = (arr) => {
-  const cloned = [...arr];
-  for (let i = cloned.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [cloned[i], cloned[j]] = [cloned[j], cloned[i]];
-  }
-  return cloned;
-};
+import { shuffleArray } from "../../../utils/array";
 
 const MiniGameSentenceBuilder = ({ data, onNext, onFail }) => {
   const tokens = useMemo(() => {
@@ -26,9 +18,16 @@ const MiniGameSentenceBuilder = ({ data, onNext, onFail }) => {
   }, [data]);
 
   const correctSentence = tokens.map((t) => t.text).join(" ");
-  const [pool, setPool] = useState(() => shuffleArray(tokens));
+  const [pool, setPool] = useState([]);
   const [slots, setSlots] = useState([]);
   const [isCorrect, setIsCorrect] = useState(null);
+
+  // Reshuffle when data changes
+  useEffect(() => {
+    setPool(shuffleArray(tokens));
+    setSlots([]);
+    setIsCorrect(null);
+  }, [data, tokens]);
 
   const handleAddToken = (token) => {
     if (slots.some((s) => s.id === token.id)) return;

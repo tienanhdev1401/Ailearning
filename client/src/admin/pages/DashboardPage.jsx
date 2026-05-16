@@ -30,10 +30,10 @@ const DashboardPage = () => {
 
   return (
     <div className="container-fluid p-4 p-lg-5">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1 className="h3 mb-0">Admin Dashboard</h1>
-          <p className="text-muted mb-0">Platform overview and real-time analytics.</p>
+      <div className="admin-page-header">
+        <div className="header-info">
+          <h1 className="mb-0">Admin Dashboard</h1>
+          <p>Platform overview and real-time analytics.</p>
         </div>
       </div>
 

@@ -68,6 +68,16 @@ class MiniGameController {
       next(error);
     }
   }
+
+  static async searchFlashcards(req: Request, res: Response, next: NextFunction) {
+    try {
+      const query = req.query.q as string;
+      const results = await MiniGameService.searchInFlashcards(query || "");
+      res.status(HttpStatusCode.Ok).json(results);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default MiniGameController;

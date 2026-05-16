@@ -8,11 +8,13 @@ const vocabNoteService = {
   },
 
   // Thêm một từ vựng vào sổ tay
-  addNote: async (term, definition, source) => {
+  addNote: async (term, definition, source, phonetic, partOfSpeech) => {
     const response = await api.post("/vocab-notes", {
       term,
       definition,
       source,
+      phonetic,
+      partOfSpeech
     });
     return response.data;
   },

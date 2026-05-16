@@ -53,6 +53,20 @@ class VocabNoteController {
       next(error);
     }
   }
+
+  static async searchMyNotes(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = (req as any).user?.id;
+      const query = req.query.q as string;
+      if (!userId) {
+        throw new ApiError(HttpStatusCode.Unauthorized, "Bạn cần đăng nhập.");
+      }
+      const results = await VocabNoteService.searchMyNotes(userId, query || "");
+      res.status(HttpStatusCode.Ok).json(results);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default VocabNoteController;

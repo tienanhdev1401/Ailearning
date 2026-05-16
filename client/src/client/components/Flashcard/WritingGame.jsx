@@ -2,9 +2,12 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { CheckCircleFill, XCircleFill, ArrowRight, VolumeUp, Lightbulb } from "react-bootstrap-icons";
 import styles from "../../styles/WritingGame.module.css";
+import { speak as ttsSpeak } from "../../../utils/tts";
+import { shuffleArray } from "../../../utils/array";
 
 const WritingGame = ({ cards }) => {
   const { isDarkMode } = useContext(ThemeContext);
+  const [shuffledCards, setShuffledCards] = useState(() => shuffleArray(cards));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userInput, setUserInput] = useState("");
   const [feedback, setFeedback] = useState(null); // 'correct' | 'wrong' | null
@@ -24,7 +27,7 @@ const WritingGame = ({ cards }) => {
     e.preventDefault();
     if (feedback || !userInput.trim()) return;
 
-    const correctTerm = cards[currentIndex].term.trim().toLowerCase();
+    const correctTerm = shuffledCards[currentIndex].term.trim().toLowerCase();
     const userTerm = userInput.trim().toLowerCase();
 
     if (userTerm === correctTerm) {
@@ -42,7 +45,7 @@ const WritingGame = ({ cards }) => {
   };
 
   const handleNext = () => {
-    if (currentIndex < cards.length - 1) {
+    if (currentIndex < shuffledCards.length - 1) {
       setCurrentIndex((prev) => prev + 1);
       setUserInput("");
       setFeedback(null);
@@ -53,6 +56,7 @@ const WritingGame = ({ cards }) => {
   };
 
   const restart = () => {
+    setShuffledCards(shuffleArray(cards)); // Reshuffle on restart
     setCurrentIndex(0);
     setUserInput("");
     setFeedback(null);
@@ -61,16 +65,12 @@ const WritingGame = ({ cards }) => {
     setShowHint(false);
   };
 
-  const speak = (text) => {
-    if (!text) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    window.speechSynthesis.speak(utterance);
+  const speak = (text, lang = "en") => {
+    ttsSpeak(text, lang);
   };
 
   const getHint = () => {
-    const term = cards[currentIndex].term;
+    const term = shuffledCards[currentIndex].term;
     if (term.length <= 2) return term;
     const middle = "_ ".repeat(term.length - 2).trim();
     return `${term.charAt(0)} ${middle} ${term.charAt(term.length - 1)}`;
@@ -80,11 +80,11 @@ const WritingGame = ({ cards }) => {
     return (
       <div className={styles.resultScreen}>
         <div className={styles.scoreCircle}>
-          <div className={styles.scoreText}>{Math.round((score / cards.length) * 100)}%</div>
+          <div className={styles.scoreText}>{Math.round((score / shuffledCards.length) * 100)}%</div>
         </div>
         <h2 className={styles.resultTitle}>Tuyệt vời!</h2>
         <p className={styles.resultDesc}>
-          Bạn đã hoàn thành chế độ luyện viết với <strong>{score}</strong>/{cards.length} câu chính xác.
+          Bạn đã hoàn thành chế độ luyện viết với <strong>{score}</strong>/{shuffledCards.length} câu chính xác.
         </p>
         <button className={styles.primaryBtn} onClick={restart}>Học lại</button>
       </div>
@@ -101,7 +101,7 @@ const WritingGame = ({ cards }) => {
 
       <div className={styles.questionBox}>
         <div className={styles.questionHeader}>
-          <span className={styles.questionCount}>Câu {currentIndex + 1} / {cards.length}</span>
+          <span className={styles.questionCount}>Câu {currentIndex + 1} / {shuffledCards.length}</span>
           <button
             className={styles.hintBtn}
             onClick={() => setShowHint(true)}
@@ -113,7 +113,7 @@ const WritingGame = ({ cards }) => {
         </div>
 
         <p className={styles.definitionLabel}>Định nghĩa:</p>
-        <h2 className={styles.definitionText}>{cards[currentIndex].definition}</h2>
+        <h2 className={styles.definitionText}>{shuffledCards[currentIndex].definition}</h2>
 
         {showHint && (
           <div className={styles.hintBox}>
@@ -158,8 +158,8 @@ const WritingGame = ({ cards }) => {
         <div className={styles.feedbackWrongArea}>
           <p className={styles.wrongLabel}>Đáp án đúng là:</p>
           <div className={styles.correctTermDisplay}>
-            <span className={styles.correctTermValue}>{cards[currentIndex].term}</span>
-            <button className={styles.speakBtnSmall} onClick={() => speak(cards[currentIndex].term)}>
+            <span className={styles.correctTermValue}>{shuffledCards[currentIndex].term}</span>
+            <button className={styles.speakBtnSmall} onClick={() => speak(shuffledCards[currentIndex].term)}>
               <VolumeUp size={18} />
             </button>
           </div>

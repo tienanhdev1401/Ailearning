@@ -48,6 +48,13 @@ const Header = () => {
     };
 
     useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const q = params.get("q");
+        if (q) setSearchValue(q);
+        else if (location.pathname !== "/search") setSearchValue("");
+    }, [location]);
+
+    useEffect(() => {
         const stored = localStorage.getItem("supportChatEnabled");
         setChatEnabled(stored !== "false");
     }, []);

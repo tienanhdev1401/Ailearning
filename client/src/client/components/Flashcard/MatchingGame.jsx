@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useContext } from "react";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { PlayFill, ArrowCounterclockwise } from "react-bootstrap-icons";
 import styles from "../../styles/MatchingGame.module.css";
+import { shuffleArray } from "../../../utils/array";
 
 const MatchingGame = ({ cards }) => {
   const { isDarkMode } = useContext(ThemeContext);
@@ -16,13 +17,13 @@ const MatchingGame = ({ cards }) => {
   const [gameStarted, setGameStarted] = useState(false);
 
   const initGame = useCallback(() => {
-    // Select up to 6 random cards for the game
-    const selection = [...cards].sort(() => 0.5 - Math.random()).slice(0, 6);
+    // Select up to 6 random cards using proper Fisher-Yates shuffle
+    const selection = shuffleArray([...cards]).slice(0, 6);
     
     const terms = selection.map(c => ({ id: c.term, content: c.term, type: 'term', matchId: c.definition }));
     const definitions = selection.map(c => ({ id: c.definition, content: c.definition, type: 'definition', matchId: c.term }));
     
-    const all = [...terms, ...definitions].sort(() => 0.5 - Math.random());
+    const all = shuffleArray([...terms, ...definitions]);
     
     setGameCards(all);
     setMatchedIds(new Set());

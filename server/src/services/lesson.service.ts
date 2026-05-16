@@ -131,7 +131,23 @@ class LessonService {
     }
 
     if (search) {
-      qb = qb.andWhere("lesson.title LIKE :search", { search: `%${search}%` });
+      const keywords = search.split(/\s+/).filter(k => k.length > 0);
+      if (keywords.length > 0) {
+        qb = qb.leftJoin("lesson.subtitles", "subtitle");
+        
+        let condition = "(";
+        const params: any = {};
+        
+        keywords.forEach((word, index) => {
+          const paramName = `word${index}`;
+          condition += `(lesson.title LIKE :${paramName} OR subtitle.full_text LIKE :${paramName})`;
+          params[paramName] = `%${word}%`;
+          if (index < keywords.length - 1) condition += " AND ";
+        });
+        
+        condition += ")";
+        qb = qb.andWhere(condition, params).groupBy("lesson.id");
+      }
     }
 
     if (level) {
