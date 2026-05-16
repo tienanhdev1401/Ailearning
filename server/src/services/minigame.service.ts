@@ -117,4 +117,33 @@ export class MiniGameService {
     const miniGame = await this.getById(id);
     await minigameRepository.remove(miniGame);
   }
+
+  static async searchInFlashcards(query: string): Promise<MiniGame[]> {
+    // Filter out very short words to avoid matching JSON keys/common noise
+    const keywords = query.split(/\s+/).filter(k => k.length >= 2);
+    if (keywords.length === 0) return [];
+
+    let qb = minigameRepository.createQueryBuilder("minigame");
+
+    let condition = "(";
+    const params: any = {};
+
+    keywords.forEach((word, index) => {
+      const paramName = `word${index}`;
+      const searchWord = `%${word.toLowerCase()}%`;
+      // We still use CAST but we can try to make it more specific by searching for ": " + word or similar if it's JSON
+      // But for simplicity, we'll just search for the word in prompt or the stringified JSON
+      condition += `(LOWER(minigame.prompt) LIKE :${paramName} OR LOWER(CAST(minigame.resources AS CHAR)) LIKE :${paramName})`;
+      params[paramName] = searchWord;
+      if (index < keywords.length - 1) condition += " AND ";
+    });
+
+    condition += ") AND minigame.type = :type";
+    params['type'] = MiniGameType.FLIP_CARD;
+
+    return await qb.leftJoinAndSelect("minigame.activity", "activity")
+      .where(condition, params)
+      .orderBy("minigame.createdAt", "DESC")
+      .getMany();
+  }
 }

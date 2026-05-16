@@ -53,6 +53,7 @@ import NotebookListPage from "./client/pages/NotebookListPage";
 import DailyChallengePage from "./client/pages/DailyChallengePage";
 import ChallengeSummary from "./client/pages/ChallengeSummary";
 import MySubscriptionPage from "./client/pages/MySubscriptionPage";
+import SearchPage from "./client/pages/SearchPage";
 
 function App() {
   return (
@@ -140,6 +141,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ClientLayout><ProfilePage /></ClientLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/search"
+          element={
+            <ProtectedRoute>
+              <ClientLayout><SearchPage /></ClientLayout>
             </ProtectedRoute>
           }
         />

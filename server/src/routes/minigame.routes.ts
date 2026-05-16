@@ -14,6 +14,11 @@ router.get("/",
   MiniGameController.getAllMiniGames
 );
 
+router.get("/search", 
+  verifyTokenAndRole(),
+  MiniGameController.searchFlashcards
+);
+
 router.post("/", 
   verifyTokenAndRole([USER_ROLE.ADMIN, USER_ROLE.STAFF]),
   validateDto(CreateMiniGameDto),
