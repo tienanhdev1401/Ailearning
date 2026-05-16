@@ -1,12 +1,13 @@
 import { AppDataSource } from "../config/database";
 import { UserSubscription } from "../models/userSubscription";
 import { SubscriptionPackage } from "../models/subscriptionPackage";
+import { UserCredit } from "../models/userCredit";
 import { MoreThan, IsNull } from "typeorm";
 
 export class SubscriptionService {
   private subscriptionRepo = AppDataSource.getRepository(UserSubscription);
 
-  async activatePackageForUser(userId: number, subPackage: SubscriptionPackage): Promise<UserSubscription> {
+  async activatePackageForUser(userId: number, subPackage: SubscriptionPackage, customMultiplier: number = 1): Promise<UserSubscription> {
     // 1. Tìm xem user đã có gói cùng loại và còn hạn không
     const existingSub = await this.subscriptionRepo.findOne({
       where: {
@@ -51,7 +52,29 @@ export class SubscriptionService {
       isActive: true,
     });
 
-    return this.subscriptionRepo.save(newSub);
+    const savedSub = await this.subscriptionRepo.save(newSub);
+
+    // Update user credits
+    const creditRepo = AppDataSource.getRepository(UserCredit);
+    let credit = await creditRepo.findOne({ where: { userId } });
+    if (!credit) {
+      credit = creditRepo.create({ userId });
+    }
+    
+    // Sử dụng customMultiplier truyền vào (mặc định là 1 nếu không có)
+    const finalMultiplier = customMultiplier || 1;
+    const addedAi = (subPackage.aiConversationCredits || 0) * finalMultiplier;
+    const addedGrammar = (subPackage.grammarCheckerCredits || 0) * finalMultiplier;
+
+    credit.aiConversationCredits += addedAi;
+    credit.totalAiConversationCredits += addedAi;
+    
+    credit.grammarCheckerCredits += addedGrammar;
+    credit.totalGrammarCheckerCredits += addedGrammar;
+
+    await creditRepo.save(credit);
+
+    return savedSub;
   }
 
   async hasPermanentPackage(userId: number, packageId: number): Promise<boolean> {

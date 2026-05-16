@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import { aiChatService } from "../services/ai-chat/aiChat.service";
 import { deepgramService } from "../services/ai-chat/deepgram.service";
+import { CreditService } from "../services/credit.service";
 import AI_CONVERSATION_MODE from "../enums/aiConversationMode.enum";
+
+const creditService = new CreditService();
 
 const getUserId = (req: Request) => (req as any).user?.id as number | undefined;
 
@@ -46,6 +49,14 @@ export const startSession = async (req: Request, res: Response) => {
     const userId = getUserId(req);
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Check and consume credit
+    const hasCredit = await creditService.consumeCredit(userId, "AI_CONVERSATION");
+    if (!hasCredit) {
+      return res.status(402).json({ 
+        message: "You've used all your free credits for today. Upgrade to continue learning without limits." 
+      });
     }
 
     const {

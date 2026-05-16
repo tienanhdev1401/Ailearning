@@ -35,6 +35,9 @@ export class Transaction {
   @Column({ type: "varchar", length: 100, nullable: true, comment: "VNPAY transaction reference" })
   vnpayTxnRef!: string | null;
 
+  @Column({ type: "int", default: 1, comment: "Dynamic multiplier chosen at purchase" })
+  multiplier!: number;
+
   @CreateDateColumn()
   createdAt!: Date;
 

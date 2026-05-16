@@ -263,3 +263,86 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Credit Dashboard */
+.creditDashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.creditCard {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.creditCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
+
+.creditIcon {
+    font-size: 2rem;
+    width: 60px;
+    height: 60px;
+    background: #f8fafc;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #f1f5f9;
+}
+
+.creditInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.creditLabelRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.creditLabel {
+    font-size: 0.95rem;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.creditCount {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.progressBarWrapper {
+    width: 100%;
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progressBarFill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--pp-accent), var(--pp-accent-2));
+    border-radius: 999px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.creditUsageNote {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-weight: 500;
+}

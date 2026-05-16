@@ -20,7 +20,8 @@ export class PaymentService {
     packageId: number,
     returnUrl: string,
     ipnUrl: string,
-    ipAddr: string
+    ipAddr: string,
+    multiplier: number = 1
   ): Promise<string> {
     const packageRepo = AppDataSource.getRepository(SubscriptionPackage);
     const transactionRepo = AppDataSource.getRepository(Transaction);
@@ -38,11 +39,15 @@ export class PaymentService {
       }
     }
 
+    // Tính giá tiền dựa trên multiplier
+    const finalAmount = Number(subPackage.price) * multiplier;
+
     // Create a new PENDING transaction
     const newTransaction = transactionRepo.create({
       userId,
       packageId,
-      amount: subPackage.price,
+      amount: finalAmount,
+      multiplier,
       status: TRANSACTION_STATUS.PENDING,
     });
     const savedTransaction = await transactionRepo.save(newTransaction);
@@ -54,8 +59,8 @@ export class PaymentService {
 
     const paymentParams: VnPayCreateUrlParams = {
       orderId: orderId,
-      amount: subPackage.price,
-      orderInfo: `Thanh toan goi ${subPackage.name}`,
+      amount: finalAmount,
+      orderInfo: `Thanh toan goi ${subPackage.name} x${multiplier}`,
       returnUrl: returnUrl,
       ipnUrl: ipnUrl,
     };
@@ -76,7 +81,6 @@ export class PaymentService {
     const transactionId = vnpTxnRef;
 
     const transactionRepo = AppDataSource.getRepository(Transaction);
-    const subRepo = AppDataSource.getRepository(UserSubscription);
     const packageRepo = AppDataSource.getRepository(SubscriptionPackage);
 
     const transaction = await transactionRepo.findOne({ where: { id: transactionId } });
@@ -103,7 +107,8 @@ export class PaymentService {
 
       const subPackage = await packageRepo.findOne({ where: { id: transaction.packageId } });
       if (subPackage) {
-        await this.subscriptionService.activatePackageForUser(transaction.userId, subPackage);
+        // Truyền multiplier từ transaction vào service kích hoạt gói
+        await this.subscriptionService.activatePackageForUser(transaction.userId, subPackage, transaction.multiplier);
       }
     } else {
       transaction.status = TRANSACTION_STATUS.FAILED;

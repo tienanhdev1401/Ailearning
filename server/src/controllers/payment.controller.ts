@@ -26,12 +26,14 @@ export const createPaymentUrl = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    const multiplier = Number(req.query.multiplier) || 1;
+
     // Cửa ngõ Backend: VNPAY sẽ trả trình duyệt về đây trước
     const backendReturnUrl = `http://localhost:5000/api/payments/vnpay-ipn`;
     const ipnUrl = `http://localhost:5000/api/payments/vnpay-ipn`;
     const ipAddr = req.ip || "127.0.0.1";
 
-    const url = await paymentService.createPaymentUrl(user.id, packageIdNum, backendReturnUrl, ipnUrl, ipAddr);
+    const url = await paymentService.createPaymentUrl(user.id, packageIdNum, backendReturnUrl, ipnUrl, ipAddr, multiplier);
     res.json({ url });
   } catch (error: any) {
     console.error("Payment Creation Error:", error);

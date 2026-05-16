@@ -21,6 +21,11 @@ const router = express.Router();
  */
 
 // ==================== USER CRUD ====================
+router.get(
+  "/me/credits",
+  verifyTokenAndRole([USER_ROLE.USER, USER_ROLE.ADMIN, USER_ROLE.STAFF]),
+  UserController.getCredits
+);
 
 /**
  * @swagger

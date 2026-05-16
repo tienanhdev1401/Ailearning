@@ -29,6 +29,8 @@ const PackagesPage = () => {
     price: 0,
     durationInDays: "",
     targetId: "",
+    aiConversationCredits: 0,
+    grammarCheckerCredits: 0,
   });
 
   const loadPackages = useCallback(async () => {
@@ -69,6 +71,8 @@ const PackagesPage = () => {
         price: pkg.price,
         durationInDays: pkg.durationInDays || "",
         targetId: pkg.targetId || "",
+        aiConversationCredits: pkg.aiConversationCredits || 0,
+        grammarCheckerCredits: pkg.grammarCheckerCredits || 0,
       });
     } else {
       setEditingPackage(null);
@@ -77,8 +81,10 @@ const PackagesPage = () => {
         description: "",
         type: activeTab,
         price: 0,
-        durationInDays: "",
+        durationInDays: (activeTab === PACKAGE_TYPE.AI_CONVERSATION || activeTab === PACKAGE_TYPE.GRAMMAR_CHECKER) ? 30 : "",
         targetId: "",
+        aiConversationCredits: 0,
+        grammarCheckerCredits: 0,
       });
     }
     setShowModal(true);
@@ -93,6 +99,8 @@ const PackagesPage = () => {
         ? 0
         : (formData.durationInDays ? Number(formData.durationInDays) : null),
       targetId: formData.targetId ? Number(formData.targetId) : null,
+      aiConversationCredits: Number(formData.aiConversationCredits),
+      grammarCheckerCredits: Number(formData.grammarCheckerCredits),
     };
 
     try {
@@ -234,6 +242,15 @@ const PackagesPage = () => {
                             : `${pkg.durationInDays || 0} ngày`}
                         </div>
                       </div>
+                      {(pkg.aiConversationCredits > 0 || pkg.grammarCheckerCredits > 0) && (
+                        <div className="col-12 mt-2">
+                          <div className="section-label">Credit đi kèm</div>
+                          <div className="small">
+                            {pkg.aiConversationCredits > 0 && <div><i className="bi bi-robot me-1"></i> {pkg.aiConversationCredits} AI</div>}
+                            {pkg.grammarCheckerCredits > 0 && <div><i className="bi bi-spellcheck me-1"></i> {pkg.grammarCheckerCredits} Grammar</div>}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -280,17 +297,19 @@ const PackagesPage = () => {
                 <div className="col-6">
                   <label className="section-label">Type</label>
                   <select
-                    className="form-select border-secondary-subtle py-2 shadow-none rounded-3"
+                    className="form-select border-secondary-subtle py-2 shadow-none rounded-3 bg-light"
                     value={formData.type}
-                    disabled={!!editingPackage}
+                    disabled={true} // Khóa cứng Type
                     onChange={(e) => {
                       const newType = e.target.value;
                       const updates = { type: newType };
                       // Roadmap is always permanent (0), others require days
                       if (newType === PACKAGE_TYPE.ROADMAP_UNLOCK) {
                         updates.durationInDays = 0;
+                        updates.aiConversationCredits = 0;
+                        updates.grammarCheckerCredits = 0;
                       } else {
-                        updates.durationInDays = "";
+                        updates.durationInDays = 30;
                         updates.targetId = ""; // Reset targetId for non-roadmap types
                       }
                       setFormData({ ...formData, ...updates });
@@ -333,18 +352,57 @@ const PackagesPage = () => {
                     </div>
                   ) : (
                     <>
-                      <label className="section-label mb-2">Duration</label>
+                      <label className="section-label mb-2">Duration (Days)</label>
                       <input
                         type="number"
-                        className="form-control border-secondary-subtle py-2 shadow-none rounded-3 animate-fade-in"
+                        className={`form-control border-secondary-subtle py-2 shadow-none rounded-3 ${
+                          (formData.type === PACKAGE_TYPE.AI_CONVERSATION || formData.type === PACKAGE_TYPE.GRAMMAR_CHECKER) 
+                          ? "bg-light" : ""
+                        }`}
                         placeholder="Số ngày (ví dụ: 30)"
                         value={formData.durationInDays}
                         required
+                        disabled={formData.type === PACKAGE_TYPE.AI_CONVERSATION || formData.type === PACKAGE_TYPE.GRAMMAR_CHECKER}
                         onChange={(e) => setFormData({ ...formData, durationInDays: e.target.value })}
                       />
+                      {(formData.type === PACKAGE_TYPE.AI_CONVERSATION || formData.type === PACKAGE_TYPE.GRAMMAR_CHECKER) ? (
+                        <small className="text-muted">Hạn sử dụng được cố định là 30 ngày cho loại gói này.</small>
+                      ) : (
+                        <small className="text-muted">Nhập số ngày hiệu lực của gói nạp.</small>
+                      )}
                     </>
                   )}
                 </div>
+
+                {/* Conditional Credit Fields */}
+                {formData.type === PACKAGE_TYPE.AI_CONVERSATION && (
+                  <>
+                    <div className="col-12">
+                      <label className="section-label">AI Conversation Credits</label>
+                      <input
+                        type="number"
+                        className="form-control border-secondary-subtle py-2 shadow-none rounded-3"
+                        value={formData.aiConversationCredits}
+                        onChange={(e) => setFormData({ ...formData, aiConversationCredits: e.target.value, grammarCheckerCredits: 0 })}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {formData.type === PACKAGE_TYPE.GRAMMAR_CHECKER && (
+                  <>
+                    <div className="col-12">
+                      <label className="section-label">Grammar Credits</label>
+                      <input
+                        type="number"
+                        className="form-control border-secondary-subtle py-2 shadow-none rounded-3"
+                        value={formData.grammarCheckerCredits}
+                        onChange={(e) => setFormData({ ...formData, grammarCheckerCredits: e.target.value, aiConversationCredits: 0 })}
+                      />
+                    </div>
+                  </>
+                )}
+
                 {formData.type === PACKAGE_TYPE.ROADMAP_UNLOCK && (
                   <div className="col-12">
                     <label className="section-label">Select Roadmap (Target ID)</label>

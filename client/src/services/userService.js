@@ -123,6 +123,16 @@ const userService = {
             const errorMessage = extractErrorMessage(error, 'Không thể xóa người dùng');
             throw new Error(errorMessage);
         }
+    },
+
+    getCredits: async () => {
+        try {
+            const response = await api.get("/users/me/credits");
+            return response.data;
+        } catch (error) {
+            const errorMessage = extractErrorMessage(error, 'Không thể tải credit');
+            throw new Error(errorMessage);
+        }
     }
 };
  

@@ -3,6 +3,9 @@ import axios, { HttpStatusCode } from "axios";
 import { randomUUID } from "crypto";
 import ApiError from "../utils/ApiError";
 import { Request, Response, NextFunction } from "express";
+import { CreditService } from "../services/credit.service";
+
+const creditService = new CreditService();
 
 interface SaplingEdit {
   id?: string;
@@ -49,6 +52,20 @@ class GrammarCheckerController {
    */
   static async generate(req: Request, res: Response, next: NextFunction) {
     try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return next(new ApiError(HttpStatusCode.Unauthorized, "Unauthorized"));
+      }
+
+      // Check and consume credit
+      const hasCredit = await creditService.consumeCredit(userId, "GRAMMAR_CHECKER");
+      if (!hasCredit) {
+        return next(new ApiError(
+          HttpStatusCode.PaymentRequired,
+          "You've used all your free credits for today. Upgrade to continue learning without limits."
+        ));
+      }
+
       const { text } = req.body as { text: string };
 
       const apiKey = process.env.SAPLING_API_KEY;

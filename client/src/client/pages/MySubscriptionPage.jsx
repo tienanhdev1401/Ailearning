@@ -2,24 +2,28 @@ import React, { useEffect, useState } from "react";
 import styles from "../styles/MySubscriptionPage.module.css";
 import subscriptionService from "../../services/subscriptionService";
 import paymentService from "../../services/paymentService";
+import userService from "../../services/userService";
 import LoadingSpinner from "../../component/LoadingSpinner";
 import { Link } from "react-router-dom";
 
 const MySubscriptionPage = () => {
   const [subscriptions, setSubscriptions] = useState([]);
   const [transactions, setTransactions] = useState([]);
+  const [credits, setCredits] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [subData, transData] = await Promise.all([
+        const [subData, transData, creditData] = await Promise.all([
           subscriptionService.getMySubscriptions(),
           paymentService.getMyTransactions(),
+          userService.getCredits(),
         ]);
         setSubscriptions(subData);
         setTransactions(transData);
+        setCredits(creditData);
       } catch (err) {
         console.error("Failed to fetch subscription data", err);
         setError("Không thể tải dữ liệu. Vui lòng thử lại sau.");
@@ -73,6 +77,54 @@ const MySubscriptionPage = () => {
 
       {error && <div className={styles.errorMessage}>{error}</div>}
 
+      <section className={styles.creditDashboard}>
+        <div className={styles.creditCard}>
+          <div className={styles.creditIcon}>🤖</div>
+          <div className={styles.creditInfo}>
+            <div className={styles.creditLabelRow}>
+              <span className={styles.creditLabel}>AI Conversation Usage</span>
+              <span className={styles.creditCount}>
+                <strong>{Math.max(0, Math.max(credits?.aiConversationCredits ?? 0, credits?.totalAiConversationCredits ?? 0) - (credits?.aiConversationCredits ?? 0))}</strong> / {Math.max(credits?.aiConversationCredits ?? 0, credits?.totalAiConversationCredits ?? 0)}
+              </span>
+            </div>
+            <div className={styles.progressBarWrapper}>
+              <div
+                className={styles.progressBarFill}
+                style={{
+                  width: `${Math.min(100, (Math.max(0, Math.max(credits?.aiConversationCredits ?? 0, credits?.totalAiConversationCredits ?? 0) - (credits?.aiConversationCredits ?? 0)) / (Math.max(credits?.aiConversationCredits ?? 0, credits?.totalAiConversationCredits ?? 0) || 1)) * 100)}%`
+                }}
+              />
+            </div>
+            <div className={styles.creditUsageNote}>
+              Bạn đã dùng {Math.max(0, Math.max(credits?.aiConversationCredits ?? 0, credits?.totalAiConversationCredits ?? 0) - (credits?.aiConversationCredits ?? 0))} trên tổng số {Math.max(credits?.aiConversationCredits ?? 0, credits?.totalAiConversationCredits ?? 0)} lượt (Còn lại: {credits?.aiConversationCredits ?? 0})
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.creditCard}>
+          <div className={styles.creditIcon}>✍️</div>
+          <div className={styles.creditInfo}>
+            <div className={styles.creditLabelRow}>
+              <span className={styles.creditLabel}>Grammar Checker Usage</span>
+              <span className={styles.creditCount}>
+                <strong>{Math.max(0, Math.max(credits?.grammarCheckerCredits ?? 0, credits?.totalGrammarCheckerCredits ?? 0) - (credits?.grammarCheckerCredits ?? 0))}</strong> / {Math.max(credits?.grammarCheckerCredits ?? 0, credits?.totalGrammarCheckerCredits ?? 0)}
+              </span>
+            </div>
+            <div className={styles.progressBarWrapper}>
+              <div
+                className={styles.progressBarFill}
+                style={{
+                  width: `${Math.min(100, (Math.max(0, Math.max(credits?.grammarCheckerCredits ?? 0, credits?.totalGrammarCheckerCredits ?? 0) - (credits?.grammarCheckerCredits ?? 0)) / (Math.max(credits?.grammarCheckerCredits ?? 0, credits?.totalGrammarCheckerCredits ?? 0) || 1)) * 100)}%`
+                }}
+              />
+            </div>
+            <div className={styles.creditUsageNote}>
+              Bạn đã dùng {Math.max(0, Math.max(credits?.grammarCheckerCredits ?? 0, credits?.totalGrammarCheckerCredits ?? 0) - (credits?.grammarCheckerCredits ?? 0))} trên tổng số {Math.max(credits?.grammarCheckerCredits ?? 0, credits?.totalGrammarCheckerCredits ?? 0)} lượt (Còn lại: {credits?.grammarCheckerCredits ?? 0})
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2>Gói dịch vụ của tôi</h2>
@@ -80,7 +132,7 @@ const MySubscriptionPage = () => {
             Nâng cấp gói
           </Link>
         </div>
-        
+
         {subscriptions.length === 0 ? (
           <div className={styles.emptyState}>
             <p>Bạn chưa đăng ký gói dịch vụ nào.</p>

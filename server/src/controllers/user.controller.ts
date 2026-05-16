@@ -4,10 +4,12 @@ import transporter from '../utils/mailTransporter'
 import ApiError from '../utils/ApiError';
 import { CreateUserDto } from '../dto/request/CreateUserDTO'
 import { UpdateUserDto } from '../dto/request/UpdateUserDTO';
+import { CreditService } from '../services/credit.service';
 import { Request, Response, NextFunction } from "express";
 import { plainToInstance } from "class-transformer";
 
 const otpStore = new Map<string, { otp: string; expires: Date; userData: { email: string } }>();
+const creditService = new CreditService();
 
 class UserController {
   // Lấy danh sách tất cả người dùng
@@ -180,6 +182,19 @@ class UserController {
     } catch (error) {
       console.error('Lỗi reset mật khẩu:', error);
       res.status(HttpStatusCode.InternalServerError).json({ error: 'Lỗi máy chủ' });
+    }
+  }
+
+  static async getCredits(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(HttpStatusCode.Unauthorized).json({ message: "Unauthorized" });
+      }
+      const credits = await creditService.getRemainingCredits(userId);
+      res.json(credits);
+    } catch (error) {
+      next(error);
     }
   }
 }

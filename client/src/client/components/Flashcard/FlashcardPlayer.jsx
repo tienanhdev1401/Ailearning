@@ -7,7 +7,6 @@ import SaveToNotebookModal from "./SaveToNotebookModal";
 import { shuffleArray } from "../../../utils/array";
 
 const FlashcardPlayer = ({ cards }) => {
-  const { isDarkMode } = useContext(ThemeContext);
   const [shuffledCards, setShuffledCards] = useState(cards);
   const [isShuffled, setIsShuffled] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -80,8 +79,6 @@ const FlashcardPlayer = ({ cards }) => {
   }, [handleFlip, handleNext, handlePrev]);
 
   if (cards.length === 0) return null;
-
-  const progress = ((currentIndex + 1) / cards.length) * 100;
 
   return (
     <div className={styles.playerContainer}>

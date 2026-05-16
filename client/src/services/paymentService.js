@@ -1,31 +1,15 @@
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import api from '../api/api';
 
 const paymentService = {
-    createPaymentUrl: async (packageId) => {
-        const token = localStorage.getItem('accessToken');
-        const response = await axios.post(
-            `${API_URL}/payments/create/${packageId}`,
-            {},
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }
+    createPaymentUrl: async (packageId, multiplier = 1) => {
+        const response = await api.post(
+            `/payments/create/${packageId}?multiplier=${multiplier}`,
+            {}
         );
         return response.data;
     },
     getMyTransactions: async () => {
-        const token = localStorage.getItem('accessToken');
-        const response = await axios.get(
-            `${API_URL}/payments/my`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }
-        );
+        const response = await api.get('/payments/my');
         return response.data;
     }
 };

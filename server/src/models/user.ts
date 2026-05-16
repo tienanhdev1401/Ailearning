@@ -10,6 +10,7 @@ import { AiConversation } from "./aiConversation";
 import { SupportConversation } from "./supportConversation";
 import { SupportMessage } from "./supportMessage";
 import { RoadmapReview } from "./roadmapReview";
+import { UserCredit } from "./userCredit";
 import USER_GENDER from "../enums/userGender.enum";
 import USER_STATUS from "../enums/userStatus.enum";
 
@@ -101,6 +102,9 @@ export class User {
 
   @OneToMany(() => RoadmapReview, (review) => review.user)
   roadmapReviews!: RoadmapReview[];
+
+  @OneToOne(() => UserCredit, (credit) => credit.user)
+  credits!: UserCredit;
 
 
   @CreateDateColumn()

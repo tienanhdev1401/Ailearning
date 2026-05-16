@@ -48,6 +48,8 @@ const PricingPage = () => {
   const [error, setError] = useState(null);
   const [processingId, setProcessingId] = useState(null);
   const [userSubscriptions, setUserSubscriptions] = useState([]);
+  const [aiMultiplier, setAiMultiplier] = useState(1);
+  const [grammarMultiplier, setGrammarMultiplier] = useState(1);
   const [modalConfig, setModalConfig] = useState({
     show: false,
     type: "confirm",
@@ -84,7 +86,7 @@ const PricingPage = () => {
     fetchPackages();
   }, []);
 
-  const handleBuy = (packageId) => {
+  const handleBuy = (packageId, multiplier = 1) => {
     const pkg = packages.find((p) => p.id === packageId);
     if (!pkg) return;
 
@@ -99,17 +101,17 @@ const PricingPage = () => {
         "confirm",
         "Xác nhận gia hạn",
         `Bạn đang có gói "${activeSub.package?.name}" vẫn còn hiệu lực. Bạn có chắc chắn muốn mua thêm để gia hạn tiếp không?`,
-        () => executePurchase(packageId)
+        () => executePurchase(packageId, multiplier)
       );
     } else {
-      executePurchase(packageId);
+      executePurchase(packageId, multiplier);
     }
   };
 
-  const executePurchase = async (packageId) => {
+  const executePurchase = async (packageId, multiplier = 1) => {
     setProcessingId(packageId);
     try {
-      const { url } = await paymentService.createPaymentUrl(packageId);
+      const { url } = await paymentService.createPaymentUrl(packageId, multiplier);
       window.location.href = url;
     } catch (err) {
       const msg = err.response?.data?.message || "Có lỗi xảy ra khi tạo giao dịch.";
@@ -174,11 +176,31 @@ const PricingPage = () => {
               <Row className="g-4">
                 {group.map((pkg, idx) => {
                   const featured = idx === featuredIndex && group.length > 1;
+                  const isPro = pkg.name.toLowerCase().includes("pro");
+                  const currentMultiplier = type === "AI_CONVERSATION" ? aiMultiplier : grammarMultiplier;
+                  const setMultiplier = type === "AI_CONVERSATION" ? setAiMultiplier : setGrammarMultiplier;
+
                   return (
                     <Col key={pkg.id} md={6} lg={4}>
                       <article
-                        className={`${styles.card} ${featured ? styles.cardFeatured : ""}`}
+                        className={`${styles.card} ${featured ? styles.cardFeatured : ""} ${isPro ? styles.cardPro : ""}`}
                       >
+                        {isPro && (
+                          <div className={styles.multiplierPillContainer}>
+                            <div className={styles.multiplierPill}>
+                              {[1, 5, 20].map(m => (
+                                <button 
+                                  key={m} 
+                                  className={`${styles.pillOption} ${currentMultiplier === m ? styles.pillOptionActive : ""}`}
+                                  onClick={() => setMultiplier(m)}
+                                >
+                                  {m}x
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {featured && (
                           <span className={styles.popularBadge}>
                             <FiStar size={11} /> Phổ biến nhất
@@ -192,7 +214,9 @@ const PricingPage = () => {
                         </p>
 
                         <div className={styles.priceBlock}>
-                          <span className={styles.price}>{formatVND(pkg.price)}</span>
+                          <span className={styles.price}>
+                            {formatVND(isPro ? pkg.price * currentMultiplier : pkg.price)}
+                          </span>
                           <span className={styles.priceUnit}>
                             / {pkg.durationInDays ? `${pkg.durationInDays} ngày` : "Vĩnh viễn"}
                           </span>
@@ -203,7 +227,14 @@ const PricingPage = () => {
                             <span className={styles.featureCheck}>
                               <FiCheck />
                             </span>
-                            <span>Kích hoạt đầy đủ tính năng của {pkg.name}</span>
+                            <span>
+                              <strong>
+                                {isPro 
+                                  ? ((pkg.aiConversationCredits || pkg.grammarCheckerCredits) * currentMultiplier).toLocaleString()
+                                  : (pkg.aiConversationCredits || pkg.grammarCheckerCredits || 0).toLocaleString()
+                                }
+                              </strong> lượt {type === "AI_CONVERSATION" ? "AI" : "Grammar"} / tháng
+                            </span>
                           </li>
                           <li className={styles.featureItem}>
                             <span className={styles.featureCheck}>
@@ -224,8 +255,8 @@ const PricingPage = () => {
                         </ul>
 
                         <button
-                          className={`${styles.cta} ${featured ? styles.ctaPrimary : ""}`}
-                          onClick={() => handleBuy(pkg.id)}
+                          className={styles.cta}
+                          onClick={() => handleBuy(pkg.id, isPro ? currentMultiplier : 1)}
                           disabled={processingId === pkg.id}
                         >
                           {processingId === pkg.id ? (
@@ -233,7 +264,12 @@ const PricingPage = () => {
                           ) : (
                             <>
                               <FiZap size={15} />
-                              Mua ngay
+                              {type === "ROADMAP_UNLOCK" 
+                                ? "Mua ngay" 
+                                : isPro 
+                                  ? `Nâng cấp Pro x${currentMultiplier}` 
+                                  : "Nâng cấp"
+                              }
                             </>
                           )}
                         </button>

@@ -27,6 +27,12 @@ export class SubscriptionPackage {
   @Column({ type: "int", nullable: true, comment: "Target ID (e.g., Roadmap ID) if the type requires it." })
   targetId!: number | null;
 
+  @Column({ type: "int", default: 0, comment: "Included AI conversation credits" })
+  aiConversationCredits!: number;
+
+  @Column({ type: "int", default: 0, comment: "Included grammar checker credits" })
+  grammarCheckerCredits!: number;
+
   @CreateDateColumn()
   createdAt!: Date;
 
