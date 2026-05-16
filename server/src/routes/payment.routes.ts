@@ -1,5 +1,5 @@
 import express from "express";
-import { createPaymentUrl, vnpayIpn, getPackages } from "../controllers/payment.controller";
+import { createPaymentUrl, vnpayIpn, getPackages, getMyTransactions } from "../controllers/payment.controller";
 import verifyTokenAndRole from "../middlewares/auth.middleware";
 import USER_ROLE from "../enums/userRole.enum";
 
@@ -44,5 +44,20 @@ router.post(
  *     tags: [Payment]
  */
 router.get("/vnpay-ipn", vnpayIpn);
+
+/**
+ * @swagger
+ * /api/payments/my:
+ *   get:
+ *     summary: Lấy danh sách giao dịch của tôi
+ *     tags: [Payment]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get(
+  "/my",
+  verifyTokenAndRole(),
+  getMyTransactions
+);
 
 export default router;

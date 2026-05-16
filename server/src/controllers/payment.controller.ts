@@ -68,4 +68,20 @@ export const getPackages = async (req: Request, res: Response): Promise<void> =>
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch packages" });
   }
-}
+};
+
+export const getMyTransactions = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = req.user as User;
+    if (!user || !user.id) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    const transactions = await paymentService.getUserTransactions(user.id);
+    res.json(transactions);
+  } catch (error: any) {
+    console.error("Get My Transactions Error:", error);
+    res.status(500).json({ message: error.message || "Failed to fetch transactions" });
+  }
+};

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import styles from "../styles/ProfilePage.module.css";
 import userService from "../../services/userService";
 import api from "../../api/api";
@@ -37,8 +37,6 @@ const ProfilePage = () => {
     data: null,
     error: "",
   });
-  const [subscriptions, setSubscriptions] = useState([]);
-  const [isSubLoading, setIsSubLoading] = useState(true);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -457,18 +455,8 @@ const ProfilePage = () => {
   }, [fetchActiveRoadmap]);
 
   useEffect(() => {
-    const fetchSubscriptions = async () => {
-      try {
-        const data = await subscriptionService.getMySubscriptions();
-        setSubscriptions(data);
-      } catch (err) {
-        console.error("Failed to fetch subscriptions", err);
-      } finally {
-        setIsSubLoading(false);
-      }
-    };
-    fetchSubscriptions();
-  }, []);
+    fetchActiveRoadmap();
+  }, [fetchActiveRoadmap]);
 
   const calculateRemainingDays = (endDate) => {
     if (!endDate) return null; // Permanent
@@ -578,6 +566,9 @@ const ProfilePage = () => {
                 <button className={styles.secondaryBtn} onClick={handleOpenEdit}>
                   Chỉnh sửa hồ sơ
                 </button>
+                <Link to="/profile/subscriptions" className={styles.secondaryBtn} style={{ textDecoration: "none", textAlign: "center" }}>
+                  Gói dịch vụ & Giao dịch
+                </Link>
               </div>
               <button className={styles.logoutBtn} onClick={handleLogout}>
                 Đăng xuất
@@ -640,46 +631,7 @@ const ProfilePage = () => {
             </div>
           </article>
 
-          <article className={styles.card}>
-            <header className={styles.cardHeader}>
-              <h2>Gói dịch vụ đã đăng ký</h2>
-            </header>
-            <div className={styles.cardBody}>
-              {isSubLoading ? (
-                <p className={styles.sectionNote}>Đang tải...</p>
-              ) : subscriptions.length === 0 ? (
-                <p className={styles.sectionNote}>Bạn chưa đăng ký gói nào.</p>
-              ) : (
-                <ul className={styles.infoList}>
-                  {subscriptions.map((sub) => {
-                    const daysRemaining = calculateRemainingDays(sub.endDate);
-                    const totalDays = sub.package?.durationInDays;
 
-                    return (
-                      <li key={sub.id} style={{ marginBottom: "16px", borderBottom: "1px solid #eee", paddingBottom: "12px" }}>
-                        <div className="d-flex justify-content-between align-items-center">
-                          <div style={{ flex: 1 }}>
-                            <span className={styles.infoLabel} style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "4px" }}>
-                              {sub.package?.name}
-                            </span>
-                            <span className={styles.infoValue} style={{ fontSize: "12px", color: "#64748b" }}>
-                              Từ: {new Intl.DateTimeFormat("vi-VN").format(new Date(sub.startDate))}
-                            </span>
-                          </div>
-                          <div className="ms-3">
-                            <CountdownCircle
-                              daysRemaining={daysRemaining}
-                              totalDays={totalDays}
-                            />
-                          </div>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-          </article>
         </aside>
 
         <main className={styles.main}>

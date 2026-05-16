@@ -112,4 +112,13 @@ export class PaymentService {
 
     return { RspCode: "00", Message: "Confirm Success" };
   }
+
+  async getUserTransactions(userId: number): Promise<Transaction[]> {
+    const transactionRepo = AppDataSource.getRepository(Transaction);
+    return transactionRepo.find({
+      where: { userId },
+      relations: ["package"],
+      order: { createdAt: "DESC" },
+    });
+  }
 }
