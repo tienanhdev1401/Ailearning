@@ -28,7 +28,7 @@ const VocabNotebookPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newCard, setNewCard] = useState({ term: "", definition: "" });
+  const [newCard, setNewCard] = useState({ term: "", definition: "", phonetic: "", partOfSpeech: "" });
   const [submitting, setSubmitting] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(false);
 
@@ -50,13 +50,13 @@ const VocabNotebookPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // Auto-translate when user stops typing
+  // Auto-lookup when user stops typing
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (newCard.term.trim() && !newCard.definition.trim()) {
         handleLookup();
       }
-    }, 1000);
+    }, 1200);
 
     return () => clearTimeout(delayDebounceFn);
   }, [newCard.term]);
@@ -66,8 +66,16 @@ const VocabNotebookPage = () => {
     if (!newCard.term.trim() || !newCard.definition.trim()) return;
     try {
       setSubmitting(true);
-      await notebookService.addCard(id, newCard.term, newCard.definition);
-      setNewCard({ term: "", definition: "" });
+      // Update this call to include new fields
+      await notebookService.addCard(
+        id, 
+        newCard.term, 
+        newCard.definition, 
+        "Cá nhân", // source
+        newCard.phonetic, 
+        newCard.partOfSpeech
+      );
+      setNewCard({ term: "", definition: "", phonetic: "", partOfSpeech: "" });
       setShowAddModal(false);
       toast.success("Đã thêm từ mới thành công!");
       fetchNotebook();
@@ -84,31 +92,48 @@ const VocabNotebookPage = () => {
     if (!newCard.term.trim()) return;
     try {
       setLookupLoading(true);
+      const word = newCard.term.trim();
 
-      const textToTranslate = newCard.term.trim();
-      let vietnameseDef = "";
+      // 1. Fetch Dictionary Info (Phonetic & Part of Speech)
+      const dictPromise = fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+      
+      // 2. Fetch Translation (Google Translate API)
+      const transPromise = fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q=${encodeURIComponent(word)}`);
 
-      try {
-        const transRes = await fetch(
-          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(textToTranslate)}&langpair=en|vi`
-        );
-        if (transRes.ok) {
-          const transData = await transRes.json();
-          vietnameseDef = transData.responseData?.translatedText || "";
+      const [dictRes, transRes] = await Promise.all([dictPromise, transPromise]);
+      
+      let phonetic = "";
+      let partOfSpeech = "";
+      let translation = "";
+
+      if (dictRes.ok) {
+        const dictData = await dictRes.json();
+        if (Array.isArray(dictData) && dictData.length > 0) {
+          const entry = dictData[0];
+          phonetic = entry.phonetic || (entry.phonetics && entry.phonetics.find(p => p.text)?.text) || "";
+          partOfSpeech = entry.meanings?.[0]?.partOfSpeech || "";
         }
-      } catch (err) {
-        console.error("Translation failed:", err);
       }
 
-      if (vietnameseDef) {
-        setNewCard((prev) => ({ ...prev, definition: vietnameseDef }));
-        toast.success("Đã tìm thấy bản dịch!");
-      } else {
-        toast.warning("Không tìm thấy bản dịch cho từ này.");
+      if (transRes.ok) {
+        const transData = await transRes.json();
+        if (Array.isArray(transData) && transData[0] && transData[0][0]) {
+          translation = transData[0][0][0];
+        }
       }
+
+      setNewCard(prev => ({
+        ...prev,
+        phonetic: phonetic || prev.phonetic,
+        partOfSpeech: partOfSpeech || prev.partOfSpeech,
+        definition: translation || prev.definition
+      }));
+
+      if (translation) toast.success("Đã hoàn thành tra cứu!");
+
     } catch (error) {
       console.error("Lookup failed:", error);
-      toast.error("Không thể lấy bản dịch. Vui lòng thử lại.");
+      toast.error("Không thể lấy dữ liệu tra cứu.");
     } finally {
       setLookupLoading(false);
     }
@@ -228,6 +253,12 @@ const VocabNotebookPage = () => {
                           <FiVolume2 size={18} />
                         </button>
                       </div>
+                      
+                      <div className="d-flex flex-wrap gap-2 mb-2">
+                        {note.phonetic && <span className={styles.phoneticTag}>{note.phonetic}</span>}
+                        {note.partOfSpeech && <span className={styles.typeTag}>{note.partOfSpeech}</span>}
+                      </div>
+
                       <div className="d-flex align-items-center gap-2">
                         <p className={styles.termDef} style={{ margin: 0 }}>{note.definition}</p>
                         <button 
@@ -273,6 +304,7 @@ const VocabNotebookPage = () => {
                   placeholder="Ví dụ: Hello"
                   value={newCard.term}
                   onChange={(e) => setNewCard({ ...newCard, term: e.target.value })}
+                  onBlur={() => { if(newCard.term) handleLookup(); }}
                   required
                   autoFocus
                 />
@@ -286,11 +318,33 @@ const VocabNotebookPage = () => {
                 </Button>
               </InputGroup>
             </Form.Group>
+
+            <div className="row g-2 mb-3">
+              <Form.Group className="col-md-7">
+                <Form.Label>Phiên âm</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="/.../"
+                  value={newCard.phonetic}
+                  onChange={(e) => setNewCard({ ...newCard, phonetic: e.target.value })}
+                />
+              </Form.Group>
+              <Form.Group className="col-md-5">
+                <Form.Label>Loại từ</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="n, v, adj..."
+                  value={newCard.partOfSpeech}
+                  onChange={(e) => setNewCard({ ...newCard, partOfSpeech: e.target.value })}
+                />
+              </Form.Group>
+            </div>
+
             <Form.Group className="mb-3">
               <Form.Label>Định nghĩa</Form.Label>
               <Form.Control
                 as="textarea"
-                rows={4}
+                rows={3}
                 placeholder="Ví dụ: Xin chào"
                 value={newCard.definition}
                 onChange={(e) => setNewCard({ ...newCard, definition: e.target.value })}

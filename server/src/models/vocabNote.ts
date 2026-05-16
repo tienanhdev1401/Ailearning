@@ -37,6 +37,12 @@ export class VocabNote {
   definition!: string;
 
   @Column({ type: "varchar", length: 255, nullable: true })
+  phonetic!: string | null;
+
+  @Column({ type: "varchar", length: 100, nullable: true })
+  partOfSpeech!: string | null;
+
+  @Column({ type: "varchar", length: 255, nullable: true })
   source!: string | null;
 
   @CreateDateColumn({ name: "created_at" })

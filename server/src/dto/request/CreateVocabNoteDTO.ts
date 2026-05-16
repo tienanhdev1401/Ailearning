@@ -11,5 +11,15 @@ export class CreateVocabNoteDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
+  phonetic?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  partOfSpeech?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
   source?: string;
 }

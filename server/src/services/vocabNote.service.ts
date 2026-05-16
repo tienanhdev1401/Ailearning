@@ -11,6 +11,8 @@ export class VocabNoteService {
         userId,
         term: dto.term,
         definition: dto.definition,
+        phonetic: dto.phonetic || null,
+        partOfSpeech: dto.partOfSpeech || null,
         source: dto.source || null,
       });
       return await vocabNoteRepository.save(newNote);

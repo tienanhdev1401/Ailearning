@@ -286,6 +286,23 @@
   word-break: break-word;
 }
 
+.phoneticTag {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--pp-muted);
+}
+
+.typeTag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--pp-accent);
+  padding: 1px 7px;
+  border: 1px solid var(--pp-accent-border);
+  border-radius: 5px;
+  background: var(--pp-accent-soft);
+}
+
 .deleteBtn {
   width: 36px;
   height: 36px;

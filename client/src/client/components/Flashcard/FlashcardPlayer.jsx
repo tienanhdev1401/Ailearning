@@ -105,6 +105,14 @@ const FlashcardPlayer = ({ cards }) => {
             </div>
             <div className={styles.cardBody}>
               <div className={styles.termText}>{currentCard.term}</div>
+              <div className="d-flex flex-wrap justify-content-center gap-2 mt-3">
+                {currentCard.phonetic && (
+                  <span className={styles.phonetic}>{currentCard.phonetic}</span>
+                )}
+                {currentCard.partOfSpeech && (
+                  <span className={styles.partOfSpeech}>{currentCard.partOfSpeech}</span>
+                )}
+              </div>
             </div>
             <div className={styles.cardFooter}>
               <span>Chạm hoặc nhấn phím Cách để lật</span>

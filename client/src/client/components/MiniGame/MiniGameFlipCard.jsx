@@ -210,6 +210,14 @@ const MiniGameFlipCard = ({ data, onNext }) => {
                 </button>
                 <span className={styles.cardLabel}>Thuật ngữ</span>
                 <div className={styles.cardContent}>{cards[currentIndex].term}</div>
+                <div className="d-flex flex-wrap justify-content-center gap-2 mt-2">
+                  {cards[currentIndex].phonetic && (
+                    <span className={styles.phonetic}>{cards[currentIndex].phonetic}</span>
+                  )}
+                  {cards[currentIndex].partOfSpeech && (
+                    <span className={styles.partOfSpeech}>{cards[currentIndex].partOfSpeech}</span>
+                  )}
+                </div>
                 <div className="mt-4 small" style={{ color: isDarkMode ? '#6c757d' : '#999' }}>Chạm để xem nghĩa</div>
               </div>
               <div className={styles.cardBack}>
