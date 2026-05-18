@@ -520,37 +520,25 @@ ${contextNote}` : basePrompt;
     }
   }
 
-  private buildFollowUpFallback(conversation: AiConversation, latestUserText: string, guidance: GuidanceView) {
+  private buildFollowUpFallback(_conversation: AiConversation, latestUserText: string, guidance: GuidanceView) {
     const trimmedLatest = latestUserText.replace(/[\r\n]+/g, " ").trim();
 
     if (!trimmedLatest) {
       return "Could you tell me a bit more so we can keep the conversation moving?";
     }
 
-    // Echo back a fragment of what the learner said so the fallback does not
-    // feel canned even if Gemini fails repeatedly.
-    const snippet = trimmedLatest.length > 70
-      ? `${trimmedLatest.slice(0, 70).trim()}...`
-      : trimmedLatest;
+    // Use scenario guidance fallbacks from database only. No hardcoded templates.
+    if (guidance.fallbackFollowUps?.length) {
+      const userTurns = _conversation.messages.filter(
+        (m) => m.role === AI_MESSAGE_ROLE.USER
+      ).length;
+      const jitter = Math.floor(Math.random() * guidance.fallbackFollowUps.length);
+      const index = (userTurns + jitter) % guidance.fallbackFollowUps.length;
+      return guidance.fallbackFollowUps[index];
+    }
 
-    const fallbackPool = guidance.fallbackFollowUps?.length
-      ? guidance.fallbackFollowUps
-      : [
-          `Interesting — when you mentioned "${snippet}", what made that stand out for you?`,
-          `Thanks for sharing. Could you walk me through what happened around "${snippet}"?`,
-          `Got it. Tell me more about how "${snippet}" played out — what came next?`,
-          `That's useful context. What was the trickiest part of "${snippet}" for you?`,
-          `Nice. If you had to do "${snippet}" again, what would you change?`,
-        ];
-
-    // Mix in a turn-based offset so consecutive fallbacks don't repeat verbatim,
-    // and a small random jitter so refreshing the same turn varies the wording.
-    const userTurns = conversation.messages.filter(
-      (m) => m.role === AI_MESSAGE_ROLE.USER
-    ).length;
-    const jitter = Math.floor(Math.random() * fallbackPool.length);
-    const index = (userTurns + jitter) % fallbackPool.length;
-    return fallbackPool[index];
+    // Ultra-generic fallback when no DB guidance available (should not happen in production)
+    return "Thanks for sharing. Could you expand on that a bit more?";
   }
 
   private applyFallbackTemplate(
@@ -558,10 +546,8 @@ ${contextNote}` : basePrompt;
     scenarioTitle?: string,
     contextLabel?: string
   ) {
-    const defaultFallback =
-      "Hello! I'm ready to kick off our role-play together. Could you start by introducing yourself so we can dive in?";
-
-    const baseTemplate = template && template.trim().length ? template : defaultFallback;
+    // No hardcoded default fallback. If DB doesn't provide template, use ultra-generic.
+    const baseTemplate = template?.trim?.() || "Hello! Let's begin. Could you introduce yourself?";
     const replacements: Record<string, string> = {
       scenarioTitle: scenarioTitle ?? "",
       contextLabel: contextLabel ?? "",

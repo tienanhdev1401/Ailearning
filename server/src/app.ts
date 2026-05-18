@@ -33,7 +33,7 @@ import { setupSocket } from './socket';
 import aiChatRouter from "./routes/aiChat.routes";
 import aiPromptRouter from "./routes/aiPrompt.routes";
 import { seedAiScenarios } from "./seeds/aiScenarios.seed";
-import { seedAiPromptsAndGuidance } from "./seeds/aiPrompts.seed";
+import { seedAiPromptsAndGuidance, EVALUATION_TEMPLATE } from "./seeds/aiPrompts.seed";
 import supportChatRouter from "./routes/supportChat.routes";
 import dashboardRouter from "./routes/dashboard.routes";
 import gopRouter from "./routes/gop.routes";
@@ -179,20 +179,9 @@ async function ensureAiChatSchema() {
       );
     const existing = evalPromptRows?.[0];
     if (existing && !/\{\{\s*pronunciationEvidence\s*\}\}/i.test(existing.template ?? "")) {
-      const NEW_EVAL_TEMPLATE = `You are an English pronunciation and conversation tutor. Evaluate the learner's performance across the following dimensions: Pronunciation, Prosody (intonation & fluency), Grammar, Vocabulary.
-
-Use the objective pronunciation evidence below (from an acoustic GOP model) as the authoritative input for the Pronunciation and Prosody scores. Translate the GOP 0-100 average into the 0-10 scale roughly as: 80+ -> 8-10, 56-79 -> 5-7, below 56 -> 0-4. If no pronunciation evidence is provided, give a neutral 5 for Pronunciation and Prosody and mention this in the summary.
-
-Pronunciation evidence:
-{{pronunciationEvidence}}
-
-Return a JSON object containing numeric scores from 0 to 10 for each dimension using whole or half steps, a short summary (2-3 sentences) and an array of actionable suggestions. Use camelCase field names.
-
-Conversation transcript:
-{{transcript}}`;
       await AppDataSource.query(
         "UPDATE `ai_prompts` SET `template` = ?, `variables` = ? WHERE id = ?",
-        [NEW_EVAL_TEMPLATE, JSON.stringify(["transcript", "pronunciationEvidence"]), existing.id]
+        [EVALUATION_TEMPLATE, JSON.stringify(["transcript", "pronunciationEvidence"]), existing.id]
       );
       console.log("[Schema] Upgraded ai_prompts.evaluation template to include pronunciationEvidence");
     }

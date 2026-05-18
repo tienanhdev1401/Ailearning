@@ -13,6 +13,12 @@ select {
   font-family: var(--app-font);
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   font-family: var(--app-font);
   background-color: #19212b;

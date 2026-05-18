@@ -52,6 +52,13 @@
     gap: 20px;
     height: 68px;
     font-family: inherit;
+    min-width: 0;
+}
+
+/* Allow flex children to shrink below their content size so nothing
+   pushes the layout wider than the viewport on smaller laptops. */
+.container > * {
+    min-width: 0;
 }
 
 /* ---------- Logo ---------- */
@@ -69,14 +76,14 @@
 }
 
 .logoBadge {
-    width: 64px;
-    height: 64px;
+    width: 44px;
+    height: 44px;
     border-radius: 10px;
     display: flex;
-    margin-top: 3%;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .logoImg {
@@ -499,9 +506,40 @@
 }
 
 /* ---------- Responsive ---------- */
+/* Laptop 15-16" (1366-1536 CSS px, hoặc 1920 với Windows scaling 125%) */
+@media (max-width: 1440px) {
+    .container {
+        gap: 14px;
+        padding: 0 16px;
+    }
+
+    .nav {
+        gap: 2px;
+        margin-left: 4px;
+    }
+
+    .navItem,
+    .dropdownTrigger {
+        padding: 8px 10px;
+        font-size: 13.5px;
+    }
+
+    .searchBox {
+        max-width: 280px;
+    }
+
+    .userActions {
+        gap: 8px;
+    }
+
+    .username {
+        max-width: 100px;
+    }
+}
+
 @media (max-width: 1280px) {
     .searchBox {
-        max-width: 260px;
+        max-width: 220px;
     }
 
     .username {
