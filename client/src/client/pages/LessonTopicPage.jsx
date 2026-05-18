@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import lessonTopicEnum from "../../enums/lessonTopic.enum";
 import DictationShadowingPopUpModal from "../components/DictationShadowingPopUpModal";
 import { fetchTopicLessonOverview, selectTopicLessonOverviewState } from "../../features/lessons/topicLessonOverviewSlice";
+import LoadingSpinner from "../../component/LoadingSpinner";
 
 const LessonTopiCPage = () => {
   const dispatch = useDispatch();
@@ -24,7 +25,7 @@ const LessonTopiCPage = () => {
   const hasData = topicsData && Object.keys(topicsData).length > 0;
 
   if (status === "loading" && !hasData) {
-    return <div className="text-center mt-5">⏳ Đang tải dữ liệu...</div>;
+    return <LoadingSpinner text="Đang tải dữ liệu..." />;
   }
 
   if (status === "failed" && !hasData) {

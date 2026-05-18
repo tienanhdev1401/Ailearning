@@ -5,6 +5,7 @@ import successSound from "../sounds/success.mp3";
 import { useParams, useNavigate } from "react-router-dom";
 import lessonService from "../services/lessonService";
 import { useToast } from "../../context/ToastContext";
+import LoadingSpinner from "../../component/LoadingSpinner";
 
 
 export default function VideoPraticePage() {
@@ -538,20 +539,7 @@ export default function VideoPraticePage() {
 
 
   if (loading) {
-    return (
-      <div
-        className="d-flex justify-content-center align-items-center bg-body text-body"
-        style={{ height: "100vh" }}
-      >
-        <div
-          className="spinner-border text-primary"
-          style={{ width: "4rem", height: "4rem" }}
-          role="status"
-        >
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text="Đang tải bài học..." />;
   }
 
   return (
@@ -562,7 +550,7 @@ export default function VideoPraticePage() {
           <li className="breadcrumb-item">Topics</li>
           <li className="breadcrumb-item">Movie short clip</li>
           <li className="breadcrumb-item active">
-            {lesson ? lesson.title : "Loading..."}
+            {lesson ? lesson.title : "Đang tải..."}
           </li>
         </ol>
       </nav>

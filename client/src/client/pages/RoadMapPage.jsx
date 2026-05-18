@@ -9,6 +9,7 @@ import RoadmapReviewPanel from '../components/roadmap/RoadmapReviewPanel';
 import useCurrentUser from '../hooks/useCurrentUser';
 import VipModal from '../components/common/VipModal';
 import DailyChallengeWidget from '../components/DailyChallenge/DailyChallengeWidget';
+import LoadingSpinner from '../../component/LoadingSpinner';
 
 const classNames = (...parts) => parts.filter(Boolean).join(' ');
 
@@ -238,7 +239,7 @@ const ActivityDrawer = ({
             ×
           </button>
         </header>
-        {loading && <p className={styles.nodeDescription}>Đang tải hoạt động...</p>}
+        {loading && <LoadingSpinner inline size="sm" variant="dots" text="Đang tải hoạt động..." />}
         {!loading && activities.length === 0 && (
           <p className={styles.nodeDescription}>Ngày này chưa có hoạt động chính thức, quay lại sau nhé.</p>
         )}
@@ -1002,7 +1003,7 @@ const RoadMapPage = () => {
   );
 
 
-  if (loading || userLoading) return <div className="text-center mt-5">Loading...</div>;
+  if (loading || userLoading) return <LoadingSpinner text="Đang tải lộ trình..." />;
   if (!roadmap) return <div className="text-center mt-5">Không tìm thấy roadmap</div>;
 
   return (
@@ -1184,7 +1185,7 @@ const RoadMapPage = () => {
               </button>
             </header>
             {switcherLoading ? (
-              <p className={styles.nodeDescription}>Đang tải danh sách lộ trình...</p>
+              <LoadingSpinner inline size="sm" variant="dots" text="Đang tải danh sách lộ trình..." />
             ) : (
               <div className={styles.switcherList}>
                 {availableRoadmaps.map((item) => {

@@ -3,6 +3,7 @@ import api from '../../api/api';
 import { useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
+import LoadingSpinner from '../../component/LoadingSpinner';
 
 import { Editor } from '@tinymce/tinymce-react';
 
@@ -278,7 +279,7 @@ const RoadmapsPage = () => {
       <div className={`card bg-body shadow-sm ${isDarkMode ? 'border border-light' : 'border-0'}`}>
         <div className="card-body">
           {loading ? (
-            <div>Đang tải...</div>
+            <LoadingSpinner inline variant="dots" text="Đang tải..." />
           ) : error ? (
             <div className="text-danger">{error}</div>
           ) : (

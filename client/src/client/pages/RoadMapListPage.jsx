@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../api/api';
 import styles from '../styles/RoadmapListPage.module.css';
 import useCurrentUser from '../hooks/useCurrentUser';
+import LoadingSpinner from '../../component/LoadingSpinner';
 
 const RoadmapListPage = () => {
   const [roadmaps, setRoadmaps] = useState([]);
@@ -77,7 +78,7 @@ const RoadmapListPage = () => {
   if (checkingActiveRoadmap || userLoading) {
     return (
       <div className={styles.page}>
-        <div className={styles.loadingGate}>Đang kiểm tra lộ trình của bạn...</div>
+        <LoadingSpinner text="Đang kiểm tra lộ trình của bạn..." />
       </div>
     );
   }

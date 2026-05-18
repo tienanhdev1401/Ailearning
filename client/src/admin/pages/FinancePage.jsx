@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import dashboardService from '../services/dashboardService';
 import { PACKAGE_TYPE } from '../../enums/packageType.enum';
+import LoadingSpinner from '../../component/LoadingSpinner';
 
 const Avatar = ({ user, size = '40px', className = '' }) => {
   const colors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
@@ -230,11 +231,7 @@ const FinancePage = () => {
           )}
 
           {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-grow text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
+            <LoadingSpinner inline variant="dots" text="Đang tải dữ liệu..." />
           ) : (
             <div className="table-responsive">
               {activeTab === 'transactions' ? (

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import userService from '../../services/userService';
 import { useToast } from '../../context/ToastContext';
+import LoadingSpinner from '../../component/LoadingSpinner';
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Hoạt động' },
@@ -357,10 +358,7 @@ const StaffPage = () => {
       </div>
 
       {loading && (
-        <div className="alert alert-info d-flex align-items-center gap-2" role="alert">
-          <span className="spinner-border spinner-border-sm" aria-hidden="true" />
-          <span>Đang tải danh sách nhân viên...</span>
-        </div>
+        <LoadingSpinner inline variant="dots" text="Đang tải danh sách nhân viên..." />
       )}
 
       {error && (

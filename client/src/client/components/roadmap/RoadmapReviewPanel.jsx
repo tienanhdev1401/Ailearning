@@ -7,6 +7,7 @@ import {
   updateRoadmapReview,
 } from '../../services/roadmapReviewService';
 import { useToast } from '../../../context/ToastContext';
+import LoadingSpinner from '../../../component/LoadingSpinner';
 
 const classNames = (...parts) => parts.filter(Boolean).join(' ');
 
@@ -327,7 +328,7 @@ const RoadmapReviewPanel = ({ roadmapId, roadmapTitle, onClose }) => {
         </section>
 
         <section className={styles.reviewList}>
-          {loading && <p className={styles.reviewEmpty}>Đang tải đánh giá...</p>}
+          {loading && <LoadingSpinner inline size="sm" variant="dots" text="Đang tải đánh giá..." />}
           {!loading && !filteredReviews.length && (
             <p className={styles.reviewEmpty}>Chưa có đánh giá nào khớp với bộ lọc hiện tại.</p>
           )}

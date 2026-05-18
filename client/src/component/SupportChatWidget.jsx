@@ -5,6 +5,7 @@ import styles from "../client/styles/SupportChatWidget.module.css";
 import { SupportChatService } from "../services/supportChatService";
 import { createSupportChatSocket } from "../utils/supportChatSocket";
 import { useToast } from "../context/ToastContext";
+import LoadingSpinner from "./LoadingSpinner";
 
 const normalizeMessage = (message) => {
   const created = message?.createdAt ? new Date(message.createdAt) : new Date();
@@ -466,7 +467,7 @@ const SupportChatWidget = () => {
                 {historyError ? (
                   <div className={styles.errorBox}>{historyError}</div>
                 ) : loadingConversations && conversations.length === 0 ? (
-                  <div className={styles.placeholder}>Đang tải lịch sử...</div>
+                  <LoadingSpinner inline size="sm" variant="dots" text="Đang tải lịch sử..." />
                 ) : conversations.length === 0 ? (
                   <div className={styles.placeholder}>Bạn chưa có cuộc trò chuyện nào</div>
                 ) : (
@@ -519,7 +520,7 @@ const SupportChatWidget = () => {
                 )}
               </div>
             ) : initializing ? (
-              <div className={styles.placeholder}>Đang tải cuộc trò chuyện...</div>
+              <LoadingSpinner inline size="sm" variant="dots" text="Đang tải cuộc trò chuyện..." />
             ) : error ? (
               <div className={styles.errorBox}>{error}</div>
             ) : (

@@ -8,6 +8,7 @@ import ListenSelectMiniGame from "./ListenSelectMiniGame";
 import ExamMiniGame from "./ExamMiniGame";
 import TrueFalseMiniGame from "./TrueFalseMiniGame";
 import TypingChallengeMiniGame from "./TypingChallengeMiniGame";
+import LoadingSpinner from "../../../component/LoadingSpinner";
 import FlipCardMiniGame from "./FlipCardMiniGame";
 import WatchVideoMiniGame from "./WatchVideoMiniGame";
 import { useToast } from "../../../context/ToastContext";
@@ -865,7 +866,7 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 						}}
 					>
 						{detailLoading ? (
-							<div className="card p-3">Loading...</div>
+							<div className="card p-3"><LoadingSpinner inline size="sm" variant="dots" /></div>
 						) : (
 							(selected.type === "match_image_word") ? (
 								<MatchImageWordMiniGame

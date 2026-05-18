@@ -8,6 +8,7 @@ import {
   selectLessons,
 } from "../../features/lessons/lessonsSlice";
 import DictationShadowingPopUpModal from "../components/DictationShadowingPopUpModal";
+import LoadingSpinner from "../../component/LoadingSpinner";
 
 const LESSONS_PER_PAGE = 8;
 
@@ -249,12 +250,12 @@ const TopicDetailPage = () => {
 
         {/* Status */}
         {status === "loading" && (
-          <div className="text-center mt-3">⏳ Đang tải dữ liệu...</div>
+          <LoadingSpinner inline text="Đang tải dữ liệu..." />
         )}
         {!lessons.length && status === "succeeded" && !loadingMore && !error && (
           <div className="text-center mt-3">Không tìm thấy bài học phù hợp.</div>
         )}
-        {loadingMore && <div className="text-center mt-3">⏳ Đang tải thêm...</div>}
+        {loadingMore && <LoadingSpinner inline size="sm" variant="dots" text="Đang tải thêm..." />}
         {error && <div className="text-center mt-3 text-danger">{error}</div>}
       </div>
       <DictationShadowingPopUpModal

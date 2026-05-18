@@ -9,6 +9,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import lessonService from "../services/lessonService";
 import { useToast } from "../../context/ToastContext";
 import PronunciationScoreResult from "../components/Pronunciation/PronunciationScoreResult";
+import LoadingSpinner from "../../component/LoadingSpinner";
 
 export default function SpeakingVideoPraticePage() {
   // Lay lessonId từ URL param
@@ -390,13 +391,7 @@ export default function SpeakingVideoPraticePage() {
   };
 
   if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center bg-body text-body" style={{ height: "100vh" }}>
-        <div className="spinner-border text-primary" style={{ width: "4rem", height: "4rem" }} role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text="Đang tải bài học..." />;
   }
 
   // helper to render colored words using apiResult if available
@@ -442,7 +437,7 @@ export default function SpeakingVideoPraticePage() {
         <ol className="breadcrumb">
           <li className="breadcrumb-item">Topics</li>
           <li className="breadcrumb-item">Movie short clip</li>
-          <li className="breadcrumb-item active">{lesson ? lesson.title : "Loading..."}</li>
+          <li className="breadcrumb-item active">{lesson ? lesson.title : "Đang tải..."}</li>
         </ol>
       </nav>
 

@@ -8,6 +8,7 @@ import React, {
 import { SupportChatService } from "../../services/supportChatService";
 import { createSupportChatSocket } from "../../utils/supportChatSocket";
 import { useToast } from "../../context/ToastContext";
+import LoadingSpinner from "../../component/LoadingSpinner";
 
 const STATUS_OPTIONS = [
 	{ value: "open", label: "Đang mở" },
@@ -339,7 +340,7 @@ const MessagesPage = () => {
 
 						<div className="conversations-list">
 							{loadingConversations ? (
-								<div className="p-4 text-center text-muted">Đang tải...</div>
+								<LoadingSpinner inline size="sm" variant="dots" text="Đang tải..." />
 							) : conversationsError ? (
 								<div className="p-4 text-center text-danger">{conversationsError}</div>
 							) : !sortedConversations.length ? (
@@ -431,7 +432,7 @@ const MessagesPage = () => {
 								) : (
 									<div className="chat-messages" ref={chatMessagesRef}>
 										{conversationLoading ? (
-											<div className="text-center text-muted py-5">Đang tải hội thoại...</div>
+											<LoadingSpinner inline size="sm" variant="dots" text="Đang tải hội thoại..." />
 										) : (
 											<>
 												{messages.map((message) => {

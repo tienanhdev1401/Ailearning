@@ -55,8 +55,7 @@ const MySubscriptionPage = () => {
   if (isLoading) {
     return (
       <div className={styles.loadingState}>
-        <LoadingSpinner />
-        <p>Đang tải dữ liệu đăng ký...</p>
+        <LoadingSpinner inline text="Đang tải dữ liệu đăng ký..." />
       </div>
     );
   }

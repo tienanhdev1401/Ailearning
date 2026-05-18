@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import userService from '../../services/userService';
 import { useToast } from '../../context/ToastContext';
 import { INITIAL_USERS } from '../data/users';
+import LoadingSpinner from '../../component/LoadingSpinner';
 
 const ROLE_LABELS = {
   admin: 'Quản trị viên',
@@ -472,10 +473,7 @@ const UsersPage = () => {
       </div>
 
       {loading && (
-        <div className="alert alert-info d-flex align-items-center gap-2" role="alert">
-          <span className="spinner-border spinner-border-sm" aria-hidden="true" />
-          <span>Đang tải dữ liệu thật từ server...</span>
-        </div>
+        <LoadingSpinner inline variant="dots" text="Đang tải dữ liệu người dùng..." />
       )}
 
       {error && (
