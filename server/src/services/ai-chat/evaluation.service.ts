@@ -8,18 +8,6 @@ import type { PronunciationReport } from "./pronunciation.service";
 
 const FEATURE_AI_CHAT = "ai_chat";
 
-const FALLBACK_EVALUATION_TEMPLATE = `You are an English pronunciation and conversation tutor. Evaluate the learner's performance across the following dimensions: Pronunciation, Prosody (intonation & fluency), Grammar, Vocabulary.
-
-Use the objective pronunciation evidence below (from an acoustic GOP model) as the authoritative input for the Pronunciation and Prosody scores. Translate the GOP 0-100 average into the 0-10 scale roughly as: 80+ -> 8-10, 56-79 -> 5-7, below 56 -> 0-4. If no pronunciation evidence is provided, give a neutral 5 for Pronunciation and Prosody and mention this in the summary.
-
-Pronunciation evidence:
-{{pronunciationEvidence}}
-
-Return a JSON object containing numeric scores from 0 to 10 for each dimension using whole or half steps, a short summary (2-3 sentences) and an array of actionable suggestions. Use camelCase field names.
-
-Conversation transcript:
-{{transcript}}`;
-
 interface EvaluationPayload {
   pronunciationScore: number;
   prosodyScore: number;
@@ -70,12 +58,12 @@ class EvaluationService {
       temperature = rendered.resolved.config.temperature ?? temperature;
       maxOutputTokens = rendered.resolved.config.maxOutputTokens ?? maxOutputTokens;
     } catch (error) {
-      // Prompt not seeded yet — fall back to inline template so the system
-      // remains operational even on a fresh install.
-      promptText = promptService.renderTemplate(FALLBACK_EVALUATION_TEMPLATE, {
-        transcript,
-        pronunciationEvidence,
-      });
+      const errMsg = error instanceof Error ? error.message : String(error);
+      console.error(`[Evaluation] Failed to render prompt for conversation ${conversationId}: ${errMsg}`);
+      throw new Error(
+        `Evaluation prompt not available. Ensure 'ai_chat:evaluation' prompt is seeded in the database. ` +
+        `Run server bootstrap or check ai_prompts table. Original error: ${errMsg}`
+      );
     }
 
     const raw = await geminiService.generate({

@@ -3,6 +3,7 @@ import api from "../../api/api";
 import { useToast } from "../../context/ToastContext";
 import { PACKAGE_TYPE } from "../../enums/packageType.enum";
 import "../styles/PackagesPage.css";
+import LoadingSpinner from '../../component/LoadingSpinner';
 
 const PackagesPage = () => {
   const toast = useToast();
@@ -184,9 +185,7 @@ const PackagesPage = () => {
       </div>
 
       {loading ? (
-        <div className="d-flex justify-content-center py-5">
-          <div className="spinner-border text-primary" role="status"></div>
-        </div>
+        <LoadingSpinner inline variant="dots" text="Đang tải gói nạp..." />
       ) : (
         <div className="row g-4">
           {filteredPackages.length === 0 ? (

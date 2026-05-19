@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import AiPromptService from "../services/aiPromptService";
 import { useToast } from "../../context/ToastContext";
+import LoadingSpinner from "../../component/LoadingSpinner";
 
 /* =========================================================
    Prompt Management — generic prompt registry for any AI feature
@@ -731,7 +732,7 @@ const PromptsTab = ({ prompts, features, loading, filter, setFilter, onAdd, onEd
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={6} className="text-center py-4">Đang tải...</td></tr>
+                <tr><td colSpan={6} className="text-center py-4"><LoadingSpinner inline size="sm" variant="dots" text="Đang tải..." /></td></tr>
               )}
               {!loading && prompts.length === 0 && (
                 <tr><td colSpan={6} className="text-center py-4 text-muted">Chưa có prompt</td></tr>
@@ -784,7 +785,7 @@ const GuidanceTab = ({ items, loading, onAdd, onEdit, onDelete }) => (
 
     <div className="row g-3">
       {loading && (
-        <div className="col-12 text-center text-muted py-4">Đang tải...</div>
+        <div className="col-12"><LoadingSpinner inline size="sm" variant="dots" text="Đang tải..." /></div>
       )}
       {!loading && items.length === 0 && (
         <div className="col-12 text-center text-muted py-4">Chưa có scenario guidance</div>

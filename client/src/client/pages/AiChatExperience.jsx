@@ -1121,14 +1121,6 @@ const AiChatExperience = () => {
           {mode === AI_CONVERSATION_MODE.VOICE && (
             <div className={styles.voiceDock}>
               <button
-                className={styles.dockAction}
-                onClick={handleCompleteSession}
-                disabled={!conversation || conversation.status !== "active" || isFinalizing}
-              >
-                {isFinalizing ? "Đang tổng kết..." : "End role-play"}
-              </button>
-
-              <button
                 className={`${styles.micButton} ${isRecording ? styles.recording : ""}`}
                 onMouseDown={!micDisabled ? startRecording : undefined}
                 onMouseUp={!micDisabled ? stopRecording : undefined}

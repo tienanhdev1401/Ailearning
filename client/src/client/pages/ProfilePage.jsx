@@ -519,8 +519,7 @@ const ProfilePage = () => {
   if (isLoading) {
     return (
       <div className={styles.loadingState}>
-        <LoadingSpinner />
-        <p>Đang tải hồ sơ học tập...</p>
+        <LoadingSpinner inline text="Đang tải hồ sơ học tập..." />
       </div>
     );
   }
@@ -646,7 +645,7 @@ const ProfilePage = () => {
             </header>
             <div className={styles.cardBody}>
               {activeRoadmapState.loading ? (
-                <div className={styles.roadmapLoading}>Đang tải lộ trình của bạn...</div>
+                <LoadingSpinner inline size="sm" variant="dots" text="Đang tải lộ trình của bạn..." />
               ) : activeRoadmapState.error ? (
                 <div className={styles.roadmapError}>
                   <span>{activeRoadmapState.error}</span>

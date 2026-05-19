@@ -550,30 +550,6 @@
   border: 1px solid var(--pp-border);
 }
 
-.dockAction {
-  appearance: none;
-  border-radius: 999px;
-  padding: 9px 16px;
-  border: 1px solid var(--pp-border-strong);
-  background: transparent;
-  color: var(--pp-text);
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
-}
-
-.dockAction:not(:disabled):hover {
-  background: var(--pp-surface-strong);
-  border-color: var(--pp-text);
-  transform: translateY(-1px);
-}
-
-.dockAction:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
 .micButton {
   height: 70px;
   width: 70px;

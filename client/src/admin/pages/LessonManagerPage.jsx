@@ -4,6 +4,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import api from '../../api/api';
 import lessonTopicEnum from "../../enums/lessonTopic.enum";
 import { useToast } from '../../context/ToastContext';
+import LoadingSpinner from '../../component/LoadingSpinner';
 
 const LessonManagerPage = ()=> {
   const toast = useToast();
@@ -217,7 +218,7 @@ const LessonManagerPage = ()=> {
       </div>
 
       {loading ? (
-        <div className="text-center py-5">Loading...</div>
+        <LoadingSpinner inline variant="dots" text="Đang tải bài học..." />
       ) : error ? (
         <div className="alert alert-danger">{error}</div>
       ) : (

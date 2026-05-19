@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import ReactApexChart from 'react-apexcharts';
+import LoadingSpinner from '../../../component/LoadingSpinner';
 
 const SubscriptionDistributionCard = ({ distribution = { labels: [], data: [] }, loading = false }) => {
   const safeDistribution = useMemo(() => ({
@@ -47,9 +48,7 @@ const SubscriptionDistributionCard = ({ distribution = { labels: [], data: [] },
       <div className="card-body px-4 pb-4">
         {loading ? (
           <div className="d-flex justify-content-center align-items-center h-100" style={{ minHeight: '250px' }}>
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
+            <LoadingSpinner inline size="sm" variant="dots" />
           </div>
         ) : !hasData ? (
           <div className="text-center py-5 text-muted">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Container, Card, Form, InputGroup, Button, Spinner, Modal } from "react-bootstrap";
+import LoadingSpinner from "../../component/LoadingSpinner";
 import {
   FiSearch,
   FiTrash2,
@@ -170,11 +171,7 @@ const VocabNotebookPage = () => {
     ) || [];
 
   if (loading) {
-    return (
-      <div className={`${styles.pageWrapper} ${styles.loadingWrapper}`}>
-        <Spinner animation="border" variant="primary" />
-      </div>
-    );
+    return <LoadingSpinner text="Đang tải sổ tay từ vựng..." />;
   }
 
   return (

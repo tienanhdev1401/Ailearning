@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Container, Row, Col, Spinner, Card } from "react-bootstrap";
+import { Container, Row, Col, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { FiLayers, FiArrowRight, FiBookOpen } from "react-icons/fi";
 import api from "../../api/api";
 import { ThemeContext } from "../../context/ThemeContext";
 import styles from "../styles/FlashcardListPage.module.css";
+import LoadingSpinner from "../../component/LoadingSpinner";
 
 const FlashcardListPage = () => {
   const navigate = useNavigate();
@@ -31,12 +32,7 @@ const FlashcardListPage = () => {
   }, []);
 
   if (loading) {
-    return (
-      <div className={styles.loadingWrapper}>
-        <Spinner animation="border" variant="primary" />
-        <p className="mt-3">Đang tải thư viện bộ thẻ...</p>
-      </div>
-    );
+    return <LoadingSpinner text="Đang tải thư viện bộ thẻ..." />;
   }
 
   const totalTerms = flashcardSets.reduce(
