@@ -4,23 +4,10 @@ import Chart from '../../lib/chart';
 const PERIODS = [
   { label: '7D', value: '7d' },
   { label: '30D', value: '30d' },
-  { label: '90D', value: '90d' },
   { label: '1Y', value: '1y' }
 ];
 
-const sliceDataByPeriod = (dataset, period) => {
-  switch (period) {
-    case '7d':
-      return dataset.slice(-7);
-    case '30d':
-      return dataset.slice(-10);
-    case '90d':
-      return dataset.slice(-12);
-    case '1y':
-    default:
-      return dataset;
-  }
-};
+
 
 const FinancialOverviewCard = ({ dataset = { labels: [], revenue: [], profit: [] } }) => {
   const [period, setPeriod] = useState('7d');
@@ -28,15 +15,17 @@ const FinancialOverviewCard = ({ dataset = { labels: [], revenue: [], profit: []
   const canvasRef = useRef(null);
 
   const filteredData = useMemo(() => {
-    const labels = dataset?.labels || [];
-    const revenue = dataset?.revenue || [];
-    const profit = dataset?.profit || [];
+    // If dataset is the new format, use dataset[period], otherwise fallback to dataset itself
+    const currentDataset = dataset[period] || dataset;
+    const labels = currentDataset?.labels || [];
+    const revenue = currentDataset?.revenue || [];
+    const profit = currentDataset?.profit || [];
 
-    return sliceDataByPeriod(labels.map((label, idx) => ({
+    return labels.map((label, idx) => ({
       label,
       revenue: revenue[idx] || 0,
       profit: profit[idx] || 0
-    })), period);
+    }));
   }, [dataset, period]);
 
   useEffect(() => {

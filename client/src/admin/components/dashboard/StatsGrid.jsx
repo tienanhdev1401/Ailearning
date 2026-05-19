@@ -9,7 +9,7 @@ const formatValue = (value, prefix = '', suffix = '') => {
 const StatsGrid = ({ stats }) => (
   <div className="row g-4 mb-4">
     {stats.map((card) => (
-      <div className="col-xl-3 col-lg-6" key={card.label}>
+      <div className="col-xl-3 col-lg-3 col-md-6 col-12" key={card.label}>
         <div className="card stats-card h-100">
           <div className="card-body">
             <div className="d-flex align-items-center">

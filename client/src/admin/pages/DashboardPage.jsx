@@ -7,7 +7,7 @@ import SalesByLocationCard from '../components/dashboard/SalesByLocationCard';
 import StatsGrid from '../components/dashboard/StatsGrid';
 import SubscriptionDistributionCard from '../components/dashboard/SubscriptionDistributionCard';
 import ContentStatsCard from '../components/dashboard/ContentStatsCard';
-import MonthlyRevenueChart from '../components/dashboard/MonthlyRevenueChart';
+
 import UserGrowthCard from '../components/dashboard/UserGrowthCard';
 import { useDashboardData } from '../hooks/useDashboardData';
 
@@ -23,7 +23,6 @@ const DashboardPage = () => {
     userGrowthDataset,
     contentStats,
     subscriptionDistribution,
-    monthlyRevenue,
     loading,
     error
   } = useDashboardData();
@@ -47,18 +46,15 @@ const DashboardPage = () => {
 
       {/* Row 1: Charts */}
       <div className="row g-4 mb-4">
-        <div className="col-lg-8">
+        <div className="col-lg-12">
           <FinancialOverviewCard dataset={revenueDataset} />
-        </div>
-        <div className="col-lg-4">
-          <UsageOverviewCard dataset={usageDataset} />
         </div>
       </div>
 
-      {/* Row 2: Monthly Breakdown & Content */}
+      {/* Row 2: Usage & Content */}
       <div className="row g-4 mb-4">
         <div className="col-lg-8">
-          <MonthlyRevenueChart data={monthlyRevenue} />
+          <UsageOverviewCard dataset={usageDataset} />
         </div>
         <div className="col-lg-4">
           <ContentStatsCard stats={contentStats} />

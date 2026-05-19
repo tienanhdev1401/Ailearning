@@ -31,10 +31,23 @@ type RevenueDataset = {
   profit: number[];
 };
 
+type RevenueDatasetMap = {
+  "7d": RevenueDataset;
+  "30d": RevenueDataset;
+  "1y": RevenueDataset;
+};
+
+
 type UsageDataset = {
   labels: string[];
   aiConversations: number[];
   resolvedTickets: number[];
+};
+
+type UsageDatasetMap = {
+  "7d": UsageDataset;
+  "30d": UsageDataset;
+  "1y": UsageDataset;
 };
 
 type UserGrowthDataset = {
@@ -75,7 +88,7 @@ type StorageUsage = {
 
 export type DashboardOverview = {
   statsCards: StatsCard[];
-  revenueDataset: RevenueDataset;
+  revenueDataset: RevenueDatasetMap | RevenueDataset;
   userGrowthDataset: UserGrowthDataset;
   orderStatusDataset: OrderStatusDataset;
   recentOrders: RecentOrder[];
@@ -88,7 +101,7 @@ export type DashboardOverview = {
     minigames: number;
     activities: number;
   };
-  usageDataset: UsageDataset;
+  usageDataset: UsageDatasetMap | UsageDataset;
   subscriptionDistribution: {
     labels: string[];
     data: number[];
@@ -233,23 +246,7 @@ export class DashboardService {
       revenueMap.set(key, { total: Number(row.total || 0), count: Number(row.count || 0) });
     });
 
-    const aiByMonthRaw = await aiConvRepo
-      .createQueryBuilder("conv")
-      .select("YEAR(conv.createdAt)", "y")
-      .addSelect("MONTH(conv.createdAt)", "m")
-      .addSelect("COUNT(*)", "total")
-      .where("conv.createdAt >= :from", { from: startSixMonths })
-      .groupBy("YEAR(conv.createdAt)")
-      .addGroupBy("MONTH(conv.createdAt)")
-      .orderBy("YEAR(conv.createdAt)", "ASC")
-      .addOrderBy("MONTH(conv.createdAt)", "ASC")
-      .getRawMany<{ y: number; m: number; total: string }>();
 
-    const aiMap = new Map<string, number>();
-    aiByMonthRaw.forEach((row) => {
-      const key = `${row.y}-${row.m.toString().padStart(2, "0")}`;
-      aiMap.set(key, Number(row.total));
-    });
 
     const monthlyRevenue = sixMonthsWindow.map((m, idx) => {
       const current = revenueMap.get(m.key) || { total: 0, count: 0 };
@@ -271,21 +268,134 @@ export class DashboardService {
       };
     });
 
-    const revenueDataset: RevenueDataset = {
-      labels: sixMonthsWindow.map((m) => m.label),
-      revenue: sixMonthsWindow.map((m) => revenueMap.get(m.key)?.total ?? 0),
-      profit: [] // Empty per user request
+    const start90Days = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 90);
+    const revenueByDayRaw = await transactionRepo
+      .createQueryBuilder("t")
+      .select("DATE(t.createdAt)", "d")
+      .addSelect("SUM(t.amount)", "total")
+      .where("t.status = :status", { status: TRANSACTION_STATUS.SUCCESS })
+      .andWhere("t.createdAt >= :from", { from: start90Days })
+      .groupBy("DATE(t.createdAt)")
+      .orderBy("DATE(t.createdAt)", "ASC")
+      .getRawMany<{ d: Date; total: string }>();
+
+    const dailyRevenueMap = new Map<string, number>();
+    revenueByDayRaw.forEach((row) => {
+      // In MySQL/TypeORM, DATE() might return a string or Date object depending on driver
+      const dateObj = new Date(row.d);
+      const key = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1).toString().padStart(2, "0")}-${dateObj.getDate().toString().padStart(2, "0")}`;
+      dailyRevenueMap.set(key, Number(row.total || 0));
+    });
+
+    const generateDailyDataset = (days: number): RevenueDataset => {
+      const labels: string[] = [];
+      const revenue: number[] = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
+        labels.push(`${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`);
+        revenue.push(dailyRevenueMap.get(key) || 0);
+      }
+      return { labels, revenue, profit: [] };
     };
 
-    const usageDataset: UsageDataset = {
-      labels: sixMonthsWindow.map((m) => m.label),
-      aiConversations: sixMonthsWindow.map((m) => aiMap.get(m.key) ?? 0),
-      resolvedTickets: sixMonthsWindow.map((m) => {
-        // Mocking ticket trend since we don't have historical ticket resolution repo yet
-        // but we can use supportRepo counts if needed. For now just use a realistic mock
-        // or query the supportRepo if it has createdAt.
-        return Math.floor(Math.random() * 50);
-      })
+    const start12Months = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+    const revenueByMonth12Raw = await transactionRepo
+      .createQueryBuilder("t")
+      .select("YEAR(t.createdAt)", "y")
+      .addSelect("MONTH(t.createdAt)", "m")
+      .addSelect("SUM(t.amount)", "total")
+      .where("t.status = :status", { status: TRANSACTION_STATUS.SUCCESS })
+      .andWhere("t.createdAt >= :from", { from: start12Months })
+      .groupBy("YEAR(t.createdAt)")
+      .addGroupBy("MONTH(t.createdAt)")
+      .orderBy("YEAR(t.createdAt)", "ASC")
+      .addOrderBy("MONTH(t.createdAt)", "ASC")
+      .getRawMany<{ y: number; m: number; total: string }>();
+
+    const monthlyRevenueMap12 = new Map<string, number>();
+    revenueByMonth12Raw.forEach((row) => {
+      const key = `${row.y}-${row.m.toString().padStart(2, "0")}`;
+      monthlyRevenueMap12.set(key, Number(row.total || 0));
+    });
+
+    const labels1y: string[] = [];
+    const revenue1y: number[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+      labels1y.push(monthLabels[d.getMonth()]);
+      revenue1y.push(monthlyRevenueMap12.get(key) || 0);
+    }
+
+    const revenueDatasetMap: RevenueDatasetMap = {
+      "7d": generateDailyDataset(7),
+      "30d": generateDailyDataset(30),
+      "1y": { labels: labels1y, revenue: revenue1y, profit: [] }
+    };
+
+    const start30Days = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
+    const aiByDayRaw = await aiConvRepo
+      .createQueryBuilder("conv")
+      .select("DATE(conv.createdAt)", "d")
+      .addSelect("COUNT(*)", "total")
+      .where("conv.createdAt >= :from", { from: start30Days })
+      .groupBy("DATE(conv.createdAt)")
+      .orderBy("DATE(conv.createdAt)", "ASC")
+      .getRawMany<{ d: Date; total: string }>();
+
+    const dailyAiMap = new Map<string, number>();
+    aiByDayRaw.forEach((row) => {
+      const dateObj = new Date(row.d);
+      const key = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1).toString().padStart(2, "0")}-${dateObj.getDate().toString().padStart(2, "0")}`;
+      dailyAiMap.set(key, Number(row.total || 0));
+    });
+
+    const generateDailyUsageDataset = (days: number): UsageDataset => {
+      const labels: string[] = [];
+      const aiConversations: number[] = [];
+      const resolvedTickets: number[] = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
+        labels.push(`${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`);
+        aiConversations.push(dailyAiMap.get(key) || 0);
+        resolvedTickets.push(Math.floor(Math.random() * 50)); // Mocking data as requested
+      }
+      return { labels, aiConversations, resolvedTickets };
+    };
+
+    const aiByMonth12Raw = await aiConvRepo
+      .createQueryBuilder("conv")
+      .select("YEAR(conv.createdAt)", "y")
+      .addSelect("MONTH(conv.createdAt)", "m")
+      .addSelect("COUNT(*)", "total")
+      .where("conv.createdAt >= :from", { from: start12Months })
+      .groupBy("YEAR(conv.createdAt)")
+      .addGroupBy("MONTH(conv.createdAt)")
+      .orderBy("YEAR(conv.createdAt)", "ASC")
+      .addOrderBy("MONTH(conv.createdAt)", "ASC")
+      .getRawMany<{ y: number; m: number; total: string }>();
+
+    const monthlyAiMap12 = new Map<string, number>();
+    aiByMonth12Raw.forEach((row) => {
+      const key = `${row.y}-${row.m.toString().padStart(2, "0")}`;
+      monthlyAiMap12.set(key, Number(row.total));
+    });
+
+    const ai1y: number[] = [];
+    const tickets1y: number[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+      ai1y.push(monthlyAiMap12.get(key) || 0);
+      tickets1y.push(Math.floor(Math.random() * 50)); // Mocking data
+    }
+
+    const usageDatasetMap: UsageDatasetMap = {
+      "7d": generateDailyUsageDataset(7),
+      "30d": generateDailyUsageDataset(30),
+      "1y": { labels: labels1y, aiConversations: ai1y, resolvedTickets: tickets1y }
     };
 
     const fourteenDaysAgo = new Date(now);
@@ -464,11 +574,7 @@ export class DashboardService {
 
     return {
       statsCards,
-      revenueDataset: ensureDataset(revenueDataset.labels, []).length ? revenueDataset : {
-        labels: monthLabels.slice(0, 6),
-        revenue: Array(6).fill(0),
-        profit: Array(6).fill(0)
-      },
+      revenueDataset: revenueDatasetMap,
       userGrowthDataset,
       orderStatusDataset,
       recentOrders: ensureDataset(recentOrders, []),
@@ -483,7 +589,7 @@ export class DashboardService {
       },
       subscriptionDistribution,
       monthlyRevenue,
-      usageDataset,
+      usageDataset: usageDatasetMap,
       recentTickets
     };
   }

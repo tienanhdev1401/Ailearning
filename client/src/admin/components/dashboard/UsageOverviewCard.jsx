@@ -4,19 +4,8 @@ import Chart from '../../lib/chart';
 const PERIODS = [
   { label: '7D', value: '7d' },
   { label: '30D', value: '30d' },
-  { label: '90D', value: '90d' },
   { label: '1Y', value: '1y' }
 ];
-
-const sliceDataByPeriod = (dataset, period) => {
-  switch (period) {
-    case '7d': return dataset.slice(-7);
-    case '30d': return dataset.slice(-10);
-    case '90d': return dataset.slice(-12);
-    case '1y':
-    default: return dataset;
-  }
-};
 
 const UsageOverviewCard = ({ dataset = { labels: [], aiConversations: [], resolvedTickets: [] } }) => {
   const [period, setPeriod] = useState('7d');
@@ -24,15 +13,16 @@ const UsageOverviewCard = ({ dataset = { labels: [], aiConversations: [], resolv
   const canvasRef = useRef(null);
 
   const filteredData = useMemo(() => {
-    const labels = dataset?.labels || [];
-    const ai = dataset?.aiConversations || [];
-    const tickets = dataset?.resolvedTickets || [];
+    const currentDataset = dataset[period] || dataset;
+    const labels = currentDataset?.labels || [];
+    const ai = currentDataset?.aiConversations || [];
+    const tickets = currentDataset?.resolvedTickets || [];
     
-    return sliceDataByPeriod(labels.map((label, idx) => ({
+    return labels.map((label, idx) => ({
       label,
       ai: ai[idx] || 0,
       tickets: tickets[idx] || 0
-    })), period);
+    }));
   }, [dataset, period]);
 
   useEffect(() => {
@@ -52,7 +42,7 @@ const UsageOverviewCard = ({ dataset = { labels: [], aiConversations: [], resolv
             borderRadius: 4
           },
           {
-            label: 'Resolved Tickets',
+            label: 'Support Tickets',
             data: filteredData.map((point) => point.tickets),
             backgroundColor: 'rgba(16, 185, 129, 0.8)',
             borderRadius: 4
@@ -101,7 +91,7 @@ const UsageOverviewCard = ({ dataset = { labels: [], aiConversations: [], resolv
         </div>
       </div>
       <div className="card-body">
-        <canvas ref={canvasRef} height="250" />
+        <canvas ref={canvasRef} height="450" />
       </div>
     </div>
   );
