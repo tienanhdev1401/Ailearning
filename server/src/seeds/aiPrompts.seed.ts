@@ -65,9 +65,9 @@ Conversation transcript:
 
 function loadJson<T>(filename: string): T | null {
   const candidates = [
-    path.resolve(__dirname, "..", "services", "ai-chat", "config", filename),
-    path.resolve(process.cwd(), "src", "services", "ai-chat", "config", filename),
-    path.resolve(process.cwd(), "dist", "services", "ai-chat", "config", filename),
+    path.resolve(__dirname, "data", filename),
+    path.resolve(process.cwd(), "src", "seeds", "data", filename),
+    path.resolve(process.cwd(), "dist", "seeds", "data", filename),
   ];
   for (const p of candidates) {
     if (fs.existsSync(p)) {

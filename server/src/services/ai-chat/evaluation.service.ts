@@ -4,9 +4,8 @@ import { AiEvaluation } from "../../models/aiEvaluation";
 import AI_MESSAGE_ROLE from "../../enums/aiMessageRole.enum";
 import { geminiService } from "./gemini.service";
 import { promptService } from "../ai/prompt.service";
+import { FEATURE_AI_CHAT } from "./constants";
 import type { PronunciationReport } from "./pronunciation.service";
-
-const FEATURE_AI_CHAT = "ai_chat";
 
 interface EvaluationPayload {
   pronunciationScore: number;

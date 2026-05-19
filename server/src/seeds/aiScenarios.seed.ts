@@ -15,9 +15,9 @@ interface ScenarioSeed {
 function loadDefaultScenarios(): ScenarioSeed[] {
   const filename = "default-scenarios.json";
   const candidatePaths = [
-    path.resolve(__dirname, "..", "services", "ai-chat", "config", filename),
-    path.resolve(process.cwd(), "src", "services", "ai-chat", "config", filename),
-    path.resolve(process.cwd(), "dist", "services", "ai-chat", "config", filename),
+    path.resolve(__dirname, "data", filename),
+    path.resolve(process.cwd(), "src", "seeds", "data", filename),
+    path.resolve(process.cwd(), "dist", "seeds", "data", filename),
   ];
 
   for (const candidate of candidatePaths) {

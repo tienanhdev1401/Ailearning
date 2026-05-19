@@ -19,9 +19,7 @@ import {
   scenarioGuidanceService,
   GuidanceView,
 } from "../ai/scenarioGuidance.service";
-
-const FEATURE_AI_CHAT = "ai_chat";
-type ScenarioKey = string;
+import { FEATURE_AI_CHAT, type ScenarioKey } from "./constants";
 
 interface StartConversationPayload {
   userId: number;
@@ -171,22 +169,9 @@ ${contextNote}` : basePrompt;
       transcript: trimmed,
     });
     await this.messageRepo.save(userMessage);
-    emitAiChatEvent(conversation.id, "user_message", this.toMessagePayload(userMessage));
 
-  const updatedConversation = await this.getConversationWithMessages(conversation.id, payload.userId);
-  const aiResponseText = await this.generateFollowUp(updatedConversation, trimmed);
+    const aiMessage = await this.processUserTurnAndGetAiReply(conversation, userMessage, payload.userId);
 
-    const aiMessage = this.messageRepo.create({
-      conversation,
-      role: AI_MESSAGE_ROLE.AI,
-      content: aiResponseText,
-    });
-    await this.messageRepo.save(aiMessage);
-    emitAiChatEvent(conversation.id, "ai_message", this.toMessagePayload(aiMessage));
-
-    // Overall evaluation is now produced only once the learner ends the
-    // session (see markConversationCompleted). Per-turn evaluation is skipped
-    // to save Gemini quota and avoid noisy mid-session score fluctuation.
     return {
       userMessage: this.toMessagePayload(userMessage),
       aiMessage: this.toMessagePayload(aiMessage),
@@ -249,7 +234,8 @@ ${contextNote}` : basePrompt;
       pronunciationScore: pronunciationScoreJson,
     });
     await this.messageRepo.save(userMessage);
-    emitAiChatEvent(conversation.id, "user_message", this.toMessagePayload(userMessage));
+
+    // Emit transcript event for voice messages (real-time UI feedback).
     emitAiChatEvent(conversation.id, "transcript", {
       conversationId: conversation.id,
       messageId: userMessage.id,
@@ -257,20 +243,8 @@ ${contextNote}` : basePrompt;
       duration: transcription.duration ?? null,
     });
 
-  const updatedConversation = await this.getConversationWithMessages(conversation.id, payload.userId);
-  const aiResponseText = await this.generateFollowUp(updatedConversation, transcriptText);
+    const aiMessage = await this.processUserTurnAndGetAiReply(conversation, userMessage, payload.userId);
 
-    const aiMessage = this.messageRepo.create({
-      conversation,
-      role: AI_MESSAGE_ROLE.AI,
-      content: aiResponseText,
-    });
-    await this.messageRepo.save(aiMessage);
-    emitAiChatEvent(conversation.id, "ai_message", this.toMessagePayload(aiMessage));
-
-    // Overall evaluation runs only at session end. Per-turn pronunciation
-    // scoring already happened above via pronunciationService.scoreTurn and
-    // is cached on the message row for the end-of-session aggregation.
     return {
       userMessage: this.toMessagePayload(userMessage),
       aiMessage: this.toMessagePayload(aiMessage),
@@ -394,6 +368,32 @@ ${contextNote}` : basePrompt;
     }
 
     return conversation;
+  }
+
+  /**
+   * Shared logic for both text and voice messages:
+   * emit user message → fetch updated history → generate AI follow-up → save & emit AI reply.
+   */
+  private async processUserTurnAndGetAiReply(
+    conversation: AiConversation,
+    userMessage: AiMessage,
+    userId: number,
+  ): Promise<AiMessage> {
+    emitAiChatEvent(conversation.id, "user_message", this.toMessagePayload(userMessage));
+
+    const updatedConversation = await this.getConversationWithMessages(conversation.id, userId);
+    const userText = userMessage.transcript ?? userMessage.content;
+    const aiResponseText = await this.generateFollowUp(updatedConversation, userText);
+
+    const aiMessage = this.messageRepo.create({
+      conversation,
+      role: AI_MESSAGE_ROLE.AI,
+      content: aiResponseText,
+    });
+    await this.messageRepo.save(aiMessage);
+    emitAiChatEvent(conversation.id, "ai_message", this.toMessagePayload(aiMessage));
+
+    return aiMessage;
   }
 
   private async generateOpeningLine(options: { prompt: string; scenarioTitle?: string; contextNote?: string | null; contextLabel?: string; scenarioKey: ScenarioKey; }) {
@@ -600,7 +600,6 @@ ${contextNote}` : basePrompt;
     };
   }
 
-
   private detectClosureIntent(latestUserText: string) {
     const normalized = latestUserText.toLowerCase();
     const phrases = [
@@ -623,7 +622,6 @@ ${contextNote}` : basePrompt;
 
   private getLastAiSnippet(conversation: AiConversation) {
     const lastAiMessage = [...conversation.messages]
-      .slice()
       .reverse()
       .find((message) => message.role === AI_MESSAGE_ROLE.AI);
 
