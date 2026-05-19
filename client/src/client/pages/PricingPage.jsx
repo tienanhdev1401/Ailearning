@@ -223,19 +223,21 @@ const PricingPage = () => {
                         </div>
 
                         <ul className={styles.featureList}>
-                          <li className={styles.featureItem}>
-                            <span className={styles.featureCheck}>
-                              <FiCheck />
-                            </span>
-                            <span>
-                              <strong>
-                                {isPro 
-                                  ? ((pkg.aiConversationCredits || pkg.grammarCheckerCredits) * currentMultiplier).toLocaleString()
-                                  : (pkg.aiConversationCredits || pkg.grammarCheckerCredits || 0).toLocaleString()
-                                }
-                              </strong> lượt {type === "AI_CONVERSATION" ? "AI" : "Grammar"} / tháng
-                            </span>
-                          </li>
+                          {(type === "AI_CONVERSATION" || type === "GRAMMAR_CHECKER") && (
+                            <li className={styles.featureItem}>
+                              <span className={styles.featureCheck}>
+                                <FiCheck />
+                              </span>
+                              <span>
+                                <strong>
+                                  {isPro 
+                                    ? ((pkg.aiConversationCredits || pkg.grammarCheckerCredits) * currentMultiplier).toLocaleString()
+                                    : (pkg.aiConversationCredits || pkg.grammarCheckerCredits || 0).toLocaleString()
+                                  }
+                                </strong> lượt {type === "AI_CONVERSATION" ? "AI" : "Grammar"} / tháng
+                              </span>
+                            </li>
+                          )}
                           <li className={styles.featureItem}>
                             <span className={styles.featureCheck}>
                               <FiCheck />
