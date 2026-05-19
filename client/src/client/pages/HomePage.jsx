@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Modal } from "react-bootstrap";
+import { FiPlayCircle, FiMic, FiMessageSquare, FiMap, FiLayers, FiBook, FiEdit3 } from "react-icons/fi";
 import styles from "../styles/Home.module.css";
 
 const HomePage = () => {
@@ -39,9 +41,31 @@ const HomePage = () => {
     { number: "24/7", label: "Hỗ Trợ" }
   ];
 
-  const handleStartLearning = (skillType) => {
-    navigate(`/learn/${skillType}`);
+  const [selectedSkill, setSelectedSkill] = useState(null);
+
+  const skillOptions = {
+    "Nghe": [
+      { id: "video", title: "Video Lesson", desc: "Học kỹ năng nghe qua video", icon: <FiPlayCircle size={24} />, path: "/topics" }
+    ],
+    "Nói": [
+      { id: "speak_video", title: "Speaking Video Lesson", desc: "Luyện phát âm qua video", icon: <FiMic size={24} />, path: "/topics" },
+      { id: "ai_chat", title: "Nói chuyện với AI", desc: "Luyện giao tiếp trực tiếp với AI", icon: <FiMessageSquare size={24} />, path: "/experience/ai-chat" }
+    ],
+    "Đọc": [
+      { id: "roadmap", title: "Roadmap", desc: "Học theo lộ trình", icon: <FiMap size={24} />, path: "/roadmaps" },
+      { id: "flashcard", title: "Flashcard", desc: "Ôn tập từ vựng", icon: <FiLayers size={24} />, path: "/flashcards" },
+      { id: "notebook", title: "Sổ tay", desc: "Quản lý từ vựng đã lưu", icon: <FiBook size={24} />, path: "/notebooks" }
+    ],
+    "Viết": [
+      { id: "grammar", title: "Grammar Checker", desc: "Kiểm tra ngữ pháp tự động", icon: <FiEdit3 size={24} />, path: "/grammar" }
+    ]
   };
+
+  const handleStartLearning = (feature) => {
+    setSelectedSkill(feature);
+  };
+
+  const closeModal = () => setSelectedSkill(null);
 
   return (
     <div className={styles.homepage}>
@@ -58,7 +82,7 @@ const HomePage = () => {
             <div className={styles.heroCTA}>
               <button 
                 className={styles.primaryBtn}
-                onClick={() => handleStartLearning("all")}
+                onClick={() => document.getElementById('features-section').scrollIntoView({ behavior: 'smooth' })}
               >
                 Bắt Đầu Học Ngay
               </button>
@@ -93,7 +117,7 @@ const HomePage = () => {
       </section>
 
       {/* Features Section */}
-      <section className={styles.features}>
+      <section id="features-section" className={styles.features}>
         <div className={styles.sectionHeader}>
           <h2>4 Kỹ Năng Chính</h2>
           <p>Phát triển toàn diện các kỹ năng tiếng Anh của bạn</p>
@@ -103,7 +127,7 @@ const HomePage = () => {
             <div 
               key={index} 
               className={styles.featureCard}
-              onClick={() => handleStartLearning(feature.title.toLowerCase())}
+              onClick={() => handleStartLearning(feature)}
               style={{ '--feature-color': feature.color }}
             >
               <div className={styles.featureIcon}>{feature.icon}</div>
@@ -195,12 +219,50 @@ const HomePage = () => {
           <p>Hôm nay là ngày tốt nhất để bắt đầu học tiếng Anh. Với AelanG, bạn sẽ thấy sự tiến bộ chỉ trong vài tuần.</p>
           <button 
             className={styles.primaryBtn}
-            onClick={() => handleStartLearning("all")}
+            onClick={() => document.getElementById('features-section').scrollIntoView({ behavior: 'smooth' })}
           >
             Bắt Đầu Miễn Phí
           </button>
         </div>
       </section>
+      {/* Skill Selection Modal */}
+      <Modal 
+        show={!!selectedSkill} 
+        onHide={closeModal} 
+        centered
+        contentClassName={styles.skillModal}
+      >
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title style={{ fontWeight: 700, color: selectedSkill?.color || '#00FFFF' }}>
+            {selectedSkill?.icon} Kỹ Năng {selectedSkill?.title}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="pt-2 pb-4 px-4">
+          <p className="text-secondary mb-4">Bạn muốn luyện tập kỹ năng {selectedSkill?.title} qua phương pháp nào dưới đây?</p>
+          <div className="d-flex flex-column gap-3">
+            {selectedSkill && skillOptions[selectedSkill.title]?.map((option) => (
+              <div 
+                key={option.id}
+                className={styles.skillOptionCard}
+                onClick={() => {
+                  closeModal();
+                  navigate(option.path);
+                }}
+              >
+                <div className={styles.skillOptionIcon} style={{ color: selectedSkill.color }}>
+                  {option.icon}
+                </div>
+                <div className={styles.skillOptionText}>
+                  <h5>{option.title}</h5>
+                  <p>{option.desc}</p>
+                </div>
+                <div className={styles.skillOptionArrow}>→</div>
+              </div>
+            ))}
+          </div>
+        </Modal.Body>
+      </Modal>
+
     </div>
   );
 };
