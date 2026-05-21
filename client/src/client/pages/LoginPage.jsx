@@ -259,7 +259,7 @@ const LoginPage = () => {
                     required
                   />
                   <span>
-                    Tôi đồng ý với <span className={styles.link}>điều khoản dịch vụ</span>
+                    Tôi đồng ý với <span className={styles.link} onClick={() => window.open('/terms-of-service', '_blank')}>điều khoản dịch vụ</span>
                   </span>
                 </label>
                 <button type="submit" className={styles.primaryButton} disabled={isSendingOtp}>

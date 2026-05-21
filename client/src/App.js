@@ -16,6 +16,7 @@ import MessagesPage from "./admin/pages/MessagesPage";
 import FinancePage from "./admin/pages/FinancePage";
 import ForgotPasswordPage from "./client/pages/ForgotPasswordPage";
 import ProtectedRoute from "./routers/ProtectedRoute";
+import TermsOfServicePage from "./client/pages/TermsOfServicePage";
 
 import VideoPraticePage from "./client/pages/VideoPraticePage";
 import SpeakingVideoPraticePage from "./client/pages/SpeakingVideoPraticePage";
@@ -80,6 +81,7 @@ function App() {
         />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/terms-of-service" element={<TermsOfServicePage />} />
 
         <Route
           path="/video/:lessonId"
