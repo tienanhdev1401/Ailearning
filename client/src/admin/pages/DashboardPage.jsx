@@ -87,7 +87,7 @@ const DashboardPage = () => {
           <ActivityFeedCard items={activityFeed} />
         </div>
         <div className="col-lg-8">
-          <SalesByLocationCard data={salesByLocation} />
+          <SalesByLocationCard data={salesByLocation} loading={loading} />
         </div>
       </div>
     </div>

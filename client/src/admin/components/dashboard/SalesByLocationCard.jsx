@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import ReactApexChart from 'react-apexcharts';
+import LoadingSpinner from '../../../component/LoadingSpinner';
 
-const SalesByLocationCard = ({ data }) => {
+const SalesByLocationCard = ({ data, loading = false }) => {
   const sortedData = useMemo(() => [...data].sort((a, b) => b.value - a.value), [data]);
 
   const series = useMemo(() => sortedData.map((entry) => entry.value), [sortedData]);
@@ -46,21 +47,29 @@ const SalesByLocationCard = ({ data }) => {
         <h5 className="card-title mb-0">Top Roadmaps</h5>
       </div>
       <div className="card-body d-flex flex-column">
-        <div className="d-flex justify-content-center mb-4 mt-2">
-          <ReactApexChart options={options} series={series} type="donut" height={280} />
-        </div>
-        <div className="custom-legend mt-auto">
-          {sortedData.map((item, idx) => (
-            <div key={idx} className="d-flex justify-content-between align-items-center mb-3">
-              <span className="text-secondary" style={{ fontSize: '14px', fontWeight: 500 }}>
-                {item.name}
-              </span>
-              <span className="text-dark" style={{ fontSize: '14px', fontWeight: 600 }}>
-                {item.value} users
-              </span>
+        {loading ? (
+          <div className="d-flex justify-content-center align-items-center h-100" style={{ minHeight: '280px' }}>
+            <LoadingSpinner inline size="sm" variant="dots" />
+          </div>
+        ) : (
+          <>
+            <div className="d-flex justify-content-center mb-4 mt-2">
+              <ReactApexChart options={options} series={series} type="donut" height={280} />
             </div>
-          ))}
-        </div>
+            <div className="custom-legend mt-auto">
+              {sortedData.map((item, idx) => (
+                <div key={idx} className="d-flex justify-content-between align-items-center mb-3">
+                  <span className="text-secondary" style={{ fontSize: '14px', fontWeight: 500 }}>
+                    {item.name}
+                  </span>
+                  <span className="text-dark" style={{ fontSize: '14px', fontWeight: 600 }}>
+                    {item.value} users
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
