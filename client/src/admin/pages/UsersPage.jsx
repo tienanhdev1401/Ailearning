@@ -166,7 +166,7 @@ const UsersPage = () => {
       setUsers(filtered);
       setError(null);
     } catch (fetchError) {
-      setError(fetchError.message || 'Không thể tải danh sách người dùng');
+      setError(fetchError.message || 'Không thể tải danh sách học viên.');
     } finally {
       setLoading(false);
     }
@@ -261,11 +261,11 @@ const UsersPage = () => {
 
   const handleBulkAction = async (action) => {
     if (!selectedIds.length) {
-      toast.warning('Vui lòng chọn người dùng trước.');
+      toast.warning('Vui lòng chọn học viên trước.');
       return;
     }
     if (action === 'delete') {
-      const confirmed = await toast.confirm(`Xóa ${selectedIds.length} người dùng?`, { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' });
+      const confirmed = await toast.confirm(`Xóa ${selectedIds.length} học viên?`, { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' });
       if (!confirmed) return;
       setUsers(prev => prev.filter(user => !selectedIds.includes(user.id)));
       setSelectedIds([]);
@@ -304,7 +304,7 @@ const UsersPage = () => {
         
         setSelectedIds([]);
       } catch (updateError) {
-        toast.error(updateError.message || 'Không thể cập nhật trạng thái người dùng. Vui lòng thử lại.');
+        toast.error(updateError.message || 'Không thể cập nhật trạng thái học viên. Vui lòng thử lại.');
       }
     }
   };
@@ -332,7 +332,7 @@ const UsersPage = () => {
         u.id === user.id ? normalizedUser : u
       ))));
     } catch (updateError) {
-      toast.error(updateError.message || 'Không thể cập nhật trạng thái người dùng. Vui lòng thử lại.');
+      toast.error(updateError.message || 'Không thể cập nhật trạng thái học viên. Vui lòng thử lại.');
     }
   };
 
@@ -376,7 +376,7 @@ const UsersPage = () => {
         setSelectedIds(prev => prev.filter(id => id !== editingId));
         handleCloseModal();
       } catch (updateError) {
-        toast.error(updateError.message || 'Không thể cập nhật người dùng. Vui lòng thử lại.');
+        toast.error(updateError.message || 'Không thể cập nhật học viên. Vui lòng thử lại.');
         throw updateError;
       }
       return;
@@ -423,7 +423,7 @@ const UsersPage = () => {
         handleCloseModal();
         return;
       } catch (createError) {
-        toast.error(createError.message || 'Không thể tạo người dùng. Vui lòng thử lại.');
+        toast.error(createError.message || 'Không thể tạo học viên. Vui lòng thử lại.');
         throw createError;
       }
     }
@@ -459,21 +459,21 @@ const UsersPage = () => {
     <div className="container-fluid p-4 p-lg-5">
       <div className="admin-page-header">
         <div className="header-info">
-          <h1 className="mb-0">Quản lý người dùng</h1>
-          <p>Theo dõi vai trò, trạng thái và hoạt động người dùng.</p>
+          <h1 className="mb-0">Quản lý học viên</h1>
+          <p>Theo dõi vai trò, trạng thái và hoạt động học viên.</p>
         </div>
         <div className="header-actions">
           <button type="button" className="btn btn-outline-secondary" onClick={loadUsers}>
             <i className="bi bi-arrow-clockwise me-1" />Tải lại
           </button>
           <button type="button" className="btn-premium" onClick={() => handleOpenUserModal()}>
-            <i className="bi bi-person-plus" />Thêm người dùng
+            <i className="bi bi-person-plus" />Thêm học viên
           </button>
         </div>
       </div>
 
       {loading && (
-        <LoadingSpinner inline variant="dots" text="Đang tải dữ liệu người dùng..." />
+        <LoadingSpinner inline variant="dots" text="Đang tải dữ liệu học viên..." />
       )}
 
       {error && (
@@ -581,7 +581,7 @@ const UsersPage = () => {
               <i className="bi bi-trash me-1" />Xóa đã chọn
             </button> */}
             {selectedIds.length > 0 && (
-              <span className="badge bg-primary align-self-center">{selectedIds.length} người dùng đã chọn</span>
+              <span className="badge bg-primary align-self-center">{selectedIds.length} học viên đã chọn</span>
             )}
           </div>
         </div>
@@ -671,7 +671,7 @@ const UsersPage = () => {
           </table>
         </div>
         <div className="card-footer d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-          <small className="text-muted">Hiển thị {paginatedUsers.length} / {sortedUsers.length} người dùng</small>
+          <small className="text-muted">Hiển thị {paginatedUsers.length} / {sortedUsers.length} học viên</small>
           <ul className="pagination mb-0">
             <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
               <button className="page-link" type="button" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
@@ -814,7 +814,7 @@ const UserModal = ({ show, onClose, onSave, user }) => {
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title">{editingId ? 'Cập nhật người dùng' : 'Thêm người dùng'}</h5>
+              <h5 className="modal-title">{editingId ? 'Cập nhật học viên' : 'Thêm học viên'}</h5>
               <button type="button" className="btn-close" onClick={onClose} />
             </div>
             <form onSubmit={handleSubmit}>
@@ -907,7 +907,7 @@ const ImportUsersModal = ({ show, onClose }) => {
               <button type="button" className="btn-close" onClick={onClose} />
             </div>
             <div className="modal-body">
-              <p className="text-muted">Upload file CSV để tạo hoặc cập nhật người dùng hàng loạt.</p>
+              <p className="text-muted">Upload file CSV để tạo hoặc cập nhật học viên hàng loạt.</p>
               <label className="form-label">Chọn file CSV</label>
               <input
                 type="file"
