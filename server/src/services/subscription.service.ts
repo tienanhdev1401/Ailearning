@@ -24,41 +24,46 @@ export class SubscriptionService {
     const now = new Date();
     let startDate = now;
     let endDate: Date | null = null;
+    let savedSub: UserSubscription;
 
-    if (subPackage.durationInDays) {
-      if (existingSub && existingSub.endDate && existingSub.endDate > now) {
-        // Cộng dồn vào ngày hết hạn cũ
-        startDate = existingSub.startDate; // Giữ nguyên ngày bắt đầu cũ hoặc dùng now tùy logic, nhưng endDate mới quan trọng
-        endDate = new Date(existingSub.endDate);
-        endDate.setDate(endDate.getDate() + subPackage.durationInDays);
-        existingSub.endDate = endDate;
-        existingSub.packageId = subPackage.id;
-        return this.subscriptionRepo.save(existingSub);
-      } else {
-        // Tạo mới hoàn toàn
+    if (subPackage.durationInDays && existingSub && existingSub.endDate && existingSub.endDate > now) {
+      // Cộng dồn vào ngày hết hạn cũ
+      startDate = existingSub.startDate;
+      endDate = new Date(existingSub.endDate);
+      endDate.setDate(endDate.getDate() + subPackage.durationInDays);
+      existingSub.endDate = endDate;
+      existingSub.packageId = subPackage.id;
+      savedSub = await this.subscriptionRepo.save(existingSub);
+    } else {
+      // Tạo mới hoàn toàn (gói mới, gói cũ đã hết hạn, hoặc gói vĩnh viễn)
+      if (subPackage.durationInDays) {
         endDate = new Date();
         endDate.setDate(now.getDate() + subPackage.durationInDays);
+      } else {
+        endDate = null;
       }
-    } else {
-      // Gói vĩnh viễn
-      endDate = null;
+      
+      const newSub = this.subscriptionRepo.create({
+        userId,
+        packageId: subPackage.id,
+        startDate,
+        endDate,
+        isActive: true,
+      });
+      savedSub = await this.subscriptionRepo.save(newSub);
     }
-
-    const newSub = this.subscriptionRepo.create({
-      userId,
-      packageId: subPackage.id,
-      startDate,
-      endDate,
-      isActive: true,
-    });
-
-    const savedSub = await this.subscriptionRepo.save(newSub);
 
     // Update user credits
     const creditRepo = AppDataSource.getRepository(UserCredit);
     let credit = await creditRepo.findOne({ where: { userId } });
     if (!credit) {
-      credit = creditRepo.create({ userId });
+      credit = creditRepo.create({ 
+        userId,
+        aiConversationCredits: 10,
+        totalAiConversationCredits: 10,
+        grammarCheckerCredits: 5,
+        totalGrammarCheckerCredits: 5
+      });
     }
     
     // Sử dụng customMultiplier truyền vào (mặc định là 1 nếu không có)
@@ -66,11 +71,11 @@ export class SubscriptionService {
     const addedAi = (subPackage.aiConversationCredits || 0) * finalMultiplier;
     const addedGrammar = (subPackage.grammarCheckerCredits || 0) * finalMultiplier;
 
-    credit.aiConversationCredits += addedAi;
-    credit.totalAiConversationCredits += addedAi;
+    credit.aiConversationCredits = (credit.aiConversationCredits || 0) + addedAi;
+    credit.totalAiConversationCredits = (credit.totalAiConversationCredits || 0) + addedAi;
     
-    credit.grammarCheckerCredits += addedGrammar;
-    credit.totalGrammarCheckerCredits += addedGrammar;
+    credit.grammarCheckerCredits = (credit.grammarCheckerCredits || 0) + addedGrammar;
+    credit.totalGrammarCheckerCredits = (credit.totalGrammarCheckerCredits || 0) + addedGrammar;
 
     await creditRepo.save(credit);
 

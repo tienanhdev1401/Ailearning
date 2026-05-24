@@ -86,6 +86,12 @@ const PricingPage = () => {
     fetchPackages();
   }, []);
 
+  const getGenericPackageName = (type) => {
+    if (type === "AI_CONVERSATION") return "AI Conversation";
+    if (type === "GRAMMAR_CHECKER") return "Grammar Checker";
+    return type || "dịch vụ";
+  };
+
   const handleBuy = (packageId, multiplier = 1) => {
     const pkg = packages.find((p) => p.id === packageId);
     if (!pkg) return;
@@ -100,7 +106,7 @@ const PricingPage = () => {
       showModal(
         "confirm",
         "Xác nhận gia hạn",
-        `Bạn đang có gói "${activeSub.package?.name}" vẫn còn hiệu lực. Bạn có chắc chắn muốn mua thêm để gia hạn tiếp không?`,
+        `Bạn đang có gói "${getGenericPackageName(activeSub.package?.type)}" vẫn còn hiệu lực. Bạn có chắc chắn muốn mua thêm để gia hạn tiếp không?`,
         () => executePurchase(packageId, multiplier)
       );
     } else {
@@ -189,8 +195,8 @@ const PricingPage = () => {
                           <div className={styles.multiplierPillContainer}>
                             <div className={styles.multiplierPill}>
                               {[1, 5, 20].map(m => (
-                                <button 
-                                  key={m} 
+                                <button
+                                  key={m}
                                   className={`${styles.pillOption} ${currentMultiplier === m ? styles.pillOptionActive : ""}`}
                                   onClick={() => setMultiplier(m)}
                                 >
@@ -230,7 +236,7 @@ const PricingPage = () => {
                               </span>
                               <span>
                                 <strong>
-                                  {isPro 
+                                  {isPro
                                     ? ((pkg.aiConversationCredits || pkg.grammarCheckerCredits) * currentMultiplier).toLocaleString()
                                     : (pkg.aiConversationCredits || pkg.grammarCheckerCredits || 0).toLocaleString()
                                   }
@@ -266,10 +272,10 @@ const PricingPage = () => {
                           ) : (
                             <>
                               <FiZap size={15} />
-                              {type === "ROADMAP_UNLOCK" 
-                                ? "Mua ngay" 
-                                : isPro 
-                                  ? `Nâng cấp Pro x${currentMultiplier}` 
+                              {type === "ROADMAP_UNLOCK"
+                                ? "Mua ngay"
+                                : isPro
+                                  ? `Nâng cấp Pro x${currentMultiplier}`
                                   : "Nâng cấp"
                               }
                             </>
@@ -333,13 +339,12 @@ const PricingPage = () => {
       >
         <Modal.Body className="text-center py-4">
           <div
-            className={`${styles.modalIcon} ${
-              modalConfig.type === "confirm"
+            className={`${styles.modalIcon} ${modalConfig.type === "confirm"
                 ? styles.modalIconWarning
                 : modalConfig.type === "error"
-                ? styles.modalIconError
-                : styles.modalIconInfo
-            }`}
+                  ? styles.modalIconError
+                  : styles.modalIconInfo
+              }`}
           >
             {modalConfig.type === "confirm" && <FiAlertTriangle size={28} />}
             {modalConfig.type === "error" && <FiXCircle size={28} />}
