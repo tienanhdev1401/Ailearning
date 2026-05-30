@@ -833,7 +833,6 @@ export class DayWordImportService {
       const lessonActivity = manager.create(Activity, {
         day,
         order: nextOrder++,
-        pointOfAc: 10,
         skill: Skill.READING,
         title: input.activityTitle?.trim() || payload.lessonTitle,
       });
@@ -890,7 +889,6 @@ export class DayWordImportService {
           const activityForType = manager.create(Activity, {
             day,
             order: nextOrder++,
-            pointOfAc: 10,
             skill: Skill.READING,
             title: getMinigameDisplayTitle(type),
           });

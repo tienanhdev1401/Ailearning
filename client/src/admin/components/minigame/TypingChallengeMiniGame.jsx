@@ -86,7 +86,7 @@ const TypingChallengeMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
     <div className="card" style={{ maxHeight: "74vh", overflowY: "auto" }}>
       <div className="card-header d-flex justify-content-between align-items-center">
         <div>
-          <strong>Minigame #{minigame.id}</strong> <span className="text-muted">({minigame.type})</span>
+          <strong>Minigame</strong> <span className="text-muted">({minigame.type})</span>
         </div>
         <div>
           {onDelete && (

@@ -10,12 +10,12 @@ const ActivityManagerPage = () => {
   const toast = useToast();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [dayNumber, setDayNumber] = useState(null);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [showWordImportForm, setShowWordImportForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newSkill, setNewSkill] = useState("reading");
-  const [newPointOfAc, setNewPointOfAc] = useState(0);
   const [wordFile, setWordFile] = useState(null);
   const [wordActivityTitle, setWordActivityTitle] = useState("");
   const [selectedWordMinigames, setSelectedWordMinigames] = useState([]);
@@ -46,6 +46,13 @@ const ActivityManagerPage = () => {
   useEffect(() => {
     if (!dayId) return;
     load();
+    // Fetch day info to get dayNumber
+    api.get(`/days/${dayId}`)
+      .then(res => {
+        const day = res.data?.data ?? res.data;
+        setDayNumber(day?.dayNumber ?? null);
+      })
+      .catch(() => setDayNumber(null));
   }, [load, dayId]);
 
   const handleReorder = async (newActivities) => {
@@ -73,7 +80,9 @@ const ActivityManagerPage = () => {
             Back
           </button>
 
-          <h2 className="mb-0">Quản lý Activities - Day #{dayId}</h2>
+          <h2 className="mb-0">
+            Quản lý Activities - Day #{dayNumber !== null ? dayNumber : dayId}
+          </h2>
         </div>
         <div className="d-flex gap-2">
           <button className="btn btn-outline-primary" onClick={load} disabled={loading}>Refesh</button>
@@ -230,17 +239,6 @@ const ActivityManagerPage = () => {
               </select>
             </div>
 
-            {/* ĐIỂM */}
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Điểm activity</label>
-              <input
-                type="number"
-                className="form-control"
-                placeholder="Ví dụ: 10"
-                value={newPointOfAc}
-                onChange={(e) => setNewPointOfAc(e.target.value)}
-              />
-            </div>
 
             {/* BUTTONS */}
             <div className="d-flex justify-content-end gap-2 mt-2">
@@ -257,8 +255,6 @@ const ActivityManagerPage = () => {
                   if (!newTitle.trim()) return toast.warning("Tiêu đề không được rỗng");
                   if (!ALLOWED_SKILLS.includes(newSkill))
                     return toast.warning("Skill không hợp lệ");
-                  if (!Number.isInteger(Number(newPointOfAc)))
-                    return toast.warning("Điểm phải là số nguyên");
 
                   try {
                     await api.post("/activities", {
@@ -266,12 +262,10 @@ const ActivityManagerPage = () => {
                       dayId: Number(dayId),
                       order: activities.length + 1,
                       skill: newSkill,
-                      pointOfAc: Number(newPointOfAc),
                     });
 
                     setNewTitle("");
                     setNewSkill("reading");
-                    setNewPointOfAc(0);
                     setShowAddForm(false);
                     await load();
                   } catch (err) {

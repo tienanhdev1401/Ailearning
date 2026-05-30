@@ -5,6 +5,14 @@ import paymentService from "../../services/paymentService";
 import userService from "../../services/userService";
 import LoadingSpinner from "../../component/LoadingSpinner";
 import { Link } from "react-router-dom";
+import PACKAGE_TYPE from "../../enums/packageType.enum";
+
+const getDisplayPackageName = (pkg) => {
+  if (pkg?.type === PACKAGE_TYPE.VIDEO_LESSON) {
+    return "Gói xem video";
+  }
+  return pkg?.name || "Gói dịch vụ";
+};
 
 const MySubscriptionPage = () => {
   const [subscriptions, setSubscriptions] = useState([]);
@@ -141,10 +149,10 @@ const MySubscriptionPage = () => {
             {subscriptions.map((sub) => (
               <div key={sub.id} className={styles.subCard}>
                 <div className={styles.subCardHeader}>
-                  <h3>{sub.package?.name}</h3>
-                  <span className={styles.price}>
+                  <h3>{getDisplayPackageName(sub.package)}</h3>
+                  {/* <span className={styles.price}>
                     {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(sub.package?.price || 0)}
-                  </span>
+                  </span> */}
                 </div>
                 <div className={styles.subCardBody}>
                   <div className={styles.infoRow}>
@@ -197,7 +205,7 @@ const MySubscriptionPage = () => {
                 {transactions.map((txn) => (
                   <tr key={txn.id}>
                     <td className={styles.txnId}>#{txn.id.substring(0, 8)}...</td>
-                    <td>{txn.package?.name}</td>
+                    <td>{getDisplayPackageName(txn.package)}</td>
                     <td className={styles.amount}>
                       {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(txn.amount)}
                     </td>

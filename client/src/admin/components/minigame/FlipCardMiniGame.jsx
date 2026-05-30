@@ -115,7 +115,7 @@ const FlipCardMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
     <div className={`card ${isDarkMode ? 'bg-dark text-light border-secondary' : ''}`} style={{ maxHeight: "74vh", overflow: "auto" }}>
       <div className={`card-header d-flex justify-content-between align-items-center ${isDarkMode ? 'bg-dark border-secondary' : ''}`}>
         <div>
-          <strong>Minigame #{minigame.id}</strong> <span className="text-muted">({minigame.type})</span>
+          <strong>Minigame</strong> <span className="text-muted">({minigame.type})</span>
         </div>
         <div>
           {onDelete && <button className="btn btn-sm btn-danger me-2" onClick={onDelete}>Xóa</button>}

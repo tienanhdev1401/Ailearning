@@ -4,8 +4,6 @@ export class CreateActivityDto {
   @IsEnum(Skill)
   skill!: Skill;
 
-  @IsInt()
-  pointOfAc!: number;
 
   @IsInt()
   order!: number;

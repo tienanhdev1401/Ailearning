@@ -17,10 +17,6 @@ class UpdateActivityItemDto {
   @IsOptional()
   @IsEnum(Skill)
   skill?: Skill;
-
-  @IsOptional()
-  @IsInt()
-  pointOfAc?: number;
 }
 
 export class UpdateManyActivitiesDto {
