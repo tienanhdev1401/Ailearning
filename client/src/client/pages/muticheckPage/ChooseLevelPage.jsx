@@ -39,12 +39,14 @@ const ChooseLevelPage = () => {
     const goal = sessionStorage.getItem("goal");
     const proficiency = sessionStorage.getItem("proficiency");
     const level = sessionStorage.getItem("level");
+    const topics = sessionStorage.getItem("topics");
 
     const confirmData = {
       reason,
-      goal,
+      goal: goal ? JSON.parse(goal) : null,
       proficiency,
-      level
+      level,
+      topics: topics ? JSON.parse(topics) : [],
     };
 
     try {
@@ -55,9 +57,8 @@ const ChooseLevelPage = () => {
       console.error("Lỗi khi gửi dữ liệu:", error);
     }
 
-    // Xóa sessionStorage và quay về trang chủ
-    sessionStorage.clear();
-    navigate("/");
+    // Chuyển sang trang AI đề xuất lộ trình (không xóa sessionStorage)
+    navigate("/welcome/recommendation");
   };
 
   return (
