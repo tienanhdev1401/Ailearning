@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import api from "../../../api/api";
 import MatchImageWordMiniGame from "./MatchImageWordMiniGame";
@@ -27,11 +27,43 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 	const [showAddPanel, setShowAddPanel] = useState(false);
 	const [addType, setAddType] = useState("match_image_word");
 
-	// Embedded dynamic add form component (keeps file count minimal)
-	const AddMiniGameForm = ({ activityId, type, onCancel, onAdded }) => {
+	// Embedded dynamic add form component
+	const AddMiniGameForm = useMemo(() => function Form({ activityId, type, onCancel, onAdded }) {
 		const toast = useToast();
 		const [prompt, setPrompt] = useState("");
 		const [saving, setSaving] = useState(false);
+
+		useEffect(() => {
+			const defaultPrompts = {
+				match_image_word: "Nối từ với hình ảnh tương ứng",
+				lesson: "Đọc bài học sau đây",
+				sentence_builder: "Sắp xếp các từ để tạo thành câu hoàn chỉnh",
+				listen_select: "Nghe và chọn đáp án đúng",
+				exam: "Trả lời các câu hỏi sau",
+				true_false: "Chọn Đúng hoặc Sai cho các phát biểu sau",
+				typing_challenge: "Gõ lại câu sau đây",
+				flip_card: "Học từ vựng qua flashcard",
+				watch_video: "Xem video và học"
+			};
+			setPrompt(defaultPrompts[type] || "");
+		}, [type]);
+
+		// Helper to upload image
+		const handleUploadImage = async (file, callback) => {
+			if (!file) return;
+			const formData = new FormData();
+			formData.append("avatar", file);
+			try {
+				toast.info("Đang tải ảnh lên...");
+				const res = await api.post("/uploads/avatar?folder=minigames", formData, {
+					headers: { "Content-Type": "multipart/form-data" },
+				});
+				callback(res.data.url);
+				toast.success("Tải ảnh thành công");
+			} catch (err) {
+				toast.error("Upload ảnh thất bại");
+			}
+		};
 
 		// MATCH_IMAGE_WORD fields
 		const [images, setImages] = useState([]);
@@ -239,11 +271,18 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 									<div className="card-body">
 										<div className="row g-2">
 											<div className="col-md-7">
+												<label className="form-label small text-muted mb-1">Hình ảnh (URL hoặc Tải lên)</label>
 												<input
-													className="form-control"
-													placeholder="Image URL"
+													className="form-control form-control-sm mb-2"
+													placeholder="Nhập URL"
 													value={img.imageUrl}
 													onChange={(e) => updateImage(idx, "imageUrl", e.target.value)}
+												/>
+												<input
+													type="file"
+													className="form-control form-control-sm"
+													accept="image/*"
+													onChange={(e) => handleUploadImage(e.target.files[0], (url) => updateImage(idx, "imageUrl", url))}
 												/>
 
 												{img.imageUrl && (
@@ -263,9 +302,10 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 											</div>
 
 											<div className="col-md-5">
+												<label className="form-label small text-muted mb-1">Từ tương ứng</label>
 												<input
-													className="form-control"
-													placeholder="Correct word"
+													className="form-control form-control-sm"
+													placeholder="Ví dụ: Apple"
 													value={img.correctWord}
 													onChange={(e) => updateImage(idx, "correctWord", e.target.value)}
 												/>
@@ -447,11 +487,18 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 										</div>
 
 										<div>
-											<label className="form-label">Image URL</label>
+											<label className="form-label">Hình ảnh minh họa (URL hoặc Tải lên)</label>
 											<input
-												className="form-control"
+												className="form-control form-control-sm mb-2"
+												placeholder="Nhập URL ảnh"
 												value={opt.imageUrl}
 												onChange={(e) => updateListenOption(idx, "imageUrl", e.target.value)}
+											/>
+											<input
+												type="file"
+												className="form-control form-control-sm mb-2"
+												accept="image/*"
+												onChange={(e) => handleUploadImage(e.target.files[0], (url) => updateListenOption(idx, "imageUrl", url))}
 											/>
 
 											{opt.imageUrl && (
@@ -684,7 +731,7 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 			const tmp = copy[to]; copy[to] = copy[index]; copy[index] = tmp;
 			setTokens(copy);
 		}
-	};
+	}, []);
 
 	const load = useCallback(async () => {
 		if (!activityId) {

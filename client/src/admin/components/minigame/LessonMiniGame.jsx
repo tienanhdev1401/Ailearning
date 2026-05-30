@@ -55,7 +55,7 @@ const LessonMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
     <div className="card" style={{ maxHeight: "74vh", overflow: "auto" }}>
       <div className="card-header d-flex justify-content-between align-items-center">
         <div>
-          <strong>Minigame #{minigame.id}</strong>{" "}
+          <strong>Minigame</strong>{" "}
           <span className="text-muted">({minigame.type})</span>
         </div>
         <div>
@@ -89,9 +89,8 @@ const LessonMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
             <div className="btn-group">
               <button
                 type="button"
-                className={`btn btn-sm ${
-                  mode === "preview" ? "btn-primary" : "btn-outline-secondary"
-                }`}
+                className={`btn btn-sm ${mode === "preview" ? "btn-primary" : "btn-outline-secondary"
+                  }`}
                 onClick={() => setMode("preview")}
               >
                 Xem
@@ -99,9 +98,8 @@ const LessonMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
 
               <button
                 type="button"
-                className={`btn btn-sm ${
-                  mode === "edit" ? "btn-primary" : "btn-outline-secondary"
-                }`}
+                className={`btn btn-sm ${mode === "edit" ? "btn-primary" : "btn-outline-secondary"
+                  }`}
                 onClick={() => setMode("edit")}
               >
                 Soạn thảo (Word)
