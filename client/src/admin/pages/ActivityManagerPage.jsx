@@ -10,6 +10,7 @@ const ActivityManagerPage = () => {
   const toast = useToast();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [dayNumber, setDayNumber] = useState(null);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [showWordImportForm, setShowWordImportForm] = useState(false);
@@ -46,6 +47,13 @@ const ActivityManagerPage = () => {
   useEffect(() => {
     if (!dayId) return;
     load();
+    // Fetch day info to get dayNumber
+    api.get(`/days/${dayId}`)
+      .then(res => {
+        const day = res.data?.data ?? res.data;
+        setDayNumber(day?.dayNumber ?? null);
+      })
+      .catch(() => setDayNumber(null));
   }, [load, dayId]);
 
   const handleReorder = async (newActivities) => {
@@ -73,7 +81,9 @@ const ActivityManagerPage = () => {
             Back
           </button>
 
-          <h2 className="mb-0">Quản lý Activities - Day #{dayId}</h2>
+          <h2 className="mb-0">
+            Quản lý Activities - Day #{dayNumber !== null ? dayNumber : dayId}
+          </h2>
         </div>
         <div className="d-flex gap-2">
           <button className="btn btn-outline-primary" onClick={load} disabled={loading}>Refesh</button>
