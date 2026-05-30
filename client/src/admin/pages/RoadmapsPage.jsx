@@ -288,9 +288,20 @@ const RoadmapsPage = () => {
                 <div key={r.id} className="col-xl-3 col-lg-3 col-md-6 col-sm-12">
                   <div className={`card h-100 bg-body ${isDarkMode ? 'border border-light' : 'border border-secondary-subtle'}`}>
                     <div className="card-body d-flex flex-column">
-                      <h5 className="card-title text-truncate" title={r.levelName}>
-                        {r.levelName}
-                      </h5>
+                      <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
+                        <h5 className="card-title text-truncate mb-0" title={r.levelName}>
+                          {r.levelName}
+                        </h5>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-link p-0 text-primary flex-shrink-0"
+                          title="Cập nhật roadmap"
+                          aria-label={`Cập nhật roadmap ${r.levelName}`}
+                          onClick={() => openEdit(r)}
+                        >
+                          <i className="bi bi-pencil-square" />
+                        </button>
+                      </div>
 
                       <p
                         className="card-text text-muted small mb-2"
@@ -309,14 +320,7 @@ const RoadmapsPage = () => {
 
                         <div className="w-100 d-flex gap-2">
                           <button
-                            className="btn btn-sm btn-outline-primary w-50"
-                            onClick={() => openEdit(r)}
-                          >
-                            Xem
-                          </button>
-
-                          <button
-                            className="btn btn-sm btn-outline-danger w-50"
+                            className="btn btn-sm btn-outline-danger w-100"
                             onClick={() => deleteRoadmap(r)}
                           >
                             Xoá
@@ -342,10 +346,10 @@ const RoadmapsPage = () => {
       {modalState.type && (
         <div className="modal show d-block" tabIndex={-1} role="dialog">
           <div className="modal-dialog" role="document">
-            <div className="modal-content">
+            <div className={`modal-content ${isDarkMode ? 'bg-dark text-light border-secondary' : ''}`}>
 
               {/* HEADER */}
-              <div className="modal-header">
+              <div className={`modal-header ${isDarkMode ? 'border-secondary' : ''}`}>
                 <h5 className="modal-title">
                   {modalState.type === 'add'
                     ? 'Tạo Roadmap'
@@ -353,7 +357,7 @@ const RoadmapsPage = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className={`btn-close ${isDarkMode ? 'btn-close-white' : ''}`}
                   aria-label="Close"
                   onClick={closeModal}
                 ></button>
@@ -365,7 +369,7 @@ const RoadmapsPage = () => {
                 <div className="mb-3">
                   <label className="form-label">Tên</label>
                   <input
-                    className="form-control"
+                    className={`form-control ${isDarkMode ? 'bg-dark text-light border-secondary' : ''}`}
                     value={form.levelName}
                     onChange={e =>
                       setForm(f => ({ ...f, levelName: e.target.value }))
@@ -376,7 +380,7 @@ const RoadmapsPage = () => {
                 <div className="mb-3">
                   <label className="form-label">Mô tả</label>
                   <textarea
-                    className="form-control"
+                    className={`form-control ${isDarkMode ? 'bg-dark text-light border-secondary' : ''}`}
                     rows={4}
                     value={form.description}
                     onChange={e =>
@@ -391,6 +395,8 @@ const RoadmapsPage = () => {
                     init={{
                       height: 300,
                       menubar: false,
+                      skin: isDarkMode ? 'oxide-dark' : 'oxide',
+                      content_css: isDarkMode ? 'dark' : 'default',
                       plugins: 'lists table paste link image code',
                       toolbar:
                         'undo redo | bold italic underline | bullist numlist | table | link image | alignleft aligncenter alignright | code',
@@ -403,8 +409,9 @@ const RoadmapsPage = () => {
                       paste_convert_word_fake_lists: true,
                       paste_retain_style_properties: "color font-size",
 
-                      content_style:
-                        "body { font-family: Arial, sans-serif; font-size: 14px; background: transparent; }"
+                      content_style: isDarkMode
+                        ? "body { font-family: Arial, sans-serif; font-size: 14px; background: #1f2429; color: #e5e7eb; }"
+                        : "body { font-family: Arial, sans-serif; font-size: 14px; background: transparent; }"
                     }}
 
                     onEditorChange={(content) => {
@@ -415,7 +422,7 @@ const RoadmapsPage = () => {
               </div>
 
               {/* FOOTER */}
-              <div className="modal-footer">
+              <div className={`modal-footer ${isDarkMode ? 'border-secondary' : ''}`}>
                 <button className="btn btn-secondary" onClick={closeModal}>
                   Huỷ
                 </button>
