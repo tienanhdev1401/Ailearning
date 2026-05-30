@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef, useMemo } from "react";
+import React, { useCallback, useEffect, useState, useRef, useMemo, useContext } from "react";
 import { createPortal } from "react-dom";
 import api from "../../../api/api";
 import MatchImageWordMiniGame from "./MatchImageWordMiniGame";
@@ -12,9 +12,79 @@ import LoadingSpinner from "../../../component/LoadingSpinner";
 import FlipCardMiniGame from "./FlipCardMiniGame";
 import WatchVideoMiniGame from "./WatchVideoMiniGame";
 import { useToast } from "../../../context/ToastContext";
+import { ThemeContext } from "../../../context/ThemeContext";
 
 import { Editor } from "@tinymce/tinymce-react";
 import HLSPlayer from "../../../component/HLSPlayer";
+
+const splitBulkLines = (text) =>
+	(text || "")
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter(Boolean);
+
+const splitBulkColumns = (line) =>
+	line
+		.split(/\t|\s*\|\s*|\s*,\s*/)
+		.map((item) => item.trim());
+
+const makeId = (index = 0) => Date.now() + index;
+
+const isValidQuickUrl = (value) => {
+	try {
+		const url = new URL((value || "").trim());
+		return ["http:", "https:"].includes(url.protocol);
+	} catch {
+		return false;
+	}
+};
+
+const normalizeTrueFalseAnswer = (value) => {
+	const answer = (value || "")
+		.replace(/^phương\s*án\s*đúng\s*:/i, "")
+		.replace(/^phuong\s*an\s*dung\s*:/i, "")
+		.trim()
+		.toLowerCase();
+	if (answer === "a" || answer === "đúng" || answer === "dung" || answer === "true") return "A";
+	if (answer === "b" || answer === "sai" || answer === "false") return "B";
+	return "";
+};
+
+const sampleDownloadButtonStyle = {
+	display: "inline-flex",
+	alignItems: "center",
+	gap: 8,
+	border: "1px solid rgba(13, 110, 253, 0.22)",
+	background: "linear-gradient(135deg, #eef5ff 0%, #ffffff 100%)",
+	color: "#0d6efd",
+	borderRadius: 8,
+	fontWeight: 600,
+	boxShadow: "0 6px 16px rgba(13, 110, 253, 0.08)",
+};
+
+const getQuickInputPanelStyle = (isDarkMode) => ({
+	border: `1px solid ${isDarkMode ? "rgba(148, 163, 184, 0.28)" : "rgba(15, 23, 42, 0.1)"}`,
+	background: isDarkMode ? "rgba(15, 23, 42, 0.32)" : "#f8fafc",
+	color: isDarkMode ? "#e5e7eb" : "#212529",
+	borderRadius: 8,
+	padding: 16,
+});
+
+const getQuickInputTextareaStyle = (isDarkMode) => ({
+	background: isDarkMode ? "#1f2429" : "#ffffff",
+	color: isDarkMode ? "#e5e7eb" : "#212529",
+	borderColor: isDarkMode ? "rgba(148, 163, 184, 0.35)" : "#dee2e6",
+});
+
+const getSampleDownloadButtonStyle = (isDarkMode) => ({
+	...sampleDownloadButtonStyle,
+	border: `1px solid ${isDarkMode ? "rgba(96, 165, 250, 0.35)" : "rgba(13, 110, 253, 0.22)"}`,
+	background: isDarkMode
+		? "linear-gradient(135deg, rgba(30, 64, 175, 0.28) 0%, rgba(15, 23, 42, 0.82) 100%)"
+		: "linear-gradient(135deg, #eef5ff 0%, #ffffff 100%)",
+	color: isDarkMode ? "#93c5fd" : "#0d6efd",
+	boxShadow: isDarkMode ? "0 6px 16px rgba(0, 0, 0, 0.22)" : sampleDownloadButtonStyle.boxShadow,
+});
 
 const MiniGameList = ({ activityId, onRefresh }) => {
 	const toast = useToast();
@@ -30,8 +100,12 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 	// Embedded dynamic add form component
 	const AddMiniGameForm = useMemo(() => function Form({ activityId, type, onCancel, onAdded }) {
 		const toast = useToast();
+		const themeContext = useContext(ThemeContext);
+		const isDarkMode = themeContext?.isDarkMode ?? false;
 		const [prompt, setPrompt] = useState("");
 		const [saving, setSaving] = useState(false);
+		const [showQuickInput, setShowQuickInput] = useState(false);
+		const [quickInput, setQuickInput] = useState("");
 
 		useEffect(() => {
 			const defaultPrompts = {
@@ -117,11 +191,52 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 
 		// FLIP_CARD fields
 		const [flipCards, setFlipCards] = useState([]);
-		const addFlipCard = () => setFlipCards([...flipCards, { term: "", definition: "" }]);
+		const addFlipCard = () => setFlipCards([...flipCards, { term: "", definition: "", phonetic: "", partOfSpeech: "" }]);
 		const updateFlipCard = (idx, field, val) => {
 			const copy = [...flipCards]; copy[idx] = { ...copy[idx], [field]: val }; setFlipCards(copy);
 		};
 		const removeFlipCard = (idx) => setFlipCards(flipCards.filter((_, i) => i !== idx));
+		const fetchFlipCardInfo = async (idx, term) => {
+			const word = (term || "").trim();
+			if (word.length < 2) return;
+
+			try {
+				const [dictRes, transRes] = await Promise.all([
+					fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`),
+					fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q=${encodeURIComponent(word)}`),
+				]);
+
+				let phonetic = "";
+				let partOfSpeech = "";
+				let definition = "";
+
+				if (dictRes.ok) {
+					const dictData = await dictRes.json();
+					const entry = Array.isArray(dictData) ? dictData[0] : null;
+					phonetic = entry?.phonetic || entry?.phonetics?.find((item) => item.text)?.text || "";
+					partOfSpeech = entry?.meanings?.[0]?.partOfSpeech || "";
+				}
+
+				if (transRes.ok) {
+					const transData = await transRes.json();
+					definition = Array.isArray(transData) ? transData?.[0]?.[0]?.[0] || "" : "";
+				}
+
+				if (!phonetic && !partOfSpeech && !definition) return;
+
+				setFlipCards((prev) => prev.map((card, cardIndex) => {
+					if (cardIndex !== idx) return card;
+					return {
+						...card,
+						definition: definition || card.definition,
+						phonetic: phonetic || card.phonetic || "",
+						partOfSpeech: partOfSpeech || card.partOfSpeech || "",
+					};
+				}));
+			} catch (err) {
+				console.error("Auto-fill flashcard failed", err);
+			}
+		};
 
 		// WATCH_VIDEO fields
 		const [watchVideoHls, setWatchVideoHls] = useState("");
@@ -148,6 +263,227 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 		const addListenOption = () => { setListenOptions([...listenOptions, { id: Date.now(), text: "", imageUrl: "" }]); };
 		const updateListenOption = (idx, field, value) => { setListenOptions(prev => { const copy = [...prev]; copy[idx][field] = value; return copy; }); };
 		const removeListenOption = (idx) => { setListenOptions(prev => prev.filter((_, i) => i !== idx)); };
+
+		const getQuickInputHint = () => {
+			const hints = {
+				match_image_word: "Mỗi dòng: từ | imageUrl",
+				sentence_builder: "Dán 1 câu để tự tách thành token, hoặc mỗi dòng 1 token",
+				listen_select: "Mỗi dòng: text | imageUrl. Dòng đầu tiên sẽ là đáp án đúng",
+				exam: "Mỗi dòng: câu hỏi | đáp án A | đáp án B | đáp án C | đáp án D | đáp án đúng 1-4",
+				true_false: "4 dòng: statement, đáp án A, đáp án B, phương án đúng: A hoặc B",
+				typing_challenge: "Dòng 1: target text. Các dòng sau: gợi ý",
+				flip_card: "Mỗi dòng: term | definition",
+			};
+			return hints[type] || "Dán dữ liệu hàng loạt";
+		};
+
+		const getQuickInputSample = () => {
+			const samples = {
+				match_image_word: [
+					"apple | https://example.com/apple.jpg",
+					"book | https://example.com/book.jpg",
+					"school | https://example.com/school.jpg",
+				],
+				sentence_builder: [
+					"I usually study English in the evening.",
+				],
+				listen_select: [
+					"apple | https://example.com/apple.jpg",
+					"banana | https://example.com/banana.jpg",
+					"orange | https://example.com/orange.jpg",
+				],
+				exam: [
+					"What does apple mean? | Quả táo | Quyển sách | Trường học | Cây bút | 1",
+					"Which sentence is correct? | I am a student. | I is a student. | I are a student. | I be a student. | 1",
+				],
+				true_false: [
+					"Quả táo tiếng anh là gì?",
+					"Apple",
+					"Pineapple",
+					"Phương án đúng: A",
+				],
+				typing_challenge: [
+					"I practice English every day.",
+					"Gợi ý: câu nói về thói quen hằng ngày",
+					"Gợi ý: bắt đầu bằng I practice...",
+				],
+				flip_card: [
+					"apple | quả táo",
+					"book | quyển sách",
+					"teacher | giáo viên",
+				],
+			};
+			return samples[type] || ["Dán dữ liệu theo mẫu của loại minigame đang chọn."];
+		};
+
+		const downloadQuickInputSample = () => {
+			const sampleText = getQuickInputSample().join("\n");
+			const html = `
+				<html>
+					<head>
+						<meta charset="utf-8" />
+						<title>Mẫu nhập nhanh minigame</title>
+						<style>
+							body { font-family: Arial, sans-serif; line-height: 1.5; }
+							pre { border: 1px solid #ddd; padding: 12px; white-space: pre-wrap; }
+						</style>
+					</head>
+					<body>
+						<h2>Mẫu nhập nhanh minigame</h2>
+						<p><strong>Loại:</strong> ${type}</p>
+						<p><strong>Cách dùng:</strong> Sửa nội dung bên dưới trong Word, sau đó copy toàn bộ phần trong khung và dán vào ô Nhập nhanh.</p>
+						<p><strong>Định dạng:</strong> ${getQuickInputHint()}</p>
+						<pre>${sampleText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+					</body>
+				</html>
+			`;
+			const blob = new Blob(["\ufeff", html], { type: "application/msword;charset=utf-8" });
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement("a");
+			link.href = url;
+			link.download = `mau-nhap-nhanh-${type}.doc`;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(url);
+		};
+
+		const applyQuickInput = () => {
+			const lines = splitBulkLines(quickInput);
+			if (!lines.length) return toast.warning("Vui lòng dán dữ liệu trước");
+
+			if (type === "match_image_word") {
+				for (let index = 0; index < lines.length; index += 1) {
+					const [correctWord, imageUrl] = splitBulkColumns(lines[index]);
+					if (!correctWord || !imageUrl) {
+						return toast.warning(`Dòng ${index + 1} cần đủ: từ | imageUrl`);
+					}
+					if (!isValidQuickUrl(imageUrl)) {
+						return toast.warning(`Dòng ${index + 1}: imageUrl không hợp lệ`);
+					}
+				}
+				const nextImages = lines
+					.map((line, index) => {
+						const [correctWord, imageUrl] = splitBulkColumns(line);
+						return { id: makeId(index), correctWord: correctWord || "", imageUrl: imageUrl || "" };
+					})
+					.filter((item) => item.correctWord || item.imageUrl);
+				if (!nextImages.length) return toast.warning("Không đọc được dữ liệu ảnh");
+				setImages(nextImages);
+				return toast.success("Đã nhập nhanh danh sách ảnh");
+			}
+
+			if (type === "sentence_builder") {
+				const rawTokens = lines.length === 1 ? lines[0].split(/\s+/) : lines;
+				const nextTokens = rawTokens
+					.map((text, index) => ({ id: index + 1, text: text.trim() }))
+					.filter((item) => item.text);
+				if (nextTokens.length < 3) return toast.warning("Cần ít nhất 3 token");
+				setTokens(nextTokens);
+				return toast.success("Đã nhập nhanh token");
+			}
+
+			if (type === "listen_select") {
+				for (let index = 0; index < lines.length; index += 1) {
+					const [text, imageUrl] = splitBulkColumns(lines[index]);
+					if (!text || !imageUrl) {
+						return toast.warning(`Dòng ${index + 1} cần đủ: text | imageUrl`);
+					}
+					if (!isValidQuickUrl(imageUrl)) {
+						return toast.warning(`Dòng ${index + 1}: imageUrl không hợp lệ`);
+					}
+				}
+				const nextOptions = lines
+					.map((line, index) => {
+						const [text, imageUrl] = splitBulkColumns(line);
+						return { id: makeId(index), text: text || "", imageUrl: imageUrl || "" };
+					})
+					.filter((item) => item.text || item.imageUrl);
+				if (nextOptions.length < 2) return toast.warning("Cần ít nhất 2 lựa chọn");
+				setListenOptions(nextOptions);
+				setCorrectIndex(0);
+				return toast.success("Đã nhập nhanh options");
+			}
+
+			if (type === "exam") {
+				for (let index = 0; index < lines.length; index += 1) {
+					const columns = splitBulkColumns(lines[index]);
+					if (columns.length < 6) {
+						return toast.warning(`Dòng ${index + 1} cần đủ: câu hỏi | A | B | C | D | đáp án đúng 1-4`);
+					}
+					if (columns.slice(0, 5).some((item) => !item)) {
+						return toast.warning(`Dòng ${index + 1} không được để trống câu hỏi hoặc đáp án`);
+					}
+					const correct = Number(columns[5]);
+					if (!Number.isInteger(correct) || correct < 1 || correct > 4) {
+						return toast.warning(`Dòng ${index + 1}: đáp án đúng phải là số từ 1 đến 4`);
+					}
+				}
+				const nextQuestions = lines
+					.map((line) => {
+						const [question, ...rest] = splitBulkColumns(line);
+						const options = rest.slice(0, 4);
+						const correctRaw = rest[4];
+						while (options.length < 4) options.push("");
+						const parsedCorrect = Number(correctRaw);
+						const correctIndex = Number.isFinite(parsedCorrect) && parsedCorrect >= 1 && parsedCorrect <= 4 ? parsedCorrect - 1 : 0;
+						return { question: question || "", options, correctIndex };
+					})
+					.filter((item) => item.question || item.options.some(Boolean));
+				if (!nextQuestions.length) return toast.warning("Không đọc được câu hỏi");
+				setQuestions(nextQuestions);
+				return toast.success("Đã nhập nhanh câu hỏi");
+			}
+
+			if (type === "true_false") {
+				if (lines.length < 4) {
+					return toast.warning("True/False cần 4 dòng: statement, đáp án A, đáp án B, phương án đúng");
+				}
+				if (!lines[0] || !lines[1] || !lines[2]) {
+					return toast.warning("Statement, đáp án A và đáp án B không được để trống");
+				}
+				const nextCorrect = normalizeTrueFalseAnswer(lines[3]);
+				if (!nextCorrect) {
+					return toast.warning("Phương án đúng phải là A hoặc B");
+				}
+				setTfStatement(lines[0] || "");
+				setTfOptions([
+					{ key: "A", label: lines[1] || "Đúng" },
+					{ key: "B", label: lines[2] || "Sai" },
+				]);
+				setTfCorrect(nextCorrect);
+				return toast.success("Đã nhập nhanh True/False");
+			}
+
+			if (type === "typing_challenge") {
+				if (!lines[0] || lines[0].length < 5) {
+					return toast.warning("Target text cần ít nhất 5 ký tự");
+				}
+				setTypingTarget(lines[0] || "");
+				setTypingHints(lines.slice(1, 6));
+				return toast.success("Đã nhập nhanh typing challenge");
+			}
+
+			if (type === "flip_card") {
+				for (let index = 0; index < lines.length; index += 1) {
+					const [term, definition] = splitBulkColumns(lines[index]);
+					if (!term || !definition) {
+						return toast.warning(`Dòng ${index + 1} cần đủ: term | definition`);
+					}
+				}
+				const nextCards = lines
+					.map((line) => {
+						const [term, definition] = splitBulkColumns(line);
+						return { term: term || "", definition: definition || "" };
+					})
+					.filter((item) => item.term || item.definition);
+				if (!nextCards.length) return toast.warning("Không đọc được flashcard");
+				setFlipCards(nextCards);
+				return toast.success("Đã nhập nhanh flashcard");
+			}
+
+			return toast.info("Loại này không cần nhập nhanh");
+		};
 
 		const handleSubmit = async () => {
 			// basic validation
@@ -212,7 +548,14 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 				if (flipCards.length === 0) return toast.warning("Cần ít nhất 1 thẻ");
 				if (flipCards.some(c => !c.term.trim() || !c.definition.trim()))
 					return toast.warning("Vui lòng điền đủ Thuật ngữ và Định nghĩa");
-				resources = { cards: flipCards.map(c => ({ term: c.term.trim(), definition: c.definition.trim() })) };
+				resources = {
+					cards: flipCards.map(c => ({
+						term: c.term.trim(),
+						definition: c.definition.trim(),
+						phonetic: c.phonetic?.trim() || "",
+						partOfSpeech: c.partOfSpeech?.trim() || "",
+					}))
+				};
 			} else if (type === "watch_video") {
 				if (!watchVideoHls && !watchVideoMp4) {
 					return toast.warning("Video không được rỗng");
@@ -246,6 +589,53 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 						<label className="form-label">Prompt</label>
 						<input className="form-control" value={prompt} onChange={(e) => setPrompt(e.target.value)} />
 					</div>
+
+					{type !== "lesson" && type !== "watch_video" && (
+						<div className="mb-3">
+							<button
+								type="button"
+								className="btn btn-sm btn-outline-success"
+								onClick={() => setShowQuickInput((prev) => !prev)}
+							>
+								{showQuickInput ? "Ẩn nhập nhanh" : "Nhập nhanh"}
+							</button>
+
+							{showQuickInput && (
+								<div className="mt-2" style={getQuickInputPanelStyle(isDarkMode)}>
+									<div className="d-flex justify-content-between align-items-center gap-2 mb-2">
+										<label className={`form-label small mb-0 ${isDarkMode ? "text-light" : "text-muted"}`}>
+											{getQuickInputHint()}
+										</label>
+										<button
+											type="button"
+											className="btn btn-sm"
+											style={getSampleDownloadButtonStyle(isDarkMode)}
+											onClick={downloadQuickInputSample}
+										>
+											<i className="bi bi-file-earmark-word" aria-hidden="true" />
+											File mẫu
+										</button>
+									</div>
+									<textarea
+										className="form-control"
+										rows={4}
+										value={quickInput}
+										onChange={(e) => setQuickInput(e.target.value)}
+										placeholder={getQuickInputHint()}
+										style={getQuickInputTextareaStyle(isDarkMode)}
+									/>
+									<div className="d-flex justify-content-end gap-2 mt-2">
+										<button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setQuickInput("")}>
+											Xóa
+										</button>
+										<button type="button" className="btn btn-sm btn-success" onClick={applyQuickInput}>
+											Áp dụng
+										</button>
+									</div>
+								</div>
+							)}
+						</div>
+					)}
 
 					{/* Dynamic fields */}
 					{type === "match_image_word" && (
@@ -697,7 +1087,13 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 									<div className="card-body">
 										<div className="row g-2 align-items-center">
 											<div className="col-md-5">
-												<input className="form-control" placeholder="Thuật ngữ" value={card.term} onChange={(e) => updateFlipCard(idx, "term", e.target.value)} />
+												<input
+													className="form-control"
+													placeholder="Thuật ngữ"
+													value={card.term}
+													onChange={(e) => updateFlipCard(idx, "term", e.target.value)}
+													onBlur={(e) => fetchFlipCardInfo(idx, e.target.value)}
+												/>
 											</div>
 											<div className="col-md-5">
 												<input className="form-control" placeholder="Định nghĩa" value={card.definition} onChange={(e) => updateFlipCard(idx, "definition", e.target.value)} />
