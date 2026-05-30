@@ -16,7 +16,6 @@ const ActivityManagerPage = () => {
   const [showWordImportForm, setShowWordImportForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newSkill, setNewSkill] = useState("reading");
-  const [newPointOfAc, setNewPointOfAc] = useState(0);
   const [wordFile, setWordFile] = useState(null);
   const [wordActivityTitle, setWordActivityTitle] = useState("");
   const [selectedWordMinigames, setSelectedWordMinigames] = useState([]);
@@ -240,17 +239,6 @@ const ActivityManagerPage = () => {
               </select>
             </div>
 
-            {/* ĐIỂM */}
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Điểm activity</label>
-              <input
-                type="number"
-                className="form-control"
-                placeholder="Ví dụ: 10"
-                value={newPointOfAc}
-                onChange={(e) => setNewPointOfAc(e.target.value)}
-              />
-            </div>
 
             {/* BUTTONS */}
             <div className="d-flex justify-content-end gap-2 mt-2">
@@ -267,8 +255,6 @@ const ActivityManagerPage = () => {
                   if (!newTitle.trim()) return toast.warning("Tiêu đề không được rỗng");
                   if (!ALLOWED_SKILLS.includes(newSkill))
                     return toast.warning("Skill không hợp lệ");
-                  if (!Number.isInteger(Number(newPointOfAc)))
-                    return toast.warning("Điểm phải là số nguyên");
 
                   try {
                     await api.post("/activities", {
@@ -276,12 +262,10 @@ const ActivityManagerPage = () => {
                       dayId: Number(dayId),
                       order: activities.length + 1,
                       skill: newSkill,
-                      pointOfAc: Number(newPointOfAc),
                     });
 
                     setNewTitle("");
                     setNewSkill("reading");
-                    setNewPointOfAc(0);
                     setShowAddForm(false);
                     await load();
                   } catch (err) {

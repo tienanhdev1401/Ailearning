@@ -13,9 +13,6 @@ export class Activity {
   skill!: Skill;
 
 
-  @Column({ name: "point_of_ac", type: "int", nullable: false, default: 0 })
-  pointOfAc!: number;
-
   @Column({ name: "order", type: "int", nullable: false })
   order!: number;
 

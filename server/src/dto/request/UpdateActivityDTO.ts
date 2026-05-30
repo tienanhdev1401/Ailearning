@@ -6,9 +6,6 @@ export class UpdateActivityDto {
   @IsEnum(Skill)
   skill?: Skill;
 
-  @IsOptional()
-  @IsInt()
-  pointOfAc?: number;
 
   @IsOptional()
   @IsInt()
