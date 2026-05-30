@@ -29,6 +29,7 @@ import ChooseLevelPage from "./client/pages/muticheckPage/ChooseLevelPage";
 import ChooseTopicPage from "./client/pages/muticheckPage/ChooseTopicPage";
 import KnowLevelPage from "./client/pages/muticheckPage/KnowLevelPage";
 import FindLevelPage from "./client/pages/muticheckPage/FindLevelPage";
+import PlacementTestPage from "./client/pages/muticheckPage/PlacementTestPage";
 
 import RoadmapListPage from "./client/pages/RoadMapListPage";
 import RoadMapPage from "./client/pages/RoadMapPage";
@@ -136,6 +137,7 @@ function App() {
         <Route path="/welcome/topic" element={<ChooseTopicPage />} />
         <Route path="/welcome/proficiency" element={<KnowLevelPage />} />
         <Route path="/welcome/placement" element={<FindLevelPage />} />
+        <Route path="/welcome/placement/test" element={<PlacementTestPage />} />
 
 
         <Route
