@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/api";
 import { useToast } from "../../../context/ToastContext";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
+import styles from "../../styles/MulticheckPages.module.css";
 
 const questions = [
   // --- LEVEL A1 ---
@@ -299,95 +298,67 @@ const PlacementTestPage = () => {
   const levelDetails = getLevelFromScore(finalScore);
 
   return (
-    <div className="min-vh-100 bg-white text-dark d-flex align-items-center py-5" data-bs-theme="light">
-      <div className="container" style={{ maxWidth: "720px", position: "relative" }}>
+    <div className={styles.page}>
+      <div className={styles.container}>
         
         {/* ================= STEP 1: THE QUIZ ================= */}
         {currentStep === 1 && (
           <div>
             {/* Top Navigation */}
-            <div className="d-flex align-items-center justify-content-between mb-4">
-              <button
-                onClick={handleBack}
-                className="btn btn-light border d-flex align-items-center justify-content-center"
-                style={{
-                  borderRadius: "50%",
-                  width: "44px",
-                  height: "44px",
-                  boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
-                }}
-              >
-                <i className="bi bi-arrow-left fs-5 text-primary"></i>
+            <div className={styles.quizHeader}>
+              <button onClick={handleBack} className={styles.backButton} style={{ position: "static" }}>
+                ←
               </button>
-              
-              <span className="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-semibold">
-                Category: {currentQuestion.category}
+              <span className={styles.categoryBadge}>
+                {currentQuestion.category}
               </span>
             </div>
 
             {/* Progress Bar */}
-            <div className="d-flex align-items-center mb-5 gap-3">
-              <div className="progress flex-grow-1" style={{ height: "10px", borderRadius: "10px" }}>
+            <div className={styles.quizProgress}>
+              <div className={styles.quizProgressBar}>
                 <div
-                  className="progress-bar bg-success progress-bar-striped progress-bar-animated"
-                  role="progressbar"
-                  style={{ width: `${progressPercent}%`, transition: "width 0.3s ease" }}
-                ></div>
+                  className={styles.quizProgressFill}
+                  style={{ width: `${progressPercent}%` }}
+                />
               </div>
-              <span className="text-secondary fw-semibold" style={{ fontSize: "0.9rem", minWidth: "90px" }}>
+              <span className={styles.quizCounter}>
                 Question {currentQuestionIndex + 1} of {questions.length}
               </span>
             </div>
 
             {/* Question Card */}
-            <div className="card border-0 bg-light p-4 rounded-4 mb-4 shadow-sm">
-              <h4 className="fw-bold mb-0 lh-base text-dark-emphasis">
+            <div className={styles.questionCard}>
+              <p className={styles.questionText}>
                 {currentQuestion.question}
-              </h4>
+              </p>
             </div>
 
             {/* Options List */}
-            <div className="d-flex flex-column gap-3 mb-4">
+            <div className={styles.quizOptionList}>
               {currentQuestion.options.map((option, idx) => {
                 const label = String.fromCharCode(65 + idx); // A, B, C, D
                 const isSelected = selectedAnswers[currentQuestionIndex] === option;
                 
                 return (
-                  <button
+                  <div
                     key={idx}
-                    className={`btn d-flex align-items-center border rounded-4 py-3 px-4 text-start transition-all ${
-                      isSelected
-                        ? "border-primary bg-primary-subtle shadow-sm"
-                        : "border-light-subtle bg-white hover-card"
-                    }`}
+                    className={`${styles.quizOption} ${isSelected ? styles.quizOptionSelected : ""}`}
                     onClick={() => handleSelectOption(option)}
-                    style={{
-                      transition: "all 0.2s ease-in-out",
-                    }}
                   >
-                    <span 
-                      className={`badge rounded-circle me-3 d-flex align-items-center justify-content-center ${
-                        isSelected ? "bg-primary text-white" : "bg-light text-secondary border"
-                      }`}
-                      style={{ width: "32px", height: "32px", fontSize: "0.95rem" }}
-                    >
-                      {label}
-                    </span>
-                    <span className={`fs-5 fw-semibold ${isSelected ? "text-primary" : "text-dark"}`}>
-                      {option}
-                    </span>
-                  </button>
+                    <span className={styles.quizOptionLabel}>{label}</span>
+                    <span className={styles.quizOptionText}>{option}</span>
+                  </div>
                 );
               })}
             </div>
 
             {/* Actions */}
-            <div className="d-flex justify-content-end mt-5">
+            <div className={styles.quizNav}>
               <button
-                className="btn btn-primary px-5 py-3 rounded-pill fw-bold fs-5 shadow"
+                className={styles.nextButton}
                 disabled={!selectedAnswers[currentQuestionIndex]}
                 onClick={handleNext}
-                style={{ minWidth: "160px" }}
               >
                 {currentQuestionIndex === questions.length - 1 ? "Finish Test" : "Next Question"}
               </button>
@@ -397,172 +368,134 @@ const PlacementTestPage = () => {
 
         {/* ================= STEP 2: AI ANALYZING LOADER ================= */}
         {currentStep === 2 && (
-          <div className="text-center py-5">
-            <div className="mb-5 position-relative d-inline-block">
-              <div 
-                className="spinner-border text-primary" 
-                role="status"
-                style={{ width: "120px", height: "120px", borderWidth: "8px" }}
-              ></div>
-              <div 
-                className="position-absolute top-50 start-50 translate-middle d-flex align-items-center justify-content-center"
-                style={{ width: "100px", height: "100px", borderRadius: "50%", background: "#f8f9fa" }}
-              >
-                <span className="fs-3 fw-bold text-primary">{loadingProgress}%</span>
-              </div>
-            </div>
+          <div className={styles.analyzerContainer}>
+            <div className={styles.analyzerOrb} />
             
-            <h3 className="fw-bold text-dark mb-3">AI Language Proficiency Audit</h3>
-            <p className="text-muted fs-5 mb-5 px-4" style={{ maxWidth: "500px", margin: "0 auto" }}>
+            <h3 className={styles.analyzerTitle}>AI Language Proficiency Audit</h3>
+            <p className={styles.analyzerText}>
               {loadingText}
             </p>
 
-            <div className="progress mx-auto shadow-sm" style={{ height: "8px", maxWidth: "400px", borderRadius: "10px" }}>
-              <div 
-                className="progress-bar bg-primary progress-bar-striped progress-bar-animated"
+            <div className={styles.analyzerProgressBar}>
+              <div
+                className={styles.analyzerProgressFill}
                 style={{ width: `${loadingProgress}%` }}
-              ></div>
+              />
             </div>
           </div>
         )}
 
         {/* ================= STEP 3: RESULTS DASHBOARD ================= */}
         {currentStep === 3 && (
-          <div className="text-center">
+          <div className={styles.resultsContainer}>
             {/* Header / Celebration */}
-            <div className="mb-4">
-              <span className="display-1">{levelDetails.badge}</span>
-              <h2 className="fw-extrabold mt-3 display-6 text-dark">Audit Results</h2>
-              <p className="text-secondary fs-5">We analyzed your skills and mapped your language proficiency level.</p>
-            </div>
+            <div className={styles.resultsBadge}>{levelDetails.badge}</div>
+            <h2 className={styles.resultsTitle}>Audit Results</h2>
+            <p className={styles.resultsSubtitle}>
+              We analyzed your skills and mapped your language proficiency level.
+            </p>
 
             {/* Mapped Level Card */}
-            <div 
-              className="card border-0 p-5 rounded-4 mb-4 shadow"
-              style={{
-                background: "linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%)",
-                color: "#ffffff"
-              }}
-            >
-              <div className="badge bg-white text-primary px-3 py-2 rounded-pill fw-bold mb-3 d-inline-block" style={{ width: "fit-content", margin: "0 auto" }}>
+            <div className={styles.levelCard}>
+              <div className={styles.levelBadge}>
                 RECOMMENDED CEFR LEVEL
               </div>
-              <h1 className="fw-extrabold display-4 mb-3">{levelDetails.name}</h1>
-              <p className="fs-5 opacity-90 mb-0 px-md-4">
+              <h1 className={styles.levelName}>{levelDetails.name}</h1>
+              <p className={styles.levelDesc}>
                 {levelDetails.desc}
               </p>
             </div>
 
             {/* Score & Skill Breakdown Details */}
-            <div className="row g-3 mb-5">
+            <div className={styles.statsGrid}>
               {/* Score card */}
-              <div className="col-12 col-md-6">
-                <div className="card border border-light-subtle rounded-4 p-4 h-100 bg-light shadow-sm text-start">
-                  <h6 className="text-muted fw-bold text-uppercase mb-2">Overall Accuracy</h6>
-                  <div className="d-flex align-items-baseline gap-2">
-                    <span className="display-4 fw-extrabold text-primary">{finalScore}</span>
-                    <span className="fs-3 text-secondary">/ {questions.length}</span>
-                  </div>
-                  <p className="text-secondary mt-3 mb-0">
-                    You answered {finalScore} out of {questions.length} questions correctly. 
-                    This is in line with the standard benchmarks for **{levelDetails.name}**.
-                  </p>
+              <div className={styles.statCard}>
+                <div className={styles.statLabel}>Overall Accuracy</div>
+                <div className={styles.statScore}>
+                  <span className={styles.statScoreNumber}>{finalScore}</span>
+                  <span className={styles.statScoreTotal}>/ {questions.length}</span>
                 </div>
+                <p className={styles.statDescription}>
+                  You answered {finalScore} out of {questions.length} questions correctly.
+                </p>
               </div>
 
               {/* Skills breakdown */}
-              <div className="col-12 col-md-6">
-                <div className="card border border-light-subtle rounded-4 p-4 h-100 bg-light shadow-sm text-start">
-                  <h6 className="text-muted fw-bold text-uppercase mb-3">Skill Breakdown</h6>
-                  
-                  {/* Skill 1: Grammar */}
-                  <div className="mb-3">
-                    <div className="d-flex justify-content-between fw-semibold mb-1" style={{ fontSize: "0.85rem" }}>
-                      <span>Grammar & Structure</span>
-                      <span className="text-primary">{finalScore >= 7 ? "High" : finalScore >= 4 ? "Medium" : "Developing"}</span>
-                    </div>
-                    <div className="progress" style={{ height: "6px" }}>
-                      <div 
-                        className="progress-bar bg-primary" 
-                        style={{ width: `${Math.min(100, Math.max(30, finalScore * 10))}%` }}
-                      ></div>
-                    </div>
+              <div className={styles.statCard}>
+                <div className={styles.statLabel}>Skill Breakdown</div>
+                
+                {/* Skill 1: Grammar */}
+                <div className={styles.skillRow}>
+                  <div className={styles.skillHeader}>
+                    <span className={styles.skillName}>Grammar & Structure</span>
+                    <span className={`${styles.skillLevel} ${finalScore >= 7 ? styles.skillLevelHigh : finalScore >= 4 ? styles.skillLevelMedium : styles.skillLevelDeveloping}`}>
+                      {finalScore >= 7 ? "High" : finalScore >= 4 ? "Medium" : "Developing"}
+                    </span>
                   </div>
-
-                  {/* Skill 2: Vocabulary */}
-                  <div className="mb-3">
-                    <div className="d-flex justify-content-between fw-semibold mb-1" style={{ fontSize: "0.85rem" }}>
-                      <span>Vocabulary & Context</span>
-                      <span className="text-success">{finalScore >= 8 ? "High" : finalScore >= 5 ? "Medium" : "Developing"}</span>
-                    </div>
-                    <div className="progress" style={{ height: "6px" }}>
-                      <div 
-                        className="progress-bar bg-success" 
-                        style={{ width: `${Math.min(100, Math.max(35, (finalScore + 1) * 9))}%` }}
-                      ></div>
-                    </div>
+                  <div className={styles.skillBar}>
+                    <div className={styles.skillBarFillGreen} style={{ width: `${Math.min(100, Math.max(30, finalScore * 10))}%` }} />
                   </div>
+                </div>
 
-                  {/* Skill 3: Reading */}
-                  <div>
-                    <div className="d-flex justify-content-between fw-semibold mb-1" style={{ fontSize: "0.85rem" }}>
-                      <span>Comprehension & Context</span>
-                      <span className="text-warning">{finalScore >= 8 ? "High" : finalScore >= 5 ? "Medium" : "Developing"}</span>
-                    </div>
-                    <div className="progress" style={{ height: "6px" }}>
-                      <div 
-                        className="progress-bar bg-warning" 
-                        style={{ width: `${Math.min(100, Math.max(25, (finalScore) * 9.5))}%` }}
-                      ></div>
-                    </div>
+                {/* Skill 2: Vocabulary */}
+                <div className={styles.skillRow}>
+                  <div className={styles.skillHeader}>
+                    <span className={styles.skillName}>Vocabulary & Context</span>
+                    <span className={`${styles.skillLevel} ${finalScore >= 8 ? styles.skillLevelHigh : finalScore >= 5 ? styles.skillLevelMedium : styles.skillLevelDeveloping}`}>
+                      {finalScore >= 8 ? "High" : finalScore >= 5 ? "Medium" : "Developing"}
+                    </span>
+                  </div>
+                  <div className={styles.skillBar}>
+                    <div className={styles.skillBarFillCyan} style={{ width: `${Math.min(100, Math.max(35, (finalScore + 1) * 9))}%` }} />
+                  </div>
+                </div>
+
+                {/* Skill 3: Reading */}
+                <div className={styles.skillRow}>
+                  <div className={styles.skillHeader}>
+                    <span className={styles.skillName}>Comprehension & Context</span>
+                    <span className={`${styles.skillLevel} ${finalScore >= 8 ? styles.skillLevelHigh : finalScore >= 5 ? styles.skillLevelMedium : styles.skillLevelDeveloping}`}>
+                      {finalScore >= 8 ? "High" : finalScore >= 5 ? "Medium" : "Developing"}
+                    </span>
+                  </div>
+                  <div className={styles.skillBar}>
+                    <div className={styles.skillBarFillAmber} style={{ width: `${Math.min(100, Math.max(25, finalScore * 9.5))}%` }} />
                   </div>
                 </div>
               </div>
             </div>
 
             {/* CTA buttons */}
-            <div className="d-flex flex-column gap-3 justify-content-center align-items-center mt-4">
-              <div className="d-flex flex-column flex-sm-row gap-3 w-100 justify-content-center">
+            <div className={styles.resultActions}>
+              <div className={styles.resultActionsRow}>
                 <button
-                  className="btn btn-primary px-5 py-2.5 rounded-pill fw-semibold fs-5 shadow"
+                  className={styles.btnPrimary}
                   onClick={handleFinishSetup}
                 >
                   Finish Setup & Start Learning
                 </button>
                 <button
-                  className="btn btn-outline-primary px-5 py-2.5 rounded-pill fw-semibold fs-5"
+                  className={styles.btnOutline}
                   onClick={handleChooseManually}
                 >
                   Choose Level Manually
                 </button>
               </div>
               <button
-                className="btn btn-link text-secondary fw-semibold mt-2"
+                className={styles.btnLink}
                 onClick={() => {
                   setCurrentStep(1);
                   setCurrentQuestionIndex(0);
                   setSelectedAnswers({});
                 }}
               >
-                <i className="bi bi-arrow-counterclockwise me-1"></i> Retake placement test
+                ↺ Retake placement test
               </button>
             </div>
           </div>
         )}
 
       </div>
-
-      <style>{`
-        .transition-all {
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .hover-card:hover {
-          transform: translateY(-2px);
-          border-color: #0d6efd !important;
-          box-shadow: 0 4px 12px rgba(13, 110, 253, 0.08);
-          background-color: #f8f9fa !important;
-        }
-      `}</style>
     </div>
   );
 };

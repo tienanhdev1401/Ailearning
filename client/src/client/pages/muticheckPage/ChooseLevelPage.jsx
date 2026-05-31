@@ -1,15 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/api";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
 import { useToast } from "../../../context/ToastContext";
+import styles from "../../styles/MulticheckPages.module.css";
 
 const ChooseLevelPage = () => {
   const levels = [
-    { icon: "🪴", label: "Beginner A1" },
+    { icon: "🌱", label: "Beginner A1" },
     { icon: "🌿", label: "Elementary A2" },
-    { icon: "🌱", label: "Intermediate B1" },
+    { icon: "🪴", label: "Intermediate B1" },
     { icon: "🌳", label: "Upper Intermediate B2" },
     { icon: "🌸", label: "Advanced C1" },
     { icon: "🌟", label: "Proficient C2" }
@@ -62,66 +61,48 @@ const ChooseLevelPage = () => {
   };
 
   return (
-    <div className="min-vh-100 bg-white text-dark" data-bs-theme="light">
-      <div
-        className="container text-center py-5"
-        style={{
-          maxWidth: "700px",
-          position: "relative"
-        }}
-      >
-      {/* Nút quay lại góc trên bên trái */}
+    <div className={styles.page}>
+      {/* Nút quay lại */}
       <button
         onClick={() => navigate("/welcome/proficiency")}
-        className="btn btn-light border position-fixed"
-        style={{
-          top: "20px",
-          left: "20px",
-          borderRadius: "50%",
-          width: "50px",
-          height: "50px",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-          zIndex: 1000
-        }}
+        className={styles.backButton}
       >
-        <i className="bi bi-arrow-left fs-4 text-primary"></i>
+        ←
       </button>
 
-      {/* Thanh tiến trình */}
-      <div className="progress mb-5" style={{ height: "8px" }}>
-        <div
-          className="progress-bar bg-success"
-          role="progressbar"
-          style={{ width: "100%" }}
-        ></div>
-      </div>
+      <div className={styles.container}>
+        {/* Thanh tiến trình */}
+        <div className={styles.progressBar}>
+          <div className={styles.progressFill} style={{ width: "100%" }} />
+        </div>
 
-      {/* Tiêu đề */}
-      <h3 className="fw-bold mb-2">Choose your level</h3>
-      <p className="text-muted mb-4">
-        We’ll match you to the right lessons
-      </p>
+        {/* Tiêu đề */}
+        <h2 className={styles.title}>Choose your level</h2>
+        <p className={styles.subtitle}>
+          We'll match you to the right lessons
+        </p>
 
-      {/* Danh sách lựa chọn */}
-      <div className="d-flex flex-column gap-3">
-        {levels.map((level, index) => (
-          <button
-            key={index}
-            className={`btn d-flex align-items-center border rounded-4 py-3 px-4 justify-content-start gap-3 ${
-              selected === index ? "border-primary bg-light shadow-sm" : ""
-            }`}
-            onClick={() => handleSelect(index)}
-          >
-            <span style={{ fontSize: "1.8rem" }}>{level.icon}</span>
-            <span className="fw-semibold fs-5">{level.label}</span>
-          </button>
-        ))}
-      </div>
+        {/* Danh sách lựa chọn */}
+        <div className={styles.optionList}>
+          {levels.map((level, index) => (
+            <div
+              key={index}
+              className={`${styles.optionCard} ${selected === index ? styles.optionCardSelected : ""}`}
+              onClick={() => handleSelect(index)}
+            >
+              <div className={styles.optionIcon}>{level.icon}</div>
+              <div className={styles.optionContent}>
+                <div className={styles.optionLabel}>{level.label}</div>
+              </div>
+              <div className={styles.optionCheck}>✓</div>
+            </div>
+          ))}
+        </div>
 
         {/* Nút Finish */}
-        <div className="mt-5">
+        <div className={styles.ctaWrapper}>
           <button
-            className="btn btn-primary px-5 py-2 rounded-pill fw-semibold"
+            className={styles.continueButton}
             disabled={selected === null}
             onClick={handleFinish}
           >
@@ -134,5 +115,3 @@ const ChooseLevelPage = () => {
 };
 
 export default ChooseLevelPage;
-
-

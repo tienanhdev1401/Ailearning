@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../api/api';
 import styles from '../styles/RoadmapListPage.module.css';
 import useCurrentUser from '../hooks/useCurrentUser';
@@ -12,6 +12,10 @@ const RoadmapListPage = () => {
   const [checkingActiveRoadmap, setCheckingActiveRoadmap] = useState(true);
   const { userId, loading: userLoading } = useCurrentUser();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Nếu navigate từ recommendation page với skipAutoRedirect, không tự redirect
+  const skipAutoRedirect = location.state?.skipAutoRedirect === true;
 
   useEffect(() => {
     const fetchRoadmaps = async () => {
@@ -28,6 +32,11 @@ const RoadmapListPage = () => {
   }, []);
 
   useEffect(() => {
+    if (skipAutoRedirect) {
+      setCheckingActiveRoadmap(false);
+      return;
+    }
+
     const checkActive = async () => {
       if (userLoading) return;
       if (!userId) {
@@ -50,7 +59,7 @@ const RoadmapListPage = () => {
     };
 
     checkActive();
-  }, [navigate, userId, userLoading]);
+  }, [navigate, userId, userLoading, skipAutoRedirect]);
 
   const categories = useMemo(() => {
     const collected = roadmaps

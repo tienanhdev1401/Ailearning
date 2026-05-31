@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import api from "../../../api/api";
 import useCurrentUser from "../../hooks/useCurrentUser";
 import { useToast } from "../../../context/ToastContext";
-import styles from "./RecommendationResultPage.module.css";
+import styles from "../../styles/RecommendationResultPage.module.css";
 
 // ── Loading step definitions ──────────────────────────
 const LOADING_STEPS = [
   { label: "Đang thu thập thông tin đánh giá...", delay: 0 },
-  { label: "AI đang phân tích trình độ của bạn...", delay: 1500 },
+  { label: "AelanG đang phân tích trình độ của bạn...", delay: 1500 },
   { label: "Đang so sánh với các lộ trình phù hợp...", delay: 3500 },
   { label: "Chuẩn bị kết quả đề xuất...", delay: 5500 },
 ];
@@ -90,7 +90,7 @@ export default function RecommendationResultPage() {
     sessionStorage.removeItem("topics");
     sessionStorage.removeItem("proficiency");
     sessionStorage.removeItem("level");
-    navigate("/roadmaps");
+    navigate("/roadmaps", { state: { skipAutoRedirect: true } });
   };
 
   // ── Render: Loading ─────────────────────────────────
@@ -98,9 +98,16 @@ export default function RecommendationResultPage() {
     return (
       <div className={styles.page}>
         <div className={styles.loadingContainer}>
-          <div className={styles.loadingOrb} />
+          <div className={styles.mascotWrapper}>
+            <div className={styles.mascotGlow} />
+            <img
+              src="/assets/img/hero/hero4.png"
+              alt="AelanG mascot"
+              className={styles.mascotImage}
+            />
+          </div>
           <div className={styles.loadingText}>
-            AI đang phân tích
+            AelanG đang tìm lộ trình phù hợp cho bạn
             <span className={styles.loadingDots}>
               <span />
               <span />
@@ -159,15 +166,11 @@ export default function RecommendationResultPage() {
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerBadge}>
-            <span>✨</span> AI Recommendation
+            <span></span> ROADMAP
           </div>
           <h1 className={styles.headerTitle}>
-            Lộ trình phù hợp nhất dành cho bạn
+            Lộ trình dành cho bạn
           </h1>
-          <p className={styles.headerSubtitle}>
-            Dựa trên đánh giá trình độ, AI đã phân tích và tìm ra lộ trình học
-            tập tối ưu cho bạn.
-          </p>
         </div>
 
         {/* User profile summary */}
@@ -195,9 +198,9 @@ export default function RecommendationResultPage() {
             <div className={styles.profileValue}>
               {Array.isArray(userProfile?.topics)
                 ? userProfile.topics.slice(0, 3).join(", ") +
-                  (userProfile.topics.length > 3
-                    ? ` +${userProfile.topics.length - 3}`
-                    : "")
+                (userProfile.topics.length > 3
+                  ? ` +${userProfile.topics.length - 3}`
+                  : "")
                 : "—"}
             </div>
           </div>
@@ -206,7 +209,7 @@ export default function RecommendationResultPage() {
         {/* Recommendation card */}
         <div className={styles.recommendationCard}>
           <div className={styles.recBadge}>
-            <span>🏆</span> Được đề xuất
+            <span></span> Roadmap được đề xuất
           </div>
           <h2 className={styles.recTitle}>
             {recommendation.roadmapName || "Lộ trình học tập"}
@@ -218,7 +221,7 @@ export default function RecommendationResultPage() {
           )}
           <div className={styles.recReason}>
             <div className={styles.recReasonLabel}>
-              <span>🤖</span> Phân tích từ AI
+              <span></span> Phân tích từ AelanG
             </div>
             {reason}
           </div>
@@ -248,7 +251,7 @@ export default function RecommendationResultPage() {
             onClick={handleStartRoadmap}
             disabled={enrolling}
           >
-            {enrolling ? "Đang đăng ký..." : "🚀 Bắt đầu lộ trình này"}
+            {enrolling ? "Đang đăng ký..." : " Bắt đầu lộ trình này"}
           </button>
           <button className={styles.btnSecondary} onClick={handleBrowseAll}>
             Xem tất cả lộ trình

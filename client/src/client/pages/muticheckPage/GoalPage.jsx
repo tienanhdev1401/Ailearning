@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
+import styles from "../../styles/MulticheckPages.module.css";
 
 const GoalPage = () => {
   const [selected, setSelected] = useState(() => {
@@ -11,10 +10,10 @@ const GoalPage = () => {
   const navigate = useNavigate();
 
   const goals = [
-    { time: "5 minutes / day", label: "Casual" },
-    { time: "10 minutes / day", label: "Regular" },
-    { time: "15 minutes / day", label: "Serious" },
-    { time: "25 minutes / day", label: "Intense" },
+    { time: "5 minutes / day", label: "Casual", icon: "☕" },
+    { time: "10 minutes / day", label: "Regular", icon: "📖" },
+    { time: "15 minutes / day", label: "Serious", icon: "🔥" },
+    { time: "25 minutes / day", label: "Intense", icon: "⚡" },
   ];
 
   const handleSelect = (goal) => {
@@ -35,71 +34,57 @@ const GoalPage = () => {
   }, [selected]);
 
   return (
-    <div className="min-vh-100 bg-white text-dark" data-bs-theme="light">
-      <div
-        className="container text-center py-5"
-        style={{ maxWidth: "600px", position: "relative" }}
-      >
+    <div className={styles.page}>
       {/* Nút quay lại */}
       <button
         onClick={() => navigate("/welcome/reason")}
-        className="btn btn-light border position-fixed"
-        style={{
-          top: "20px",
-          left: "20px",
-          borderRadius: "50%",
-          width: "50px",
-          height: "50px",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-          zIndex: 1000,
-        }}
+        className={styles.backButton}
       >
-        <i className="bi bi-arrow-left fs-4 text-primary"></i>
+        ←
       </button>
 
-      {/* Thanh tiến trình */}
-      <div className="progress mb-5" style={{ height: "8px" }}>
-        <div
-          className="progress-bar bg-success"
-          role="progressbar"
-          style={{ width: "40%" }}
-        ></div>
-      </div>
+      <div className={styles.container}>
+        {/* Thanh tiến trình */}
+        <div className={styles.progressBar}>
+          <div className={styles.progressFill} style={{ width: "40%" }} />
+        </div>
 
-      <h3 className="fw-bold mb-2">Set a daily study goal</h3>
-      <p className="text-muted mb-4">
-        Create a learning habit to improve your English.
-      </p>
+        {/* Illustration */}
+        <div className={styles.illustrationWrapper}>
+          <img
+            src="https://img.pikbest.com/png-images/qiantu/dart-target-icon-design_2688549.png!sw800"
+            alt="Target icon"
+            className={styles.illustration}
+          />
+        </div>
 
-      <div className="mb-4">
-        <img
-          src="https://img.pikbest.com/png-images/qiantu/dart-target-icon-design_2688549.png!sw800"
-          alt="Target icon"
-          style={{ width: "6rem", height: "auto" }}
-        />
-      </div>
+        {/* Tiêu đề */}
+        <h2 className={styles.title}>Set a daily study goal</h2>
+        <p className={styles.subtitle}>
+          Create a learning habit to improve your English.
+        </p>
 
-      {/* Danh sách lựa chọn */}
-      <div className="d-flex flex-column gap-3">
-        {goals.map((goal, index) => (
+        {/* Danh sách lựa chọn */}
+        <div className={styles.optionList}>
+          {goals.map((goal, index) => (
+            <div
+              key={index}
+              className={`${styles.optionCard} ${selected?.label === goal.label ? styles.optionCardSelected : ""}`}
+              onClick={() => handleSelect(goal)}
+            >
+              <div className={styles.optionIcon}>{goal.icon}</div>
+              <div className={styles.optionContent}>
+                <div className={styles.optionLabel}>{goal.time}</div>
+              </div>
+              <div className={styles.optionValue}>{goal.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Nút Continue */}
+        <div className={styles.ctaWrapper}>
           <button
-            key={index}
-            className={`btn d-flex justify-content-between align-items-center border rounded-4 py-3 px-4 ${
-              selected?.label === goal.label
-                ? "border-primary bg-light shadow-sm"
-                : ""
-            }`}
-            onClick={() => handleSelect(goal)}
-          >
-            <span className="fw-semibold">{goal.time}</span>
-            <span className="text-muted">{goal.label}</span>
-          </button>
-        ))}
-      </div>
-
-        <div className="mt-5">
-          <button
-            className="btn btn-primary px-4 py-2 rounded-pill fw-semibold"
+            className={styles.continueButton}
             disabled={!selected}
             onClick={handleCommit}
           >

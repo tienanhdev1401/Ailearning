@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import ReasonCard from "../../components/ReasonCard";
-import { Container, ProgressBar, Button, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import styles from "../../styles/MulticheckPages.module.css";
 
 export default function ReasonPage() {
   const [selected, setSelected] = useState(
-    sessionStorage.getItem("reason") || "Challenge myself" 
+    sessionStorage.getItem("reason") || "Challenge myself"
   );
   const navigate = useNavigate();
 
@@ -27,52 +26,48 @@ export default function ReasonPage() {
   }, [selected]);
 
   return (
-    <Container
-      fluid
-      className="min-vh-100 d-flex flex-column justify-content-center align-items-center bg-white text-center text-dark"
-      data-bs-theme="light"
-    >
-      <div className="w-100" style={{ maxWidth: "700px" }}>
+    <div className={styles.page}>
+      <div className={styles.container}>
         {/* Thanh tiến trình */}
-        <ProgressBar
-          now={20}
-          className="mb-4"
-          style={{ height: "6px", borderRadius: "5px" }}
-          variant="success"
-        />
+        <div className={styles.progressBar}>
+          <div className={styles.progressFill} style={{ width: "20%" }} />
+        </div>
 
         {/* Tiêu đề */}
-        <h3 className="fw-semibold mb-2">
-          Hi <span className="text-primary fw-bold">Phan Hùng Anh</span>, why are you learning English?
-        </h3>
-        <p className="text-secondary mb-4">
+        <h2 className={styles.title}>
+          Hi <span className={styles.titleHighlight}>Learner</span>, why are you learning English?
+        </h2>
+        <p className={styles.subtitle}>
           Help us tailor your learning experience.
         </p>
 
         {/* Danh sách lựa chọn */}
-        <Row xs={1} md={2} className="g-3 mb-4">
+        <div className={styles.optionList}>
           {reasons.map((r) => (
-            <Col key={r.text}>
-              <ReasonCard
-                icon={r.icon}
-                text={r.text}
-                selected={selected === r.text}
-                onClick={() => setSelected(r.text)}
-              />
-            </Col>
+            <div
+              key={r.text}
+              className={`${styles.optionCard} ${selected === r.text ? styles.optionCardSelected : ""}`}
+              onClick={() => setSelected(r.text)}
+            >
+              <div className={styles.optionIcon}>{r.icon}</div>
+              <div className={styles.optionContent}>
+                <div className={styles.optionLabel}>{r.text}</div>
+              </div>
+              <div className={styles.optionCheck}>✓</div>
+            </div>
           ))}
-        </Row>
+        </div>
 
         {/* Nút Continue */}
-        <Button
-          variant="primary"
-          className="px-5 py-2 rounded-pill fw-semibold"
-          size="lg"
-          onClick={() => {navigate("/welcome/goal");}}
-        >
-          Continue
-        </Button>
+        <div className={styles.ctaWrapper}>
+          <button
+            className={styles.continueButton}
+            onClick={() => navigate("/welcome/goal")}
+          >
+            Continue
+          </button>
+        </div>
       </div>
-    </Container>
+    </div>
   );
 }
