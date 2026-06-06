@@ -16,6 +16,13 @@ const getDisplayPackageName = (pkg) => {
   return pkg?.name || "Gói dịch vụ";
 };
 
+const getUsageBarClass = (usedPercent, remaining, total) => {
+  if (total > 0 && remaining <= 0) return `${styles.progressBarFill} ${styles.progressBarExhausted}`;
+  if (usedPercent >= 80) return `${styles.progressBarFill} ${styles.progressBarWarning}`;
+  if (usedPercent >= 50) return `${styles.progressBarFill} ${styles.progressBarMiddle}`;
+  return styles.progressBarFill;
+};
+
 const MySubscriptionPage = () => {
   const [subscriptions, setSubscriptions] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -69,14 +76,14 @@ const MySubscriptionPage = () => {
   const aiRemaining = credits?.aiConversationCredits ?? 0;
   const aiTotalObj = credits?.totalAiConversationCredits ?? 0;
   const aiTotal = Math.max(aiTotalObj, aiRemaining, 1);
-  const aiPercent = (aiRemaining / aiTotal) * 100;
   const aiUsed = Math.max(0, aiTotalObj - aiRemaining);
+  const aiPercent = Math.min(100, (aiUsed / aiTotal) * 100);
 
   const grammarRemaining = credits?.grammarCheckerCredits ?? 0;
   const grammarTotalObj = credits?.totalGrammarCheckerCredits ?? 0;
   const grammarTotal = Math.max(grammarTotalObj, grammarRemaining, 1);
-  const grammarPercent = (grammarRemaining / grammarTotal) * 100;
   const grammarUsed = Math.max(0, grammarTotalObj - grammarRemaining);
+  const grammarPercent = Math.min(100, (grammarUsed / grammarTotal) * 100);
 
   if (isLoading) {
     return (
@@ -110,7 +117,7 @@ const MySubscriptionPage = () => {
             </div>
             <div className={styles.progressBarWrapper}>
               <div
-                className={styles.progressBarFill}
+                className={getUsageBarClass(aiPercent, aiRemaining, aiTotalObj)}
                 style={{ width: `${aiPercent}%` }}
               />
             </div>
@@ -131,7 +138,7 @@ const MySubscriptionPage = () => {
             </div>
             <div className={styles.progressBarWrapper}>
               <div
-                className={styles.progressBarFill}
+                className={getUsageBarClass(grammarPercent, grammarRemaining, grammarTotalObj)}
                 style={{ width: `${grammarPercent}%` }}
               />
             </div>
