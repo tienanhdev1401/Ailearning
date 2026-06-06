@@ -1267,7 +1267,7 @@
   font-size: 13px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(0, 255, 204, 0.8);
+  color: var(--roadmap-accent);
   margin: 0 0 6px;
 }
 
@@ -1289,8 +1289,8 @@
   gap: 18px;
   padding: 18px;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--roadmap-border-soft);
+  background: var(--roadmap-surface-veil);
 }
 
 .progressBadge {
@@ -1376,8 +1376,8 @@
 
 .activityItem {
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--roadmap-border-soft);
+  background: var(--roadmap-surface-veil);
   padding: 10px 14px;
   display: flex;
   align-items: center;
@@ -1424,7 +1424,8 @@
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--roadmap-border-strong);
+  color: var(--roadmap-muted);
 }
 
 .miniGameHero {
@@ -1496,13 +1497,13 @@
 }
 
 .secondaryBtn {
-  border: none;
+  border: 1px solid var(--roadmap-border-strong);
   border-radius: 999px;
   padding: 12px 26px;
   font-weight: 700;
   font-size: 14px;
   margin-left: 8px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--roadmap-surface-veil);
   color: var(--roadmap-text);
   cursor: not-allowed;
 }

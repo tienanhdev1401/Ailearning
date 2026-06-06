@@ -1,8 +1,8 @@
 import { HttpStatusCode } from "axios";
 import mammoth from "mammoth";
 import { AppDataSource } from "../config/database";
+import ActivityType from "../enums/activityType.enum";
 import MiniGameType from "../enums/minigameType.enum";
-import Skill from "../enums/skill.enum";
 import { Activity } from "../models/activity";
 import { Day } from "../models/day";
 import { MiniGame } from "../models/minigame";
@@ -833,7 +833,7 @@ export class DayWordImportService {
       const lessonActivity = manager.create(Activity, {
         day,
         order: nextOrder++,
-        skill: Skill.READING,
+        type: ActivityType.LESSON,
         title: input.activityTitle?.trim() || payload.lessonTitle,
       });
       await manager.save(lessonActivity);
@@ -889,7 +889,7 @@ export class DayWordImportService {
           const activityForType = manager.create(Activity, {
             day,
             order: nextOrder++,
-            skill: Skill.READING,
+            type: ActivityType.MINIGAME,
             title: getMinigameDisplayTitle(type),
           });
           await manager.save(activityForType);

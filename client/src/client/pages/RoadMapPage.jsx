@@ -12,6 +12,24 @@ import DailyChallengeWidget from '../components/DailyChallenge/DailyChallengeWid
 import LoadingSpinner from '../../component/LoadingSpinner';
 
 const classNames = (...parts) => parts.filter(Boolean).join(' ');
+const ACTIVITY_TYPE_LABELS = {
+  bai_hoc: 'Bài học',
+  lesson: 'Bài học',
+  minigame: 'Minigame',
+  exam: 'Bài kiểm tra',
+  exercise: 'Bài tập',
+  exercice: 'Bài tập',
+  reading: 'Đọc hiểu',
+  listening: 'Luyện nghe',
+  speaking: 'Luyện nói',
+  writing: 'Luyện viết',
+};
+
+const getActivityTypeLabel = (activity) => {
+  if (!activity) return '';
+  const value = activity?.type || activity?.skill;
+  return ACTIVITY_TYPE_LABELS[value] || value || 'Bài học';
+};
 
 const deriveActivityMeta = (activities = []) => {
   const total = activities.length;
@@ -274,7 +292,7 @@ const ActivityDrawer = ({
                     <div>
                       <strong>{activity.title || activity.name || `Hoạt động ${index + 1}`}</strong>
                       <p className={styles.activityListMeta}>
-                        {activity.type || 'Nội dung'} · {activity.duration || '—'} phút
+                        {getActivityTypeLabel(activity)}
                       </p>
                     </div>
                     <span className={styles.activityStatusBadge} data-status={activityStatus(activity, index)}>
@@ -1094,7 +1112,7 @@ const RoadMapPage = () => {
                 <div className={styles.miniGameHubBanner}>
                   <div>
                     <p className={styles.bannerLabel}>Hoạt động hiện tại</p>
-                    <strong className={styles.bannerTitle}>{miniGameView.activity?.skill || 'Đang tải...'}</strong>
+                    <strong className={styles.bannerTitle}>{getActivityTypeLabel(miniGameView.activity) || 'Đang tải...'}</strong>
                   </div>
                   <div className={styles.bannerMeta}>
                     <span>Đã chơi {miniGameView.activityIndex + 1} / {miniGameView.activities?.length || 0}</span>

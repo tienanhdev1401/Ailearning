@@ -15,12 +15,17 @@ const ActivityManagerPage = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showWordImportForm, setShowWordImportForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
-  const [newSkill, setNewSkill] = useState("reading");
+  const [newType, setNewType] = useState("bai_hoc");
   const [wordFile, setWordFile] = useState(null);
   const [wordActivityTitle, setWordActivityTitle] = useState("");
   const [selectedWordMinigames, setSelectedWordMinigames] = useState([]);
   const [importingWord, setImportingWord] = useState(false);
-  const ALLOWED_SKILLS = ["reading", "listening", "speaking", "writing"];
+  const ACTIVITY_TYPE_OPTIONS = [
+    { value: "bai_hoc", label: "Bài học" },
+    { value: "minigame", label: "Minigame" },
+    { value: "exam", label: "Bài kiểm tra" },
+    { value: "exercise", label: "Bài tập" },
+  ];
   const WORD_MINIGAME_OPTIONS = [
     { value: "true_false", label: "True / False" },
     { value: "sentence_builder", label: "Sentence Builder" },
@@ -221,19 +226,19 @@ const ActivityManagerPage = () => {
               />
             </div>
 
-            {/* SKILL COMBOBOX – KHÔNG ĐƯỢC NHẬP */}
+            {/* TYPE COMBOBOX */}
             <div className="mb-3">
-              <label className="form-label fw-semibold">Skill</label>
+              <label className="form-label fw-semibold">Loại activity</label>
 
               <select
                 className="form-select"
-                value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
+                value={newType}
+                onChange={(e) => setNewType(e.target.value)}
               >
-                <option value="">-- Chọn skill --</option>
-                {ALLOWED_SKILLS.map((skill) => (
-                  <option key={skill} value={skill}>
-                    {skill}
+                <option value="">-- Chọn loại activity --</option>
+                {ACTIVITY_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
               </select>
@@ -253,19 +258,19 @@ const ActivityManagerPage = () => {
                 className="btn btn-primary"
                 onClick={async () => {
                   if (!newTitle.trim()) return toast.warning("Tiêu đề không được rỗng");
-                  if (!ALLOWED_SKILLS.includes(newSkill))
-                    return toast.warning("Skill không hợp lệ");
+                  if (!ACTIVITY_TYPE_OPTIONS.some((option) => option.value === newType))
+                    return toast.warning("Loại activity không hợp lệ");
 
                   try {
                     await api.post("/activities", {
                       title: newTitle.trim(),
                       dayId: Number(dayId),
                       order: activities.length + 1,
-                      skill: newSkill,
+                      type: newType,
                     });
 
                     setNewTitle("");
-                    setNewSkill("reading");
+                    setNewType("bai_hoc");
                     setShowAddForm(false);
                     await load();
                   } catch (err) {

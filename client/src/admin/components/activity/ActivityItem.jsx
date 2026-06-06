@@ -10,24 +10,31 @@ const ActivityItem = ({ activity, onRefresh }) => {
   const [open, setOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState("");
-  const [editSkill, setEditSkill] = useState("");
+  const [editType, setEditType] = useState("");
 
-  const ALLOWED_SKILLS = ["reading", "listening", "speaking", "writing"];
+  const ACTIVITY_TYPE_OPTIONS = [
+    { value: "bai_hoc", label: "Bài học" },
+    { value: "minigame", label: "Minigame" },
+    { value: "exam", label: "Bài kiểm tra" },
+    { value: "exercise", label: "Bài tập" },
+  ];
+  const getActivityTypeLabel = (type) =>
+    ACTIVITY_TYPE_OPTIONS.find((option) => option.value === type)?.label || type;
 
   const handleOpenEdit = () => {
     setEditTitle(activity.title || "");
-    setEditSkill(activity.skill || "reading");
+    setEditType(activity.type || activity.skill || "bai_hoc");
     setIsEditing(true);
   };
 
   const handleSaveEdit = async () => {
     if (!editTitle.trim()) return toast.warning("Tiêu đề không được rỗng");
-    if (!ALLOWED_SKILLS.includes(editSkill)) return toast.warning("Skill không hợp lệ");
+    if (!ACTIVITY_TYPE_OPTIONS.some((option) => option.value === editType)) return toast.warning("Loại activity không hợp lệ");
     
     try {
       await api.put(`/activities/${activity.id}`, {
         title: editTitle.trim(),
-        skill: editSkill
+        type: editType
       });
       toast.success("Cập nhật thành công");
       setIsEditing(false);
@@ -54,7 +61,7 @@ const ActivityItem = ({ activity, onRefresh }) => {
     <div className="card">
       <div className="card-body d-flex align-items-center justify-content-between">
         <div>
-          <h5 className="card-title mb-1">#{activity.order} - {activity.title || activity.skill || "Activity"}</h5>
+          <h5 className="card-title mb-1">#{activity.order} - {activity.title || getActivityTypeLabel(activity.type || activity.skill) || "Activity"}</h5>
           <p className="mb-0 text-muted small">{activity.content ? (typeof activity.content === "string" ? activity.content : "") : ""}</p>
         </div>
         <div className="d-flex gap-2">
@@ -92,14 +99,14 @@ const ActivityItem = ({ activity, onRefresh }) => {
             </div>
             
             <div className="mb-3">
-              <label className="form-label fw-semibold">Skill</label>
+              <label className="form-label fw-semibold">Loại activity</label>
               <select
                 className="form-select"
-                value={editSkill}
-                onChange={(e) => setEditSkill(e.target.value)}
+                value={editType}
+                onChange={(e) => setEditType(e.target.value)}
               >
-                {ALLOWED_SKILLS.map((skill) => (
-                  <option key={skill} value={skill}>{skill}</option>
+                {ACTIVITY_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
             </div>
