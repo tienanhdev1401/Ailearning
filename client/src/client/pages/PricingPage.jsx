@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
+import { useLocation } from "react-router-dom";
 import { Container, Row, Col, Spinner, Modal } from "react-bootstrap";
 import {
   FiCheck,
@@ -57,6 +58,22 @@ const PricingPage = () => {
     message: "",
     onConfirm: null,
   });
+
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!loading) {
+      setTimeout(() => {
+        const scrollTo = location.state?.scrollTo || (location.hash ? location.hash.substring(1) : null);
+        if (scrollTo) {
+          const element = document.getElementById(`package-${scrollTo}`) || document.getElementById(scrollTo);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      }, 100);
+    }
+  }, [loading, location.state, location.hash]);
 
   // ThemeContext is consumed so [data-theme] body attr drives CSS-variable swaps.
   useContext(ThemeContext);
@@ -170,7 +187,7 @@ const PricingPage = () => {
           const featuredIndex = group.length >= 3 ? 1 : 0;
 
           return (
-            <section key={type} className={styles.group}>
+            <section key={type} id={`package-${type}`} className={styles.group}>
               <div className={styles.groupHeader}>
                 <div className={styles.groupIcon}>{meta.icon}</div>
                 <h2 className={styles.groupTitle}>{meta.label}</h2>

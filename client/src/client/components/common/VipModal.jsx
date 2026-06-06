@@ -3,7 +3,7 @@ import { Modal, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { Gem, RocketTakeoff, ClockHistory } from "react-bootstrap-icons";
 
-const VipModal = ({ show, onHide, title = "Mở khóa lộ trình", message }) => {
+const VipModal = ({ show, onHide, title = "Mở khóa lộ trình", message, packageType }) => {
   const navigate = useNavigate();
 
   return (
@@ -32,7 +32,7 @@ const VipModal = ({ show, onHide, title = "Mở khóa lộ trình", message }) =
             className="rounded-pill fw-bold"
             onClick={() => {
               onHide();
-              navigate("/pricing");
+              navigate("/pricing", packageType ? { state: { scrollTo: packageType } } : {});
             }}
           >
             <Gem className="me-2" /> Mua gói để mở khóa

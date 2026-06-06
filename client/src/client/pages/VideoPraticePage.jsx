@@ -891,7 +891,7 @@ export default function VideoPraticePage() {
             }}
           >
             <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "20px", overflow: "hidden" }}>
+              <div className="modal-content bg-body text-body border-0 shadow-lg" style={{ borderRadius: "20px", overflow: "hidden" }}>
                 <div className="modal-header border-0 pb-0 justify-content-end">
                   <button type="button" className="btn-close" onClick={() => navigate(-1)} aria-label="Close"></button>
                 </div>
@@ -907,7 +907,7 @@ export default function VideoPraticePage() {
                   >
                     💎
                   </div>
-                  <h3 className="fw-bold mb-3" style={{ color: "#333" }}>Nâng cấp VIP</h3>
+                  <h3 className="fw-bold mb-3">Nâng cấp VIP</h3>
                   <p className="text-muted fs-5 mb-4">
                     Bạn cần sở hữu gói <strong>VIP</strong> để mở khóa bài học này và tận hưởng đầy đủ tính năng cao cấp.
                   </p>
@@ -919,7 +919,7 @@ export default function VideoPraticePage() {
                         borderRadius: "12px",
                         padding: "15px"
                       }}
-                      onClick={() => navigate("/pricing")}
+                      onClick={() => navigate("/pricing", { state: { scrollTo: "VIDEO_LESSON" } })}
                     >
                       <i className="bi bi-cart-fill me-2"></i>Đăng ký VIP ngay
                     </button>
