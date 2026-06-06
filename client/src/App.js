@@ -74,7 +74,7 @@ function App() {
           }
         />
         <Route
-          path="/grammar"
+          path="/tools"
           element={
             <ProtectedRoute>
               <ClientLayout><GrammarCheckerPage /></ClientLayout>

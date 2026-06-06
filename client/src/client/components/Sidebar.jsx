@@ -41,7 +41,7 @@ const Sidebar = () => {
             </div>
             <div
               className={styles['submenu-item']}
-              onClick={() => navigate("/grammar")}
+              onClick={() => navigate("/tools")}
             >
               <svg viewBox="0 0 24 24" fill="none">
                 <path fill="#facc15" d="M6 12h12v2H6z" />

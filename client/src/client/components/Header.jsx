@@ -102,7 +102,7 @@ const Header = () => {
             icon: <FiLayers />,
             children: [
                 { label: "AI Tutor", icon: <BsRobot/>, path: "/experience/ai-chat" },
-                { label: "Công cụ", icon: <FiBook />, path: "/grammar" },
+                { label: "Công cụ", icon: <FiBook />, path: "/tools" },
                 { label: "Flashcards", icon: <GiCardPick/>, path: "/flashcards" },
             ]
         },

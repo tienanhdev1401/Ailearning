@@ -1,0 +1,277 @@
+/* ── CreditBanner – compact pill ── */
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  margin-bottom: 12px;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Toggle button ── */
+.toggleBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  color: #64748b;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+  z-index: 1;
+  margin-right: -1px;
+}
+
+.toggleBtn:hover {
+  background: #f1f5f9;
+  color: #334155;
+  transform: scale(1.1);
+}
+
+/* ── Pill ── */
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.pill:hover {
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* ── Icon ── */
+.pillIcon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+/* ── Label ── */
+.pillLabel {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #334155;
+  letter-spacing: 0.02em;
+}
+
+/* ── Count ── */
+.pillCount {
+  font-size: 0.85rem;
+  color: #1e293b;
+}
+
+.pillCount strong {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #10b981;
+}
+
+.pillTotal {
+  font-weight: 500;
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+/* ── Exhausted state ── */
+.pillExhausted {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(254, 242, 242, 0.9);
+  animation: softPulse 2.5s ease-in-out infinite;
+}
+
+.pillExhausted .pillIcon {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+}
+
+.pillExhausted .pillCount strong {
+  color: #dc2626;
+}
+
+@keyframes softPulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(239, 68, 68, 0.08); }
+  50% { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.18); }
+}
+
+/* ── Upgrade chip ── */
+.upgradeChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+}
+
+.upgradeChip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
+/* ── Collapsed state ── */
+.collapsed .pill {
+  max-width: 0;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  pointer-events: none;
+  margin: 0;
+}
+
+.collapsed .toggleBtn {
+  margin-right: 0;
+}
+
+/* ── Dark mode (data-bs-theme) ── */
+:global([data-bs-theme="dark"]) .toggleBtn {
+  background: rgba(31, 41, 55, 0.85);
+  border-color: rgba(55, 65, 81, 0.8);
+  color: #9ca3af;
+}
+
+:global([data-bs-theme="dark"]) .toggleBtn:hover {
+  background: #374151;
+  color: #e5e7eb;
+}
+
+:global([data-bs-theme="dark"]) .pill {
+  background: rgba(31, 41, 55, 0.85);
+  border-color: rgba(55, 65, 81, 0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+:global([data-bs-theme="dark"]) .pill:hover {
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+:global([data-bs-theme="dark"]) .pillLabel {
+  color: #f1f5f9;
+}
+
+:global([data-bs-theme="dark"]) .pillCount {
+  color: #e5e7eb;
+}
+
+:global([data-bs-theme="dark"]) .pillCount strong {
+  color: #34d399;
+}
+
+:global([data-bs-theme="dark"]) .pillTotal {
+  color: #6b7280;
+}
+
+:global([data-bs-theme="dark"]) .pillExhausted {
+  background: rgba(127, 29, 29, 0.25);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+:global([data-bs-theme="dark"]) .pillExhausted .pillCount strong {
+  color: #f87171;
+}
+
+/* ── Dark mode (isDarkMode prop) ── */
+.dark .toggleBtn {
+  background: rgba(31, 41, 55, 0.85);
+  border-color: rgba(55, 65, 81, 0.8);
+  color: #9ca3af;
+}
+
+.dark .toggleBtn:hover {
+  background: #374151;
+  color: #e5e7eb;
+}
+
+.dark .pill {
+  background: rgba(31, 41, 55, 0.85);
+  border-color: rgba(55, 65, 81, 0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dark .pill:hover {
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.dark .pillLabel {
+  color: #f1f5f9;
+}
+
+.dark .pillCount {
+  color: #e5e7eb;
+}
+
+.dark .pillCount strong {
+  color: #34d399;
+}
+
+.dark .pillTotal {
+  color: #6b7280;
+}
+
+.dark .pillExhausted {
+  background: rgba(127, 29, 29, 0.25);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.dark .pillExhausted .pillCount strong {
+  color: #f87171;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .pill {
+    padding: 6px 12px;
+    gap: 6px;
+  }
+
+  .pillIcon {
+    width: 24px;
+    height: 24px;
+    font-size: 0.85rem;
+  }
+
+  .pillLabel {
+    font-size: 0.75rem;
+  }
+
+  .pillCount {
+    font-size: 0.78rem;
+  }
+
+  .pillCount strong {
+    font-size: 0.9rem;
+  }
+}

@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { diffWords } from 'diff';
 import styles from '../styles/GrammarCheckerPage.module.css'; // Import CSS Module
 import api from '../../api/api';
 import { ThemeContext } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
 import TranslationTab from '../components/GrammarTools/TranslationTab';
+import userService from '../../services/userService';
+import CreditBanner from '../components/CreditBanner';
 
 const GrammarCheckerPage = () => {
   const { isDarkMode } = useContext(ThemeContext);
@@ -18,11 +20,26 @@ const GrammarCheckerPage = () => {
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
   const [showTranslateHistory, setShowTranslateHistory] = useState(false);
+  const [credits, setCredits] = useState(null);
 
   // Load history from localStorage on component mount
   useEffect(() => {
     setHistory(loadHistoryFromStorage());
   }, []);
+
+  // Fetch credits on mount
+  const fetchCredits = useCallback(async () => {
+    try {
+      const data = await userService.getCredits();
+      setCredits(data);
+    } catch (error) {
+      console.error('Failed to fetch credits', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCredits();
+  }, [fetchCredits]);
 
   // Save history to localStorage whenever history changes
   useEffect(() => {
@@ -111,9 +128,15 @@ const GrammarCheckerPage = () => {
 
       setResults(newResults);
       setShowResults(true);
+      fetchCredits();
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Kiểm tra ngữ pháp thất bại. Vui lòng thử lại.');
+      if (error.response?.status === 402) {
+        fetchCredits();
+        toast.error(error.response?.data?.message || 'Bạn đã hết lượt miễn phí hôm nay.');
+      } else {
+        toast.error('Kiểm tra ngữ pháp thất bại. Vui lòng thử lại.');
+      }
     } finally {
       setIsLoading(false);
       setLoadingIndex(-1);
@@ -148,9 +171,15 @@ const GrammarCheckerPage = () => {
       const newHistoryItem = createHistoryItem(text, result);
 
       setHistory(prev => [newHistoryItem, ...prev.slice(0, 19)]);
+      fetchCredits();
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Kiểm tra ngữ pháp thất bại. Vui lòng thử lại.');
+      if (error.response?.status === 402) {
+        fetchCredits();
+        toast.error(error.response?.data?.message || 'Bạn đã hết lượt miễn phí hôm nay.');
+      } else {
+        toast.error('Kiểm tra ngữ pháp thất bại. Vui lòng thử lại.');
+      }
     } finally {
       setLoadingIndex(-1);
     }
@@ -265,6 +294,7 @@ const GrammarCheckerPage = () => {
         className={`${styles['grammar-checker-container']} ${isDarkMode ? styles.dark : ''}`}
         aria-label="Grammar Checker Application"
       >
+        <CreditBanner type="GRAMMAR_CHECKER" credits={credits} isDarkMode={isDarkMode} />
         <header className={styles['grammar-checker-header']}>
           <h1 className={`${styles['grammar-checker-title']} ${isDarkMode ? styles.dark : ''}`}>
              Công Cụ
@@ -372,7 +402,7 @@ const GrammarCheckerPage = () => {
                       <button
                         type="button"
                         onClick={() => handleSingleSubmit(index)}
-                        disabled={!text.trim() || isProcessing}
+                        disabled={!text.trim() || isProcessing || (credits && (credits.grammarCheckerCredits ?? 0) <= 0)}
                         className={`${styles['btn-base']} ${styles['single-check-btn']} ${isDarkMode ? styles.dark : ''}`}
                         title="Check this text only"
                       >
@@ -428,7 +458,7 @@ const GrammarCheckerPage = () => {
                 type="button" 
                 onClick={handleSubmit}
                 aria-label="Check All Grammar"
-                disabled={isLoading || inputTexts.every(text => !text.trim())}
+                disabled={isLoading || inputTexts.every(text => !text.trim()) || (credits && (credits.grammarCheckerCredits ?? 0) <= 0)}
                 className={`${styles['btn-base']} ${styles['grammar-checker-submit-button']} ${isDarkMode ? styles.dark : ''}`}
               >
                 {isLoading ? (

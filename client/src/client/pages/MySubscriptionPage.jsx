@@ -6,6 +6,8 @@ import userService from "../../services/userService";
 import LoadingSpinner from "../../component/LoadingSpinner";
 import { Link } from "react-router-dom";
 import PACKAGE_TYPE from "../../enums/packageType.enum";
+import { BsRobot } from "react-icons/bs";
+import { FiEdit3 } from "react-icons/fi";
 
 const getDisplayPackageName = (pkg) => {
   if (pkg?.type === PACKAGE_TYPE.VIDEO_LESSON) {
@@ -64,6 +66,18 @@ const MySubscriptionPage = () => {
     return diffDays > 0 ? `${diffDays} ngày` : "Hết hạn";
   };
 
+  const aiRemaining = credits?.aiConversationCredits ?? 0;
+  const aiTotalObj = credits?.totalAiConversationCredits ?? 0;
+  const aiTotal = Math.max(aiTotalObj, aiRemaining, 1);
+  const aiPercent = (aiRemaining / aiTotal) * 100;
+  const aiUsed = Math.max(0, aiTotalObj - aiRemaining);
+
+  const grammarRemaining = credits?.grammarCheckerCredits ?? 0;
+  const grammarTotalObj = credits?.totalGrammarCheckerCredits ?? 0;
+  const grammarTotal = Math.max(grammarTotalObj, grammarRemaining, 1);
+  const grammarPercent = (grammarRemaining / grammarTotal) * 100;
+  const grammarUsed = Math.max(0, grammarTotalObj - grammarRemaining);
+
   if (isLoading) {
     return (
       <div className={styles.loadingState}>
@@ -86,47 +100,43 @@ const MySubscriptionPage = () => {
 
       <section className={styles.creditDashboard}>
         <div className={styles.creditCard}>
-          <div className={styles.creditIcon}>🤖</div>
+          <div className={styles.creditIcon}><BsRobot /></div>
           <div className={styles.creditInfo}>
             <div className={styles.creditLabelRow}>
               <span className={styles.creditLabel}>AI Conversation Usage</span>
               <span className={styles.creditCount}>
-                <strong>{Math.max(0, Math.max(credits?.aiConversationCredits ?? 0, credits?.totalAiConversationCredits ?? 0) - (credits?.aiConversationCredits ?? 0))}</strong> / {Math.max(credits?.aiConversationCredits ?? 0, credits?.totalAiConversationCredits ?? 0)}
+                <strong>{aiRemaining}</strong> / {aiTotalObj}
               </span>
             </div>
             <div className={styles.progressBarWrapper}>
               <div
                 className={styles.progressBarFill}
-                style={{
-                  width: `${Math.min(100, (Math.max(0, Math.max(credits?.aiConversationCredits ?? 0, credits?.totalAiConversationCredits ?? 0) - (credits?.aiConversationCredits ?? 0)) / (Math.max(credits?.aiConversationCredits ?? 0, credits?.totalAiConversationCredits ?? 0) || 1)) * 100)}%`
-                }}
+                style={{ width: `${aiPercent}%` }}
               />
             </div>
             <div className={styles.creditUsageNote}>
-              Bạn đã dùng {Math.max(0, Math.max(credits?.aiConversationCredits ?? 0, credits?.totalAiConversationCredits ?? 0) - (credits?.aiConversationCredits ?? 0))} trên tổng số {Math.max(credits?.aiConversationCredits ?? 0, credits?.totalAiConversationCredits ?? 0)} lượt (Còn lại: {credits?.aiConversationCredits ?? 0})
+              Bạn đã dùng {aiUsed} trên tổng số {aiTotalObj} lượt (Còn lại: {aiRemaining})
             </div>
           </div>
         </div>
 
         <div className={styles.creditCard}>
-          <div className={styles.creditIcon}>✍️</div>
+          <div className={styles.creditIcon}><FiEdit3 /></div>
           <div className={styles.creditInfo}>
             <div className={styles.creditLabelRow}>
               <span className={styles.creditLabel}>Grammar Checker Usage</span>
               <span className={styles.creditCount}>
-                <strong>{Math.max(0, Math.max(credits?.grammarCheckerCredits ?? 0, credits?.totalGrammarCheckerCredits ?? 0) - (credits?.grammarCheckerCredits ?? 0))}</strong> / {Math.max(credits?.grammarCheckerCredits ?? 0, credits?.totalGrammarCheckerCredits ?? 0)}
+                <strong>{grammarRemaining}</strong> / {grammarTotalObj}
               </span>
             </div>
             <div className={styles.progressBarWrapper}>
               <div
                 className={styles.progressBarFill}
-                style={{
-                  width: `${Math.min(100, (Math.max(0, Math.max(credits?.grammarCheckerCredits ?? 0, credits?.totalGrammarCheckerCredits ?? 0) - (credits?.grammarCheckerCredits ?? 0)) / (Math.max(credits?.grammarCheckerCredits ?? 0, credits?.totalGrammarCheckerCredits ?? 0) || 1)) * 100)}%`
-                }}
+                style={{ width: `${grammarPercent}%` }}
               />
             </div>
             <div className={styles.creditUsageNote}>
-              Bạn đã dùng {Math.max(0, Math.max(credits?.grammarCheckerCredits ?? 0, credits?.totalGrammarCheckerCredits ?? 0) - (credits?.grammarCheckerCredits ?? 0))} trên tổng số {Math.max(credits?.grammarCheckerCredits ?? 0, credits?.totalGrammarCheckerCredits ?? 0)} lượt (Còn lại: {credits?.grammarCheckerCredits ?? 0})
+              Bạn đã dùng {grammarUsed} trên tổng số {grammarTotalObj} lượt (Còn lại: {grammarRemaining})
             </div>
           </div>
         </div>

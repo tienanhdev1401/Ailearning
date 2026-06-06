@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "../styles/AiChatExperience.module.css";
 import AiChatService from "../../services/aiChatService";
+import userService from "../../services/userService";
 import { createAiChatSocket } from "../../utils/aiChatSocket";
 import { convertBlobToWav16k } from "../../utils/audioToWav";
 import AI_CONVERSATION_MODE from "../../enums/aiConversationMode.enum";
+import CreditBanner from "../components/CreditBanner";
 
 const modeLabels = {
   [AI_CONVERSATION_MODE.VOICE]: "Voice",
@@ -55,6 +57,7 @@ const AiChatExperience = () => {
   const [loadingSpeechId, setLoadingSpeechId] = useState(null);
   const [playingSpeechId, setPlayingSpeechId] = useState(null);
   const [isFinalizing, setIsFinalizing] = useState(false);
+  const [credits, setCredits] = useState(null);
 
   const messagesContainerRef = useRef(null);
   const shouldAutoScrollRef = useRef(true);
@@ -114,7 +117,8 @@ const AiChatExperience = () => {
   const trimmedInterviewIndustry = useMemo(() => interviewIndustry.trim(), [interviewIndustry]);
   const isInterviewIndustryMissing = isJobInterview && trimmedInterviewIndustry.length === 0;
   const isConversationActive = conversation && conversation.status === "active";
-  const startDisabled = loading || isConversationActive || isInterviewIndustryMissing;
+  const isCreditsExhausted = credits && (credits.aiConversationCredits ?? 0) <= 0;
+  const startDisabled = loading || isConversationActive || isInterviewIndustryMissing || isCreditsExhausted;
   const sendDisabled = !isConversationActive || isSendingText || isUploadingAudio;
   const micDisabled = !isConversationActive || isUploadingAudio;
   const contextInputClassName = `${styles.contextInput} ${
@@ -297,6 +301,19 @@ const AiChatExperience = () => {
       console.warn("Auto speech playback failed", error);
     });
   }, [conversation, messages, playMessageAudio]);
+
+  const fetchCredits = useCallback(async () => {
+    try {
+      const data = await userService.getCredits();
+      setCredits(data);
+    } catch (error) {
+      console.error("Failed to fetch credits", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCredits();
+  }, [fetchCredits]);
 
   useEffect(() => {
     const loadScenarios = async () => {
@@ -506,8 +523,12 @@ const AiChatExperience = () => {
       );
       setMessages(initialMessages);
       setEvaluation(data.conversation.evaluation ?? null);
+      fetchCredits();
     } catch (error) {
       console.error("Failed to start session", error);
+      if (error.response?.status === 402) {
+        fetchCredits();
+      }
       const message = error.response?.data?.message ?? "Không thể bắt đầu phiên trò chuyện";
       pushSystemMessage(message);
     } finally {
@@ -1004,6 +1025,7 @@ const AiChatExperience = () => {
 
   return (
     <div className={styles.wrapper}>
+      <CreditBanner type="AI_CONVERSATION" credits={credits} />
       <div className={styles.header}>
         <div className={styles.titleBlock}>
           <h1>Trò chuyện cùng AelanG AI</h1>

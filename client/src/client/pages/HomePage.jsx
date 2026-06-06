@@ -57,7 +57,7 @@ const HomePage = () => {
       { id: "notebook", title: "Sổ tay", desc: "Quản lý từ vựng đã lưu", icon: <FiBook size={24} />, path: "/notebooks" }
     ],
     "Viết": [
-      { id: "grammar", title: "Grammar Checker", desc: "Kiểm tra ngữ pháp tự động", icon: <FiEdit3 size={24} />, path: "/grammar" }
+      { id: "grammar", title: "Grammar Checker", desc: "Kiểm tra ngữ pháp tự động", icon: <FiEdit3 size={24} />, path: "/tools" }
     ]
   };
 

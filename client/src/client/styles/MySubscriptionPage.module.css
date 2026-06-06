@@ -336,7 +336,7 @@
 
 .progressBarFill {
     height: 100%;
-    background: linear-gradient(90deg, var(--pp-accent), var(--pp-accent-2));
+    background: linear-gradient(90deg, #6366f1, #818cf8);
     border-radius: 999px;
     transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
