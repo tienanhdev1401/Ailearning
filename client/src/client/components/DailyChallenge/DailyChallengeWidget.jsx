@@ -7,6 +7,7 @@ import styles from './DailyChallengeWidget.module.css';
 const DailyChallengeWidget = ({ roadmapId, isCompact = false, isFloating = false }) => {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { isDarkMode } = useContext(ThemeContext);
   const navigate = useNavigate();
 
@@ -141,7 +142,14 @@ const DailyChallengeWidget = ({ roadmapId, isCompact = false, isFloating = false
 
   if (isFloating) {
     return (
-      <div className={styles.floatingWrapper}>
+      <div className={`${styles.floatingWrapper} ${isCollapsed ? styles.collapsed : ''}`}>
+        <button 
+          className={styles.collapseBtn}
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          title={isCollapsed ? "Mở rộng" : "Thu gọn"}
+        >
+          {isCollapsed ? '◀' : '▶'}
+        </button>
         {widgetContent}
       </div>
     );
