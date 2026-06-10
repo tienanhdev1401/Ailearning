@@ -1,8 +1,8 @@
 import { IsEnum, IsInt, IsNotEmpty, IsObject, IsOptional, IsString } from "class-validator";
-import Skill from "../../enums/skill.enum";
+import ActivityType from "../../enums/activityType.enum";
 export class CreateActivityDto {
-  @IsEnum(Skill)
-  skill!: Skill;
+  @IsEnum(ActivityType)
+  type!: ActivityType;
 
 
   @IsInt()

@@ -336,9 +336,21 @@
 
 .progressBarFill {
     height: 100%;
-    background: linear-gradient(90deg, #6366f1, #818cf8);
+    background: linear-gradient(90deg, #10b981, #34d399);
     border-radius: 999px;
     transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progressBarMiddle {
+    background: linear-gradient(90deg, #6366f1, #818cf8);
+}
+
+.progressBarWarning {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.progressBarExhausted {
+    background: linear-gradient(90deg, #dc2626, #ef4444);
 }
 
 .creditUsageNote {

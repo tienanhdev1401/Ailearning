@@ -1,10 +1,10 @@
 import { IsEnum, IsInt, IsOptional, IsString } from "class-validator";
-import Skill from "../../enums/skill.enum";
+import ActivityType from "../../enums/activityType.enum";
 
 export class UpdateActivityDto {
   @IsOptional()
-  @IsEnum(Skill)
-  skill?: Skill;
+  @IsEnum(ActivityType)
+  type?: ActivityType;
 
 
   @IsOptional()

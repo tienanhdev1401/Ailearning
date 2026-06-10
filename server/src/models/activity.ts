@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn, Unique } from "typeorm";
 import { Day } from "./day";
-import Skill from "../enums/skill.enum";
+import ActivityType from "../enums/activityType.enum";
 import { UserProgress } from "./userProgress";
 import { MiniGame } from "./minigame";
 
@@ -9,15 +9,15 @@ export class Activity {
   @PrimaryGeneratedColumn({ name: "activity_id" })
   id!: number;
 
-  @Column({ type: "varchar",nullable: false,})
-  skill!: Skill;
+  @Column({ type: "enum", enum: ActivityType, nullable: false })
+  type!: ActivityType;
 
 
   @Column({ name: "order", type: "int", nullable: false })
   order!: number;
 
   @Column({ name: "title", type: "text", nullable: true })
-  title?: string;   
+  title?: string;
 
   @ManyToOne(() => Day, (day) => day.activities, { onDelete: "CASCADE" })
   day!: Day;
@@ -30,8 +30,8 @@ export class Activity {
 
   @CreateDateColumn()
   startedAt!: Date;
-    
+
   @UpdateDateColumn()
   updatedAt!: Date;
-  
+
 }

@@ -32,7 +32,7 @@ export class ActivityService {
 
     // Tạo activity mới
     const activity = this.activityRepository.create({
-      skill: dto.skill,
+      type: dto.type,
       order: dto.order,
       title: dto.title,
       day,

@@ -1,6 +1,6 @@
 import { IsArray, ValidateNested, IsInt, IsOptional, IsString, IsEnum } from "class-validator";
 import { Type } from "class-transformer";
-import Skill from "../../enums/skill.enum";
+import ActivityType from "../../enums/activityType.enum";
 
 class UpdateActivityItemDto {
   @IsInt()
@@ -15,8 +15,8 @@ class UpdateActivityItemDto {
   title?: string;
 
   @IsOptional()
-  @IsEnum(Skill)
-  skill?: Skill;
+  @IsEnum(ActivityType)
+  type?: ActivityType;
 }
 
 export class UpdateManyActivitiesDto {

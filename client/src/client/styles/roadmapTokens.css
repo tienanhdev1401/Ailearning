@@ -4,6 +4,7 @@
   --roadmap-surface: rgba(18, 32, 46, 0.98);
   --roadmap-text: #e0f2ff;
   --roadmap-muted: #96a8bb;
+  --roadmap-accent: rgba(0, 255, 204, 0.85);
   --roadmap-path: rgba(0, 255, 204, 0.45);
   --roadmap-node-complete: linear-gradient(135deg, #00ffff, #00ff88);
   --roadmap-node-progress: linear-gradient(135deg, #facc15, #f472b6);
@@ -210,7 +211,8 @@
   --roadmap-gradient: linear-gradient(135deg, #f1f5f9 0%, #ffffff 65%, #e6f7ff 100%);
   --roadmap-surface: rgba(255, 255, 255, 0.97);
   --roadmap-text: #0f172a;
-  --roadmap-muted: #5b6777;
+  --roadmap-muted: #4b5563;
+  --roadmap-accent: #0891b2;
   --roadmap-path: rgba(0, 153, 153, 0.35);
   --roadmap-node-complete: linear-gradient(135deg, #00c4b4, #00a39b);
   --roadmap-node-progress: linear-gradient(135deg, #f7b731, #f472b6);
