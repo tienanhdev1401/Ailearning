@@ -534,15 +534,19 @@ const RoadMapPage = () => {
       }
 
       try {
-        const checkRes = await fetchEnrollmentStatus(userId);
+        // Gọi song song kiểm tra ghi danh + trang ngày đầu tiên để tránh waterfall tuần tự
+        const [checkResult, daysResult] = await Promise.allSettled([
+          fetchEnrollmentStatus(userId),
+          fetchUserDayStatuses(userId, { page: 1, append: false }),
+        ]);
         if (cancelled) return;
+        if (checkResult.status === 'rejected') throw checkResult.reason;
+        const checkRes = checkResult.value;
         if (checkRes?.data?.enrolled) {
           setEnrolled(true);
           setRoadmap(checkRes.data.roadmap_enrollement.roadmap);
-          try {
-            await fetchUserDayStatuses(userId, { page: 1, append: false });
-          } catch (error) {
-            console.error('Không thể tải tiến trình, fallback sang chế độ preview', error);
+          if (daysResult.status === 'rejected') {
+            console.error('Không thể tải tiến trình, fallback sang chế độ preview', daysResult.reason);
             setEnrolled(false);
             await hydratePublicRoadmap();
             showNotice('Không tải được tiến trình, đang hiển thị chế độ xem trước.');

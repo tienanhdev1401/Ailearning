@@ -166,64 +166,62 @@ export class RoadmapService {
   //   };
   // }
   static async getUserRoadmapDayStatuses(userId: number, roadmapId: number, page = 1, limit = 10) {
-    // ✅ Kiểm tra enrollment
-    const enrollment = await roadmapEnrollementRepository.findOne({
-      where: {
-        user: { id: userId },
-        roadmap: { id: roadmapId },
-      },
-    });
+    const userSubscriptionRepo = AppDataSource.getRepository(UserSubscription);
+    const now = new Date();
+    const skip = (page - 1) * limit;
+
+    // ✅ Các truy vấn độc lập chạy song song thay vì tuần tự (giảm tổng độ trễ)
+    const [enrollment, subscription, roadmap, daysAndTotal, progresses] = await Promise.all([
+      roadmapEnrollementRepository.findOne({
+        where: {
+          user: { id: userId },
+          roadmap: { id: roadmapId },
+        },
+      }),
+      userSubscriptionRepo.findOne({
+        where: [
+          {
+            userId,
+            isActive: true,
+            package: { type: PACKAGE_TYPE.ROADMAP_UNLOCK, targetId: roadmapId },
+            endDate: MoreThan(now)
+          },
+          {
+            userId,
+            isActive: true,
+            package: { type: PACKAGE_TYPE.ROADMAP_UNLOCK, targetId: roadmapId },
+            endDate: IsNull()
+          }
+        ],
+        relations: ["package"]
+      }),
+      roadmapRepository.findOne({ where: { id: roadmapId } }),
+      dayRepository.findAndCount({
+        where: { roadmap: { id: roadmapId } },
+        relations: ["activities"],
+        order: { dayNumber: "ASC" },
+        skip,
+        take: limit,
+      }),
+      // ✅ Chỉ lấy progress thuộc roadmap này (lọc ở SQL),
+      // trước đây load toàn bộ progress của user trên mọi roadmap
+      userProgressRepository.find({
+        where: { user: { id: userId }, activity: { day: { roadmap: { id: roadmapId } } } },
+        relations: ["activity"],
+      }),
+    ]);
 
     if (!enrollment) {
       throw new ApiError(HttpStatusCode.Forbidden, "Người dùng chưa enrollment vào roadmap này");
     }
 
-    // ✅ Kiểm tra xem user có gói unlock roadmap này không
-    const userSubscriptionRepo = AppDataSource.getRepository(UserSubscription);
-    const now = new Date();
-    const subscription = await userSubscriptionRepo.findOne({
-      where: [
-        {
-          userId,
-          isActive: true,
-          package: { type: PACKAGE_TYPE.ROADMAP_UNLOCK, targetId: roadmapId },
-          endDate: MoreThan(now)
-        },
-        {
-          userId,
-          isActive: true,
-          package: { type: PACKAGE_TYPE.ROADMAP_UNLOCK, targetId: roadmapId },
-          endDate: IsNull()
-        }
-      ],
-      relations: ["package"]
-    });
-
     const isSubscribed = !!subscription;
-    const roadmap = await roadmapRepository.findOne({ where: { id: roadmapId } });
     const freeDayCount = roadmap?.freeDayCount || 0;
-
-    // ✅ Tính offset
-    const skip = (page - 1) * limit;
-
-    // ✅ Lấy roadmap + days (có phân trang)
-    const [days, total] = await dayRepository.findAndCount({
-      where: { roadmap: { id: roadmapId } },
-      relations: ["activities"],
-      order: { dayNumber: "ASC" },
-      skip,
-      take: limit,
-    });
+    const [days, total] = daysAndTotal;
 
     if (!days.length) {
       throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy day nào trong roadmap");
     }
-
-    // ✅ Lấy tiến độ user
-    const progresses = await userProgressRepository.find({
-      where: { user: { id: userId } },
-      relations: ["activity"],
-    });
 
     const progressMap = new Map<number, UserProgress>();
     for (const p of progresses) {
