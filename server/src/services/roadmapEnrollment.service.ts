@@ -31,11 +31,19 @@ export class RoadmapEnrollmentService {
   }
 
   private static async buildProgressSummary(userId: number, roadmapId: number) {
-    const days = await dayRepository.find({
-      where: { roadmap: { id: roadmapId } },
-      relations: ["activities"],
-      order: { dayNumber: "ASC" },
-    });
+    // ✅ Chạy song song và chỉ lấy progress thuộc roadmap này (lọc ở SQL
+    // thay vì load toàn bộ progress của user trên mọi roadmap rồi lọc bằng JS)
+    const [days, progresses] = await Promise.all([
+      dayRepository.find({
+        where: { roadmap: { id: roadmapId } },
+        relations: ["activities"],
+        order: { dayNumber: "ASC" },
+      }),
+      userProgressRepository.find({
+        where: { user: { id: userId }, activity: { day: { roadmap: { id: roadmapId } } } },
+        relations: ["activity"],
+      }),
+    ]);
 
     if (!days.length) {
       return {
@@ -47,16 +55,9 @@ export class RoadmapEnrollmentService {
       };
     }
 
-    const progresses = await userProgressRepository.find({
-      where: { user: { id: userId } },
-      relations: ["activity", "activity.day", "activity.day.roadmap"],
-    });
-
     const progressMap = new Map<number, UserProgress>();
     progresses.forEach((progress) => {
-      if (progress.activity?.day?.roadmap?.id === roadmapId) {
-        progressMap.set(progress.activity.id, progress);
-      }
+      progressMap.set(progress.activity.id, progress);
     });
 
     let lastCompletedDay = 0;
