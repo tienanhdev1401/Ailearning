@@ -37,15 +37,17 @@ const decorateActivitiesWithProgress = (activities = [], progressList = []) => {
   const list = activities.map((activity, index) => {
     const progress = progressMap.get(activity.id);
     const isCompleted = Boolean(progress?.isCompleted);
+    const wasEverCompleted = Boolean(progress?.completedAt);
     const isInProgress = Boolean(progress && !progress.isCompleted && progress.timeSpent > 0);
-    const isUnlocked = isCompleted ? true : allPreviousCompleted;
+    // Mở khóa nếu: đã hoàn thành, hoặc đã từng hoàn thành (đang làm lại), hoặc tất cả trước đó đều xong
+    const isUnlocked = isCompleted || wasEverCompleted ? true : allPreviousCompleted;
     const status = isCompleted
       ? 'completed'
       : isUnlocked
         ? (isInProgress ? 'in_progress' : 'available')
         : 'locked';
 
-    if (!isCompleted) {
+    if (!isCompleted && !wasEverCompleted) {
       allPreviousCompleted = false;
     }
 
@@ -74,6 +76,7 @@ const ActivityDrawer = ({
   onClose,
   onLogActivity,
   onLaunchMiniGame,
+  onResetDay,
   initialIndex = 0,
   progressPercentOverride,
   completedCountOverride,
@@ -82,6 +85,8 @@ const ActivityDrawer = ({
   const [stage, setStage] = useState('content');
   const [miniGames, setMiniGames] = useState([]);
   const [miniGameIndex, setMiniGameIndex] = useState(-1);
+  const [resetting, setResetting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const timerRef = useRef(Date.now());
 
   const logActivity = useCallback(
@@ -294,13 +299,69 @@ const ActivityDrawer = ({
                     ? 'Hoàn thành mini game'
                     : 'Hoàn thành ngày'}
               </button>
-              <button className={styles.secondaryBtn} type="button" disabled>
-                Bắt đầu lại từ đầu
+              <button
+                className={styles.secondaryBtn}
+                type="button"
+                disabled={resetting || !activities.some((a) => a.isCompleted || a.isInProgress)}
+                onClick={() => setShowResetConfirm(true)}
+              >
+                {resetting ? 'Đang xử lý...' : 'Bắt đầu lại từ đầu'}
               </button>
             </div>
           </>
         )}
       </div>
+      {showResetConfirm && (
+        <div className={classNames(styles.drawerOverlay, styles.centerOverlay)} onClick={() => setShowResetConfirm(false)}>
+          <div className={classNames(styles.popupShell, styles.switchPrompt)} onClick={(e) => e.stopPropagation()}>
+            <header className={styles.overviewHeader}>
+              <div>
+                <h3 className={styles.overviewTitle}>Bắt đầu lại từ đầu?</h3>
+                <p className={styles.popupSubtitle}>
+                  Tiến trình của ngày này sẽ được đặt lại. Bạn sẽ làm lại tất cả hoạt động từ đầu, các ngày sau vẫn được giữ nguyên.
+                </p>
+              </div>
+              <button className={styles.closeBtn} type="button" onClick={() => setShowResetConfirm(false)} aria-label="Đóng">
+                ×
+              </button>
+            </header>
+            <div className={styles.switchPromptActions}>
+              <button
+                className={styles.secondaryBtn}
+                type="button"
+                onClick={() => setShowResetConfirm(false)}
+                disabled={resetting}
+              >
+                Hủy
+              </button>
+              <button
+                className={styles.primaryBtn}
+                type="button"
+                disabled={resetting}
+                onClick={async () => {
+                  if (!day?.id || !onResetDay) return;
+                  setResetting(true);
+                  try {
+                    await onResetDay(day.id);
+                    setCurrentActivityIndex(0);
+                    setStage('content');
+                    setMiniGames([]);
+                    setMiniGameIndex(-1);
+                    timerRef.current = Date.now();
+                    setShowResetConfirm(false);
+                  } catch (err) {
+                    console.error('Không thể bắt đầu lại', err);
+                  } finally {
+                    setResetting(false);
+                  }
+                }}
+              >
+                {resetting ? 'Đang xử lý...' : 'Xác nhận làm lại'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -606,6 +667,22 @@ const RoadMapPage = () => {
         console.error('Không ghi được hoạt động', error);
         showNotice('Không ghi được tiến trình hoạt động.');
       }
+    },
+    [refreshActivitiesForDay, refreshCurrentPageDays, showNotice, userId]
+  );
+
+  const handleResetDay = useCallback(
+    async (dayId) => {
+      if (!dayId || !userId) return;
+      await api.delete(`/users/${userId}/days/${dayId}/progress`);
+      setActivitiesCache((prev) => {
+        const next = { ...prev };
+        delete next[dayId];
+        return next;
+      });
+      await refreshActivitiesForDay(dayId);
+      refreshCurrentPageDays();
+      showNotice('Đã bắt đầu lại từ đầu. Chúc bạn học tốt!');
     },
     [refreshActivitiesForDay, refreshCurrentPageDays, showNotice, userId]
   );
@@ -1299,6 +1376,7 @@ const RoadMapPage = () => {
           onClose={() => setSelectedDayId(null)}
           onLogActivity={handleLogActivity}
           onLaunchMiniGame={handleLaunchMiniGame}
+          onResetDay={handleResetDay}
           initialIndex={drawerInitialIndex}
           progressPercentOverride={drawerProgressPercent}
           completedCountOverride={drawerCompletedCount}

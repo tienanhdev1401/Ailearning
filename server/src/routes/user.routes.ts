@@ -216,4 +216,7 @@ router.put("/:userId/activities/:activityId", UserProgressController.updateProgr
 // Lấy tất cả progress trong day
 router.get("/:userId/days/:dayId/progress", UserProgressController.getProgressByDay);
 
+// Xóa toàn bộ progress trong day (bắt đầu lại từ đầu)
+router.delete("/:userId/days/:dayId/progress", UserProgressController.resetDayProgress);
+
 export default router;

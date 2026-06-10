@@ -35,4 +35,17 @@ export class UserProgressController {
       res.status(error.statusCode || 500).json({ message: error.message });
     }
   }
+
+  static async resetDayProgress(req: Request, res: Response) {
+    try {
+      const { userId, dayId } = req.params;
+      const result = await UserProgressService.resetDayProgress(
+        Number(userId),
+        Number(dayId)
+      );
+      res.json(result);
+    } catch (error: any) {
+      res.status(error.statusCode || 500).json({ message: error.message });
+    }
+  }
 }

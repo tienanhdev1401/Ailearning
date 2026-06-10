@@ -40,8 +40,10 @@ export class UserProgressService {
         relations: ["activity"]
       });
 
+      // Cho phép học nếu ngày trước đã từng hoàn thành (completedAt != null),
+      // kể cả khi user đã reset để làm lại (isCompleted = false)
       const prevDayCompleted = previousDay?.activities.every(a =>
-        prevDayProgresses.some(p => p.activity.id === a.id && p.isCompleted)
+        prevDayProgresses.some(p => p.activity.id === a.id && (p.isCompleted || p.completedAt != null))
       );
 
       if (!prevDayCompleted) {
@@ -91,5 +93,31 @@ export class UserProgressService {
       relations: ["activity"]
     });
     return progresses;
+  }
+
+  // Reset tiến trình của user trong 1 day (bắt đầu lại từ đầu)
+  // Giữ completedAt để các ngày sau không bị khóa
+  static async resetDayProgress(userId: number, dayId: number) {
+    const user = await userRepository.findOneBy({ id: userId });
+    if (!user) throw new ApiError(HttpStatusCode.NotFound, "User không tồn tại");
+
+    const day = await dayRepository.findOne({
+      where: { id: dayId },
+      relations: ["activities"],
+    });
+    if (!day) throw new ApiError(HttpStatusCode.NotFound, "Day không tồn tại");
+
+    const activityIds = (day.activities || []).map((a) => a.id);
+    if (!activityIds.length) return { reset: 0 };
+
+    const result = await userProgressRepository
+      .createQueryBuilder()
+      .update("user_progress")
+      .set({ isCompleted: false, timeSpent: 0 })
+      .where("userId = :userId", { userId })
+      .andWhere("activityId IN (:...activityIds)", { activityIds })
+      .execute();
+
+    return { reset: result.affected || 0 };
   }
 }

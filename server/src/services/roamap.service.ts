@@ -260,12 +260,13 @@ export class RoadmapService {
         else status = "not_started";
       }
 
-      // ✅ Khóa ngày nếu ngày trước chưa hoàn thành
+      // ✅ Khóa ngày nếu ngày trước chưa từng hoàn thành
+      // completedAt != null = đã từng hoàn thành (kể cả khi đã reset để làm lại)
       if (index > 0) {
         const prevDay = days[index - 1];
         const prevCompleted = (prevDay.activities || []).every((a) => {
           const p = progressMap.get(a.id);
-          return p?.isCompleted;
+          return p?.isCompleted || p?.completedAt != null;
         });
         if (!prevCompleted) {
           status = "locked";
