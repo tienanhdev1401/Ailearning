@@ -71,8 +71,8 @@ const SaveToNotebookModal = ({ show, onHide, term, definition }) => {
       centered
       contentClassName={isDarkMode ? "bg-dark text-light border-secondary" : ""}
     >
-      <Modal.Header closeButton closeVariant={isDarkMode ? "white" : undefined}>
-        <Modal.Title className="fs-5">Lưu vào sổ tay</Modal.Title>
+      <Modal.Header closeButton closeVariant={isDarkMode ? "white" : undefined} className={isDarkMode ? "border-secondary" : ""}>
+        <Modal.Title className={`fs-5 ${isDarkMode ? "text-light" : ""}`}>Lưu vào sổ tay</Modal.Title>
       </Modal.Header>
       <Modal.Body className="p-0">
         <div className="p-3 border-bottom border-secondary opacity-75">
