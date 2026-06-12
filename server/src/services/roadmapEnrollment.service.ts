@@ -1,5 +1,6 @@
 import ApiError from "../utils/ApiError";
 import { HttpStatusCode } from "axios";
+import { EntityManager } from "typeorm";
 import { userRepository } from "../repositories/user.repository";
 import { roadmapRepository } from "../repositories/roadmap.repository";
 import { roadmapEnrollementRepository } from "../repositories/roadmapEnrollement.repository";
@@ -9,13 +10,16 @@ import { userProgressRepository } from "../repositories/userProgress.repository"
 import { dayRepository } from "../repositories/day.repository";
 import { UserProgress } from "../models/userProgress";
 import { RoadmapEnrollment } from "../models/roadmapEnrollment";
+import { AppDataSource } from "../config/database";
+import { buildProgressMap, getDayProgressStatus } from "../utils/roadmapProgress.helper";
 
 export class RoadmapEnrollmentService {
   private static async resetProgressForRoadmap(userId: number, roadmapId: number) {
+    // ✅ Chỉ cần id của activity: điều kiện where lồng nhau đã tự join,
+    // không cần load thêm relations day/day.roadmap (thừa)
     const activities = await activityRepository.find({
       where: { day: { roadmap: { id: roadmapId } } },
       select: ["id"],
-      relations: ["day", "day.roadmap"],
     });
 
     const activityIds = activities.map((activity) => activity.id);
@@ -28,6 +32,26 @@ export class RoadmapEnrollmentService {
       .where("userId = :userId", { userId })
       .andWhere("activityId IN (:...activityIds)", { activityIds })
       .execute();
+  }
+
+  // ✅ Pause mọi enrollment active khác của user (trước đây bị copy-paste 2 lần)
+  private static async pauseOtherEnrollments(
+    manager: EntityManager,
+    userId: number,
+    roadmapId: number
+  ) {
+    const otherEnrollments = await manager.find(RoadmapEnrollment, {
+      where: { user: { id: userId }, status: "active" },
+      relations: ["roadmap"],
+    });
+
+    const updates = otherEnrollments.filter((enrollment) => enrollment.roadmap.id !== roadmapId);
+    if (!updates.length) return;
+
+    updates.forEach((enrollment) => {
+      enrollment.status = "paused";
+    });
+    await manager.save(updates);
   }
 
   private static async buildProgressSummary(userId: number, roadmapId: number) {
@@ -55,10 +79,7 @@ export class RoadmapEnrollmentService {
       };
     }
 
-    const progressMap = new Map<number, UserProgress>();
-    progresses.forEach((progress) => {
-      progressMap.set(progress.activity.id, progress);
-    });
+    const progressMap = buildProgressMap(progresses);
 
     let lastCompletedDay = 0;
     let lastTouchedDay = 0;
@@ -66,8 +87,7 @@ export class RoadmapEnrollmentService {
     days.forEach((day) => {
       const activities = day.activities || [];
       const anyTouched = activities.some((activity) => progressMap.has(activity.id));
-      const allCompleted =
-        activities.length > 0 && activities.every((activity) => progressMap.get(activity.id)?.isCompleted);
+      const allCompleted = getDayProgressStatus(day, progressMap) === "completed";
 
       if (anyTouched) lastTouchedDay = day.dayNumber;
       if (allCompleted) lastCompletedDay = day.dayNumber;
@@ -104,55 +124,26 @@ export class RoadmapEnrollmentService {
       where: { user: { id: userId }, roadmap: { id: roadmapId } },
     });
 
-    if (existingEnrollment) {
-      if (existingEnrollment.status === "active") {
-        throw new ApiError(HttpStatusCode.BadRequest, "Người dùng đã tham gia đăng ký roadmap này rồi");
-      }
-      existingEnrollment.status = "active";
-      existingEnrollment.started_at = new Date();
-      await roadmapEnrollementRepository.save(existingEnrollment);
-      const otherEnrollments = await roadmapEnrollementRepository.find({
-        where: { user: { id: userId }, status: "active" },
-        relations: ["roadmap"],
-      });
-      const updates = otherEnrollments
-        .filter((enrollment) => enrollment.roadmap.id !== roadmapId)
-        .map((enrollment) => {
-          enrollment.status = "paused";
-          return enrollment;
+    if (existingEnrollment && existingEnrollment.status === "active") {
+      throw new ApiError(HttpStatusCode.BadRequest, "Người dùng đã tham gia đăng ký roadmap này rồi");
+    }
+
+    // ✅ Bọc trong transaction để tránh race condition khiến 2 roadmap cùng active
+    return await AppDataSource.transaction(async (manager) => {
+      const enrollment =
+        existingEnrollment ??
+        manager.create(RoadmapEnrollment, {
+          user,
+          roadmap,
         });
-      if (updates.length) {
-        await roadmapEnrollementRepository.save(updates);
-      }
-      return existingEnrollment;
-    }
 
-    const enrollment = roadmapEnrollementRepository.create({
-      user,
-      roadmap,
-      status: "active",
-      started_at: new Date(),
+      enrollment.status = "active";
+      enrollment.started_at = new Date();
+
+      const saved = await manager.save(enrollment);
+      await RoadmapEnrollmentService.pauseOtherEnrollments(manager, userId, roadmapId);
+      return saved;
     });
-
-    const saved = await roadmapEnrollementRepository.save(enrollment);
-
-    const otherEnrollments = await roadmapEnrollementRepository.find({
-      where: { user: { id: userId }, status: "active" },
-      relations: ["roadmap"],
-    });
-
-    const updates = otherEnrollments
-      .filter((enrollment) => enrollment.roadmap.id !== roadmapId)
-      .map((enrollment) => {
-        enrollment.status = "paused";
-        return enrollment;
-      });
-
-    if (updates.length) {
-      await roadmapEnrollementRepository.save(updates);
-    }
-
-    return saved;
   }
 
   static async setActiveRoadmap(
