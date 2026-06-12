@@ -110,7 +110,9 @@ const ActivityDrawer = ({
   const logActivity = useCallback(
     async (activityId, isCompleted) => {
       if (!activityId || !onLogActivity) return;
-      const timeSpent = Math.max(5, Math.round((Date.now() - timerRef.current) / 1000));
+      // Gửi thời gian thực tế (tối thiểu 1 giây) thay vì ép tối thiểu 5 giây làm sai lệch dữ liệu
+      // (server dùng timeSpent > 0 để suy ra trạng thái in_progress)
+      const timeSpent = Math.max(1, Math.round((Date.now() - timerRef.current) / 1000));
       timerRef.current = Date.now();
       try {
         await onLogActivity({

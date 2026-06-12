@@ -24,6 +24,8 @@ import minigameRouter from './routes/minigame.routes'
 import userconfirmRouter from './routes/userconfirm.routes'
 import './config/passport'   // chạy file config để đăng ký strategy
 import errorHandlingMiddleware from './middlewares/errorHandling.middleware'
+import ApiError from './utils/ApiError'
+import { HttpStatusCode } from 'axios'
 import { limiter } from './middlewares/ratelimit.middleware'
 import uploadRouter from './routes/upload.routes'
 
