@@ -6,6 +6,25 @@ import { Request, Response, NextFunction } from "express";
 import { UpdateProfileDto } from "../dto/request/UpdateProfileDTO";
 import UserService from "../services/user.service";
 
+// ✅ Options cookie dùng chung cho cả login và logout
+// (clearCookie phải truyền cùng options thì trình duyệt mới xóa được cookie)
+const getRefreshTokenCookieOptions = () => {
+  const cookieSecure =
+    (process.env.COOKIE_SECURE ?? (process.env.NODE_ENV === "production" ? "true" : "false")) === "true";
+  const cookieSameSite = (process.env.COOKIE_SAMESITE as "strict" | "lax" | "none") || "strict";
+  return {
+    httpOnly: true,
+    sameSite: cookieSameSite,
+    secure: cookieSecure,
+  };
+};
+
+// Thời gian sống của refresh token cookie (mặc định 7 ngày)
+const REFRESH_TOKEN_MAX_AGE_MS =
+  Number(process.env.REFRESH_TOKEN_TTL_MS) > 0
+    ? Number(process.env.REFRESH_TOKEN_TTL_MS)
+    : 7 * 24 * 60 * 60 * 1000;
+
 class AuthController {
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
@@ -13,13 +32,9 @@ class AuthController {
 
       const result = await AuthService.login(email, password);
 
-      const cookieSecure = (process.env.COOKIE_SECURE ?? (process.env.NODE_ENV === "production" ? "true" : "false")) === "true";
-      const cookieSameSite = (process.env.COOKIE_SAMESITE as "strict" | "lax" | "none") || "strict";
-      
       res.cookie("refreshToken", result.refreshToken, {
-        httpOnly: true,
-        sameSite: cookieSameSite,
-        secure: cookieSecure,
+        ...getRefreshTokenCookieOptions(),
+        maxAge: REFRESH_TOKEN_MAX_AGE_MS,
       });
 
       res.status(HttpStatusCode.Ok).json({ accessToken: result.accessToken });
@@ -54,12 +69,16 @@ class AuthController {
   }
 
   static logout(req: Request, res: Response, next: NextFunction) {
-    res.clearCookie("refreshToken");
+    // ✅ Phải truyền cùng options lúc set cookie thì trình duyệt mới xóa được cookie
+    res.clearCookie("refreshToken", getRefreshTokenCookieOptions());
     res.status(HttpStatusCode.Ok).json({ message: "Logout thành công" });
   }
 
   static async getMe(req: Request & { user?: any }, res: Response, next: NextFunction) {
     try {
+      if (!req.user?.id) {
+        throw new ApiError(HttpStatusCode.Unauthorized, "Không xác định được người dùng");
+      }
       const user = await AuthService.getUserById(req.user.id);
       res.status(HttpStatusCode.Ok).json(user);
     } catch (error) {

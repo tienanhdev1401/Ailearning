@@ -1,7 +1,6 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
 import "reflect-metadata";
 import dotenv from 'dotenv'
-import mysql from 'mysql2'
 import cookieParser from 'cookie-parser'
 import passport from 'passport'
 import cors from 'cors'
@@ -25,6 +24,8 @@ import minigameRouter from './routes/minigame.routes'
 import userconfirmRouter from './routes/userconfirm.routes'
 import './config/passport'   // chạy file config để đăng ký strategy
 import errorHandlingMiddleware from './middlewares/errorHandling.middleware'
+import ApiError from './utils/ApiError'
+import { HttpStatusCode } from 'axios'
 import { limiter } from './middlewares/ratelimit.middleware'
 import uploadRouter from './routes/upload.routes'
 
