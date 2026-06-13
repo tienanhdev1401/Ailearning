@@ -5,6 +5,7 @@ import { ThemeContext } from "../../../context/ThemeContext";
 import vocabNoteService from "../../../services/vocabNoteService";
 import { shuffleArray } from "../../../utils/array";
 import { speak } from "../../../utils/tts";
+import SaveToNotebookModal from "../Flashcard/SaveToNotebookModal";
 
 const MiniGameFlipCard = ({ data, onNext }) => {
   const navigate = useNavigate();
@@ -19,8 +20,8 @@ const MiniGameFlipCard = ({ data, onNext }) => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [score, setScore] = useState(0);
-  const [savingCards, setSavingCards] = useState({}); // Keep track of saved status: { index: loading|success|error }
-  const [toastMessage, setToastMessage] = useState(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [savingCard, setSavingCard] = useState(null);
 
   // Initialize practice options when index changes in practice mode
   useEffect(() => {
@@ -46,36 +47,10 @@ const MiniGameFlipCard = ({ data, onNext }) => {
     setIsFlipped(!isFlipped);
   };
 
-  const handleSaveNote = async (e, card, index) => {
+  const handleSaveNoteClick = (e, card) => {
     e.stopPropagation();
-
-    // Nếu đang loading → không cho bấm
-    if (savingCards[index] === 'loading') return;
-
-    // Nếu đã lưu → hiện toast thôi
-    if (savingCards[index] === 'success') {
-      setToastMessage({ type: 'info', text: `"${card.term}" đã được lưu rồi!` });
-      setTimeout(() => setToastMessage(null), 2000);
-      return;
-    }
-
-    setSavingCards(prev => ({ ...prev, [index]: 'loading' }));
-
-    try {
-      await vocabNoteService.addNote(card.term, card.definition, "MiniGame Flip Card");
-
-      // Vẫn giữ trạng thái success (để biết đã lưu)
-      setSavingCards(prev => ({ ...prev, [index]: 'success' }));
-
-      setToastMessage({ type: 'success', text: `Đã lưu "${card.term}" vào sổ tay!` });
-      setTimeout(() => setToastMessage(null), 3000);
-
-    } catch (err) {
-      setSavingCards(prev => ({ ...prev, [index]: 'error' }));
-      const errorMsg = err.response?.data?.message || "Lỗi khi lưu từ.";
-      setToastMessage({ type: 'error', text: errorMsg });
-      setTimeout(() => setToastMessage(null), 3000);
-    }
+    setSavingCard(card);
+    setShowSaveModal(true);
   };
 
   const handleNextLearned = () => {
@@ -146,28 +121,27 @@ const MiniGameFlipCard = ({ data, onNext }) => {
             {mode !== "completed" ? `${currentIndex + 1} / ${cards.length}` : ""}
           </span>
           <div className="d-flex gap-2">
-            <button 
-              className="btn btn-sm btn-outline-primary rounded-pill border-2 fw-bold"
-              onClick={() => navigate(`/flashcards/${data.id}`)}
-              style={{ fontSize: '12px' }}
-            >
-              🚀 Mở trang Flashcard học tập
-            </button>
+            {mode === "learning" && (
+              <button 
+                className="btn btn-sm btn-outline-primary rounded-pill border-2 fw-bold"
+                onClick={() => navigate(`/flashcards/${data.id}`)}
+                style={{ fontSize: '12px' }}
+              >
+                🚀 Mở trang Flashcard học tập
+              </button>
+            )}
             {mode === "practice" && <span className={styles.progressText}>Điểm: {score}</span>}
           </div>
         </div>
       </div>
 
-      {/* Simple Toast for Save feature */}
-      {toastMessage && (
-        <div style={{
-          position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000,
-          background: toastMessage.type === 'success' ? '#28a745' : '#dc3545', color: 'white',
-          padding: '8px 16px', borderRadius: '20px', fontWeight: 'bold', fontSize: '14px',
-          boxShadow: '0 4px 6px rgba(0,00,0,0.1)'
-        }}>
-          {toastMessage.text}
-        </div>
+      {savingCard && (
+        <SaveToNotebookModal
+          show={showSaveModal}
+          onHide={() => setShowSaveModal(false)}
+          term={savingCard.term}
+          definition={savingCard.definition}
+        />
       )}
 
       {feedback !== null && (
@@ -175,7 +149,7 @@ const MiniGameFlipCard = ({ data, onNext }) => {
           <div className={styles.feedbackContent}>
             {feedback ? (
               <>
-                <span className={styles.feedbackIcon}>🎓</span>
+                <span className={styles.feedbackIcon}>✅</span>
                 <span className={styles.feedbackText}>Chính xác!</span>
               </>
             ) : (
@@ -194,12 +168,11 @@ const MiniGameFlipCard = ({ data, onNext }) => {
             <div className={`${styles.flashcard} ${isFlipped ? styles.isFlipped : ""}`}>
               <div className={styles.cardFront}>
                 <button
-                  className={`${styles.saveBtn} ${savingCards[currentIndex] === 'success' ? styles.savedBtn : ''}`}
-                  onClick={(e) => handleSaveNote(e, cards[currentIndex], currentIndex)}
+                  className={styles.saveBtn}
+                  onClick={(e) => handleSaveNoteClick(e, cards[currentIndex])}
                   title="Lưu vào Sổ tay"
-                  disabled={savingCards[currentIndex] === 'loading'}
                 >
-                  {savingCards[currentIndex] === 'loading' ? '⏳' : '📖'}
+                  📖
                 </button>
                 <button
                   className={styles.speakerBtn}
@@ -255,13 +228,6 @@ const MiniGameFlipCard = ({ data, onNext }) => {
           <div className={styles.questionBox}>
             <div className={styles.question}>
               "{practiceCards[currentIndex]?.term}" nghĩa là gì?
-              <button
-                className={styles.speakerBtnInline}
-                onClick={() => speak(practiceCards[currentIndex]?.term, 'en')}
-                title="Phát âm tiếng Anh"
-              >
-                🔊
-              </button>
             </div>
             <div className={styles.optionsGrid}>
               {shuffledOptions.map((option, idx) => (
@@ -275,18 +241,6 @@ const MiniGameFlipCard = ({ data, onNext }) => {
                   disabled={feedback !== null}
                 >
                   <span>{option}</span>
-                  {feedback !== null && (
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      style={{ marginLeft: '6px', cursor: 'pointer', fontSize: '1rem' }}
-                      onClick={(e) => { e.stopPropagation(); speak(option, 'vi'); }}
-                      onKeyDown={(e) => e.key === 'Enter' && speak(option, 'vi')}
-                      title="Đọc tiếng Việt"
-                    >
-                      🔊
-                    </span>
-                  )}
                 </button>
               ))}
             </div>
