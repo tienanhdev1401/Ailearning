@@ -119,7 +119,11 @@ const AiChatExperience = () => {
 
   const trimmedInterviewIndustry = useMemo(() => interviewIndustry.trim(), [interviewIndustry]);
   const isInterviewIndustryMissing = isJobInterview && trimmedInterviewIndustry.length === 0;
-  const isConversationActive = conversation && conversation.status === "active";
+  // A session opened from history is always read-only, even if its stored
+  // status is still "active" (e.g. an abandoned session that was never
+  // completed). This keeps the input/mic disabled while reviewing history.
+  const isConversationActive =
+    !viewingHistoryId && conversation && conversation.status === "active";
   const isCreditsExhausted = credits && (credits.aiConversationCredits ?? 0) <= 0;
   const startDisabled = loading || isConversationActive || isInterviewIndustryMissing || isCreditsExhausted;
   const sendDisabled = !isConversationActive || isSendingText || isUploadingAudio;
