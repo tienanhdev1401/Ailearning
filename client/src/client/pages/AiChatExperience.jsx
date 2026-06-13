@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "../styles/AiChatExperience.module.css";
 import AiChatService from "../../services/aiChatService";
+import ConversationHistorySidebar from "../components/ConversationHistorySidebar";
 import userService from "../../services/userService";
 import { createAiChatSocket } from "../../utils/aiChatSocket";
 import { convertBlobToWav16k } from "../../utils/audioToWav";
@@ -41,6 +42,8 @@ function parseEvaluationDetails(evaluation) {
 
 const AiChatExperience = () => {
   const [scenarios, setScenarios] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [viewingHistoryId, setViewingHistoryId] = useState(null);
   const [selectedScenarioId, setSelectedScenarioId] = useState(null);
   const [mode, setMode] = useState(AI_CONVERSATION_MODE.VOICE);
   const [conversation, setConversation] = useState(null);
@@ -116,7 +119,11 @@ const AiChatExperience = () => {
 
   const trimmedInterviewIndustry = useMemo(() => interviewIndustry.trim(), [interviewIndustry]);
   const isInterviewIndustryMissing = isJobInterview && trimmedInterviewIndustry.length === 0;
-  const isConversationActive = conversation && conversation.status === "active";
+  // A session opened from history is always read-only, even if its stored
+  // status is still "active" (e.g. an abandoned session that was never
+  // completed). This keeps the input/mic disabled while reviewing history.
+  const isConversationActive =
+    !viewingHistoryId && conversation && conversation.status === "active";
   const isCreditsExhausted = credits && (credits.aiConversationCredits ?? 0) <= 0;
   const startDisabled = loading || isConversationActive || isInterviewIndustryMissing || isCreditsExhausted;
   const sendDisabled = !isConversationActive || isSendingText || isUploadingAudio;
@@ -629,6 +636,48 @@ const AiChatExperience = () => {
     }
   };
 
+  // Open a past conversation read-only: tear down any live session state
+  // (socket, recording, playback) then load the stored transcript. Because
+  // the loaded session is not "active", the input controls stay disabled.
+  const handleOpenHistorySession = useCallback(
+    async (sessionId) => {
+      if (!sessionId) return;
+      stopRecording();
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      resetSpeechState();
+      setEvaluation(null);
+      setViewingHistoryId(sessionId);
+      try {
+        const data = await AiChatService.getHistory(sessionId);
+        setConversation(data);
+        setMessages(
+          [...(data.messages ?? [])].sort(
+            (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          )
+        );
+        setEvaluation(data.evaluation ?? null);
+        setShowHistory(false);
+      } catch (error) {
+        console.error("Failed to open history session", error);
+        pushSystemMessage("Không tải được cuộc trò chuyện này.");
+        setViewingHistoryId(null);
+      }
+    },
+    [resetSpeechState, pushSystemMessage]
+  );
+
+  // Reset back to a fresh "new conversation" state from history view.
+  const handleNewConversation = useCallback(() => {
+    resetSpeechState();
+    setViewingHistoryId(null);
+    setConversation(null);
+    setMessages([]);
+    setEvaluation(null);
+  }, [resetSpeechState]);
+
   const handleCompleteSession = async () => {
     if (!conversation?.id || isFinalizing) return;
     setIsFinalizing(true);
@@ -1034,6 +1083,22 @@ const AiChatExperience = () => {
             ngữ pháp và từ vựng. Bạn có thể thu âm trực tiếp hoặc gõ tin nhắn tùy thích.
           </p>
         </div>
+        <button
+          type="button"
+          className={styles.historyLink}
+          onClick={() => setShowHistory((prev) => !prev)}
+        >
+          Lịch sử
+        </button>
+        {viewingHistoryId && (
+          <button
+            type="button"
+            className={styles.historyLink}
+            onClick={handleNewConversation}
+          >
+            + Trò chuyện mới
+          </button>
+        )}
         <div className={styles.modeToggle}>
           {Object.values(AI_CONVERSATION_MODE).map((itemMode) => (
             <button
@@ -1048,6 +1113,12 @@ const AiChatExperience = () => {
       </div>
 
       <div className={styles.layout}>
+        <ConversationHistorySidebar
+          open={showHistory}
+          onClose={() => setShowHistory(false)}
+          onSelectSession={handleOpenHistorySession}
+          activeId={viewingHistoryId}
+        />
         <aside className={styles.scenarioPanel}>
           <div className={styles.scenarioHeader}>
             <h2>Tình huống</h2>

@@ -15,6 +15,7 @@ import { emitAiChatEvent } from "../../socket";
 import { deepgramService } from "./deepgram.service";
 import type { DeepgramTranscriptionResult } from "./deepgram.service";
 import { promptService } from "../ai/prompt.service";
+import { uploadRepository } from "../../repositories/upload.repository";
 import {
   scenarioGuidanceService,
   GuidanceView,
@@ -170,7 +171,7 @@ ${contextNote}` : basePrompt;
     });
     await this.messageRepo.save(userMessage);
 
-    const aiMessage = await this.processUserTurnAndGetAiReply(conversation, userMessage, payload.userId);
+    const aiMessage = await this.processUserTurnAndGetAiReply(conversation, userMessage);
 
     return {
       userMessage: this.toMessagePayload(userMessage),
@@ -224,13 +225,25 @@ ${contextNote}` : basePrompt;
       );
     }
 
+    // Persist the original recording so users can replay it later and the
+    // audio can be re-analysed. Failures must not break the chat turn.
+    let audioPath: string | null = null;
+    try {
+      audioPath = await uploadRepository.uploadAudio(buffer, filename);
+    } catch (error) {
+      console.warn(
+        `[AiChat] Failed to upload voice recording for conversation ${conversation.id}:`,
+        error instanceof Error ? error.message : error
+      );
+    }
+
     const userMessage = this.messageRepo.create({
       conversation,
       role: AI_MESSAGE_ROLE.USER,
       content: transcriptText,
       transcript: transcriptText,
       durationSeconds: transcription.duration ?? null,
-      audioPath: null,
+      audioPath,
       pronunciationScore: pronunciationScoreJson,
     });
     await this.messageRepo.save(userMessage);
@@ -243,7 +256,7 @@ ${contextNote}` : basePrompt;
       duration: transcription.duration ?? null,
     });
 
-    const aiMessage = await this.processUserTurnAndGetAiReply(conversation, userMessage, payload.userId);
+    const aiMessage = await this.processUserTurnAndGetAiReply(conversation, userMessage);
 
     return {
       userMessage: this.toMessagePayload(userMessage),
@@ -255,6 +268,18 @@ ${contextNote}` : basePrompt;
 
   async markConversationCompleted(conversationId: number, userId: number) {
     const conversation = await this.assertConversationOwner(conversationId, userId);
+
+    // Guard against double-completion: if the session is already completed,
+    // return the existing evaluation instead of re-running the scoring and
+    // Gemini pipeline (which costs API calls and would overwrite results).
+    if (conversation.status === AI_CONVERSATION_STATUS.COMPLETED) {
+      const existing = await this.evaluationRepo.findOne({
+        where: { conversation: { id: conversation.id } },
+        relations: ["conversation"],
+      });
+      return this.toEvaluationPayload(existing ?? null);
+    }
+
     conversation.status = AI_CONVERSATION_STATUS.COMPLETED;
     conversation.endedAt = new Date();
     await this.conversationRepo.save(conversation);
@@ -299,24 +324,93 @@ ${contextNote}` : basePrompt;
     return this.toEvaluationPayload(evaluation);
   }
 
-  async getConversationWithMessages(conversationId: number, userId: number) {
-    const conversation = await this.conversationRepo.findOne({
-      where: { id: conversationId, user: { id: userId } },
-      relations: [
-        "scenario",
-        "messages",
-        "messages.conversation",
-        "evaluation",
-      ],
-    });
+  async listConversations(userId: number) {
+    // Load conversation rows + scenario only. Message count and the presence
+    // of an evaluation are mapped via COUNT subqueries so we never hydrate
+    // message/evaluation rows just to summarise them.
+    const conversations = await this.conversationRepo
+      .createQueryBuilder("conversation")
+      .leftJoinAndSelect("conversation.scenario", "scenario")
+      .loadRelationCountAndMap("conversation.messageCount", "conversation.messages")
+      .loadRelationCountAndMap("conversation.evaluationCount", "conversation.evaluation")
+      .where("conversation.user = :userId", { userId })
+      .orderBy("conversation.createdAt", "DESC")
+      .getMany();
 
-    if (!conversation) {
-      throw new Error("Conversation not found");
+    if (conversations.length === 0) {
+      return [];
     }
 
-    conversation.messages = conversation.messages
-      ? conversation.messages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-      : [];
+    // Fetch only the lightweight columns needed for the preview of the most
+    // recent message per listed conversation, then reduce in memory. This
+    // avoids hydrating full AiMessage entities (longtext pronunciation data,
+    // audio paths, etc.).
+    const conversationIds = conversations.map((conversation) => conversation.id);
+    const previewRows = await this.messageRepo
+      .createQueryBuilder("message")
+      .select([
+        "message.id",
+        "message.content",
+        "message.transcript",
+        "message.createdAt",
+      ])
+      .addSelect("message.conversationId", "message_conversationId")
+      .where("message.conversationId IN (:...conversationIds)", { conversationIds })
+      .orderBy("message.conversationId", "ASC")
+      .addOrderBy("message.createdAt", "DESC")
+      .getRawAndEntities();
+
+    // Keep the first (most recent) message seen per conversation.
+    const lastMessageByConversation = new Map<number, AiMessage>();
+    previewRows.raw.forEach((raw: any, index: number) => {
+      const conversationId = Number(raw.message_conversationId);
+      if (!lastMessageByConversation.has(conversationId)) {
+        lastMessageByConversation.set(conversationId, previewRows.entities[index]);
+      }
+    });
+
+    return conversations.map((conversation) => {
+      const lastMessage = lastMessageByConversation.get(conversation.id) ?? null;
+      const messageCount = (conversation as any).messageCount ?? 0;
+      const hasEvaluation = ((conversation as any).evaluationCount ?? 0) > 0;
+
+      return {
+        id: conversation.id,
+        title:
+          conversation.scenario?.title ??
+          conversation.customTitle ??
+          "Cuộc trò chuyện",
+        scenarioTitle: conversation.scenario?.title ?? null,
+        mode: conversation.mode,
+        status: conversation.status,
+        messageCount,
+        lastMessagePreview: lastMessage
+          ? this.truncateText(
+              (lastMessage.transcript ?? lastMessage.content ?? "").replace(/[\r\n]+/g, " "),
+              120
+            )
+          : null,
+        hasEvaluation,
+        endedAt: conversation.endedAt,
+        createdAt: conversation.createdAt,
+        updatedAt: conversation.updatedAt,
+      };
+    });
+  }
+
+  async getConversationWithMessages(conversationId: number, userId: number) {
+    // assertConversationOwner already loads the owner, scenario and
+    // DB-ordered messages in a single query; reuse it instead of issuing a
+    // second near-identical query. It also enforces ownership.
+    const conversation = await this.assertConversationOwner(conversationId, userId);
+
+    // assertConversationOwner does not load the evaluation relation, so attach
+    // it explicitly here for callers that need it (snapshot / evaluation
+    // lookups). Loading it unconditionally avoids relying on TypeORM leaving
+    // the property `undefined` when a relation is not requested.
+    conversation.evaluation = await this.evaluationRepo.findOne({
+      where: { conversation: { id: conversation.id } },
+    });
 
     return conversation;
   }
@@ -360,12 +454,18 @@ ${contextNote}` : basePrompt;
   private async assertConversationOwner(conversationId: number, userId: number) {
     const conversation = await this.conversationRepo.findOne({
       where: { id: conversationId },
-      relations: ["user"],
+      // Load messages + scenario so callers (text/voice turns) can build the
+      // follow-up prompt with full history from this single query, instead of
+      // reloading the conversation again afterwards.
+      relations: ["user", "scenario", "messages"],
+      order: { messages: { createdAt: "ASC" } },
     });
 
     if (!conversation || conversation.user.id !== userId) {
       throw new Error("Conversation not found or access denied");
     }
+
+    conversation.messages = conversation.messages ?? [];
 
     return conversation;
   }
@@ -377,11 +477,16 @@ ${contextNote}` : basePrompt;
   private async processUserTurnAndGetAiReply(
     conversation: AiConversation,
     userMessage: AiMessage,
-    userId: number,
   ): Promise<AiMessage> {
     emitAiChatEvent(conversation.id, "user_message", this.toMessagePayload(userMessage));
 
-    const updatedConversation = await this.getConversationWithMessages(conversation.id, userId);
+    // Reuse the conversation we already loaded and append the freshly saved
+    // user message, instead of reloading the entire conversation on each turn.
+    const updatedConversation = conversation;
+    updatedConversation.messages = [
+      ...(conversation.messages ?? []),
+      userMessage,
+    ];
     const userText = userMessage.transcript ?? userMessage.content;
     const aiResponseText = await this.generateFollowUp(updatedConversation, userText);
 

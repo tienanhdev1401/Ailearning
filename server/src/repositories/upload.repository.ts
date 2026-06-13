@@ -40,6 +40,36 @@ class UploadRepository {
     });
   }
 
+  async uploadAudio(
+    buffer: Buffer,
+    filename: string,
+    folder = "ai-chat"
+  ): Promise<string> {
+    const uploadFolder = `${this.baseFolder}/${folder}`;
+
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: uploadFolder,
+          // Cloudinary handles audio files under the "video" resource type.
+          resource_type: "video",
+          use_filename: true,
+          unique_filename: true,
+          filename_override: filename,
+        },
+        (error: UploadApiErrorResponse | undefined, result?: UploadApiResponse) => {
+          if (error || !result) {
+            reject(new Error(error?.message || "Không thể tải âm thanh lên Cloudinary"));
+            return;
+          }
+          resolve(result.secure_url);
+        }
+      );
+
+      stream.end(buffer);
+    });
+  }
+
   async uploadVideo(
     buffer: Buffer,
     filename: string,

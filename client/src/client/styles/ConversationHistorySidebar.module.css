@@ -1,0 +1,135 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  max-width: 100%;
+  background: var(--pp-surface, #fff);
+  border: 1px solid var(--pp-border, #e2e8f0);
+  border-radius: 16px;
+  overflow: hidden;
+  align-self: stretch;
+  max-height: 75vh;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--pp-border, #e2e8f0);
+}
+
+.headTitle {
+  font-weight: 700;
+  color: var(--pp-text-strong, #0f172a);
+}
+
+.closeButton {
+  border: none;
+  background: transparent;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--pp-muted, #64748b);
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.placeholder {
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--pp-muted, #64748b);
+  font-size: 0.9rem;
+}
+
+.retryButton {
+  margin-top: 10px;
+  border: 1px solid var(--pp-border-strong, #cbd5e1);
+  background: transparent;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: var(--pp-text, #475569);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--pp-border, #e2e8f0);
+  background: var(--pp-surface-2, #fff);
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.item:hover {
+  border-color: var(--pp-border-strong, #94a3b8);
+}
+
+.itemActive {
+  border-color: var(--pp-accent, #2dd4bf);
+  box-shadow: 0 0 0 2px var(--pp-accent-soft, rgba(45, 212, 191, 0.25));
+}
+
+.itemTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.itemTitle {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--pp-text-strong, #0f172a);
+}
+
+.badge {
+  font-size: 0.68rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badgeDone {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+
+.badgeActive {
+  background: rgba(245, 158, 11, 0.16);
+  color: #a16207;
+}
+
+.preview {
+  margin: 0 0 8px;
+  color: var(--pp-text, #475569);
+  font-size: 0.82rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--pp-muted, #94a3b8);
+  font-size: 0.72rem;
+}
