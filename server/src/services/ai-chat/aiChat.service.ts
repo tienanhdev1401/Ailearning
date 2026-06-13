@@ -366,12 +366,12 @@ ${contextNote}` : basePrompt;
     const conversation = await this.assertConversationOwner(conversationId, userId);
 
     // assertConversationOwner does not load the evaluation relation, so attach
-    // it here for callers that need it (snapshot / evaluation lookups).
-    if (conversation.evaluation === undefined) {
-      conversation.evaluation = await this.evaluationRepo.findOne({
-        where: { conversation: { id: conversation.id } },
-      });
-    }
+    // it explicitly here for callers that need it (snapshot / evaluation
+    // lookups). Loading it unconditionally avoids relying on TypeORM leaving
+    // the property `undefined` when a relation is not requested.
+    conversation.evaluation = await this.evaluationRepo.findOne({
+      where: { conversation: { id: conversation.id } },
+    });
 
     return conversation;
   }
