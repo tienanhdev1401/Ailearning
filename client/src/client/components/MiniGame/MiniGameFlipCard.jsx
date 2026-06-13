@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../../styles/MiniGameFlipCard.module.css";
 import { ThemeContext } from "../../../context/ThemeContext";
-import vocabNoteService from "../../../services/vocabNoteService";
 import { shuffleArray } from "../../../utils/array";
 import { speak } from "../../../utils/tts";
 import SaveToNotebookModal from "../Flashcard/SaveToNotebookModal";
@@ -122,7 +121,7 @@ const MiniGameFlipCard = ({ data, onNext }) => {
           </span>
           <div className="d-flex gap-2">
             {mode === "learning" && (
-              <button 
+              <button
                 className="btn btn-sm btn-outline-primary rounded-pill border-2 fw-bold"
                 onClick={() => navigate(`/flashcards/${data.id}`)}
                 style={{ fontSize: '12px' }}

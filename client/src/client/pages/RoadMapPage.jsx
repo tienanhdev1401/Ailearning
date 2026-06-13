@@ -31,6 +31,15 @@ const getActivityTypeLabel = (activity) => {
   return ACTIVITY_TYPE_LABELS[value] || value || 'Bài học';
 };
 
+const formatTimeSpent = (seconds) => {
+  if (!seconds || seconds <= 0) return null;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  if (minutes === 0) return `${remainingSeconds} giây`;
+  if (remainingSeconds === 0) return `${minutes} phút`;
+  return `${minutes} phút ${remainingSeconds} giây`;
+};
+
 const deriveActivityMeta = (activities = []) => {
   const total = activities.length;
   const completedCount = activities.filter((activity) => activity?.isCompleted).length;
@@ -146,6 +155,8 @@ const ActivityDrawer = ({
         ? Math.round((completedActivities / activities.length) * 100)
         : 0;
   const nextActivityTitle = currentActivity?.title || currentActivity?.name || 'Hoạt động tiếp theo';
+  const totalTimeSpent = activities.reduce((sum, a) => sum + (a.timeSpent || 0), 0);
+  const totalTimeLabel = formatTimeSpent(totalTimeSpent);
 
   const completeActivity = useCallback(async () => {
     if (!currentActivity) return;
@@ -275,6 +286,9 @@ const ActivityDrawer = ({
                   Đã hoàn thành <strong>{completedActivities}</strong> / {activities.length} nhiệm vụ.
                 </p>
                 <p className={styles.summaryHint}>Tiếp theo: {nextActivityTitle}</p>
+                {totalTimeLabel && (
+                  <p className={styles.summaryHint}>⏱ Đã học: {totalTimeLabel}</p>
+                )}
               </div>
             </section>
 
@@ -298,6 +312,7 @@ const ActivityDrawer = ({
                       <strong>{activity.title || activity.name || `Hoạt động ${index + 1}`}</strong>
                       <p className={styles.activityListMeta}>
                         {getActivityTypeLabel(activity)}
+                        {activity.timeSpent > 0 && <> · Đã học: {formatTimeSpent(activity.timeSpent)}</>}
                       </p>
                     </div>
                     <span className={styles.activityStatusBadge} data-status={activityStatus(activity, index)}>
@@ -1409,9 +1424,9 @@ const RoadMapPage = () => {
         message={`Lộ trình "${roadmap?.levelName}" đã đạt giới hạn học thử. Hãy sở hữu ngay gói mở khóa để tiếp tục hành trình học tập nhé!`}
         packageType="ROADMAP_UNLOCK"
       />
-      {!miniGameView.activity && !selectedDay && (
+      <div style={{ display: (!miniGameView.activity && !selectedDay) ? undefined : 'none' }}>
         <DailyChallengeWidget roadmapId={id} isFloating={true} />
-      )}
+      </div>
     </div>
   );
 };

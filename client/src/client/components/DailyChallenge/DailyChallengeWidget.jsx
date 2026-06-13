@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import dailyChallengeService from '../../../services/dailyChallengeService';
 import { ThemeContext } from '../../../context/ThemeContext';
@@ -10,6 +10,7 @@ const DailyChallengeWidget = ({ roadmapId, isCompact = false, isFloating = false
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { isDarkMode } = useContext(ThemeContext);
   const navigate = useNavigate();
+  const hasAnimated = useRef(false);
 
   useEffect(() => {
     if (roadmapId) {
@@ -141,8 +142,10 @@ const DailyChallengeWidget = ({ roadmapId, isCompact = false, isFloating = false
   );
 
   if (isFloating) {
+    const animClass = !hasAnimated.current ? styles.slideInOnce : '';
+    if (!hasAnimated.current) hasAnimated.current = true;
     return (
-      <div className={`${styles.floatingWrapper} ${isCollapsed ? styles.collapsed : ''}`}>
+      <div className={`${styles.floatingWrapper} ${isCollapsed ? styles.collapsed : ''} ${animClass}`}>
         <button 
           className={styles.collapseBtn}
           onClick={() => setIsCollapsed(!isCollapsed)}
