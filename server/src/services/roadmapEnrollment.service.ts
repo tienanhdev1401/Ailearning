@@ -15,8 +15,6 @@ import { buildProgressMap, getDayProgressStatus } from "../utils/roadmapProgress
 
 export class RoadmapEnrollmentService {
   private static async resetProgressForRoadmap(userId: number, roadmapId: number) {
-    // ✅ Chỉ cần id của activity: điều kiện where lồng nhau đã tự join,
-    // không cần load thêm relations day/day.roadmap (thừa)
     const activities = await activityRepository.find({
       where: { day: { roadmap: { id: roadmapId } } },
       select: ["id"],
@@ -34,7 +32,6 @@ export class RoadmapEnrollmentService {
       .execute();
   }
 
-  // ✅ Pause mọi enrollment active khác của user (trước đây bị copy-paste 2 lần)
   private static async pauseOtherEnrollments(
     manager: EntityManager,
     userId: number,
@@ -55,8 +52,6 @@ export class RoadmapEnrollmentService {
   }
 
   private static async buildProgressSummary(userId: number, roadmapId: number) {
-    // ✅ Chạy song song và chỉ lấy progress thuộc roadmap này (lọc ở SQL
-    // thay vì load toàn bộ progress của user trên mọi roadmap rồi lọc bằng JS)
     const [days, progresses] = await Promise.all([
       dayRepository.find({
         where: { roadmap: { id: roadmapId } },
@@ -128,7 +123,6 @@ export class RoadmapEnrollmentService {
       throw new ApiError(HttpStatusCode.BadRequest, "Người dùng đã tham gia đăng ký roadmap này rồi");
     }
 
-    // ✅ Bọc trong transaction để tránh race condition khiến 2 roadmap cùng active
     return await AppDataSource.transaction(async (manager) => {
       const enrollment =
         existingEnrollment ??
@@ -238,7 +232,7 @@ export class RoadmapEnrollmentService {
   static async updateStatus(enrollmentId: number, status: ENROLLMENT_STATUS) {
     if (!Object.values(ENROLLMENT_STATUS).includes(status))
       throw new ApiError(HttpStatusCode.BadRequest, "Trạng thái không hợp lệ");
-    
+
     const enrollment = await roadmapEnrollementRepository.findOne({ where: { id: enrollmentId } });
     if (!enrollment) {
       throw new ApiError(HttpStatusCode.NotFound, "Không tìm thấy bản ghi đăng ký");
@@ -262,10 +256,10 @@ export class RoadmapEnrollmentService {
   static async checkEnroll(userId: number, roadmapId: number) {
     const enrollment = await roadmapEnrollementRepository.findOne({
       where: {
-        user: { id: userId },      
-        roadmap: { id: roadmapId } 
+        user: { id: userId },
+        roadmap: { id: roadmapId }
       },
-      relations: ["roadmap"], 
+      relations: ["roadmap"],
     });
 
     if (!enrollment) {

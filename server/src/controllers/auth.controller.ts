@@ -6,8 +6,6 @@ import { Request, Response, NextFunction } from "express";
 import { UpdateProfileDto } from "../dto/request/UpdateProfileDTO";
 import UserService from "../services/user.service";
 
-// ✅ Options cookie dùng chung cho cả login và logout
-// (clearCookie phải truyền cùng options thì trình duyệt mới xóa được cookie)
 const getRefreshTokenCookieOptions = () => {
   const cookieSecure =
     (process.env.COOKIE_SECURE ?? (process.env.NODE_ENV === "production" ? "true" : "false")) === "true";
@@ -69,7 +67,6 @@ class AuthController {
   }
 
   static logout(req: Request, res: Response, next: NextFunction) {
-    // ✅ Phải truyền cùng options lúc set cookie thì trình duyệt mới xóa được cookie
     res.clearCookie("refreshToken", getRefreshTokenCookieOptions());
     res.status(HttpStatusCode.Ok).json({ message: "Logout thành công" });
   }
@@ -112,7 +109,7 @@ class AuthController {
       }
 
       await OtpService.sendOtp(email);
-      res.status(HttpStatusCode.Ok).json({message: "Mã xác thực đã được gửi đến email của bạn"});
+      res.status(HttpStatusCode.Ok).json({ message: "Mã xác thực đã được gửi đến email của bạn" });
     } catch (error) {
       next(error);
     }
@@ -128,7 +125,7 @@ class AuthController {
 
       await OtpService.verifyOtp(email, otp);
 
-      res.status(HttpStatusCode.Ok).json({message: "Xác thực OTP thành công"});
+      res.status(HttpStatusCode.Ok).json({ message: "Xác thực OTP thành công" });
     } catch (error) {
       next(error);
     }
@@ -144,7 +141,7 @@ class AuthController {
 
       await UserService.resetPassword(email, otp, newPassword);
 
-      res.status(HttpStatusCode.Ok).json({message: "Đặt lại mật khẩu thành công"});
+      res.status(HttpStatusCode.Ok).json({ message: "Đặt lại mật khẩu thành công" });
     } catch (error) {
       next(error);
     }

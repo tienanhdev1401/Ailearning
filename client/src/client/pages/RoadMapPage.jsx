@@ -110,8 +110,6 @@ const ActivityDrawer = ({
   const logActivity = useCallback(
     async (activityId, isCompleted) => {
       if (!activityId || !onLogActivity) return;
-      // Gửi thời gian thực tế (tối thiểu 1 giây) thay vì ép tối thiểu 5 giây làm sai lệch dữ liệu
-      // (server dùng timeSpent > 0 để suy ra trạng thái in_progress)
       const timeSpent = Math.max(1, Math.round((Date.now() - timerRef.current) / 1000));
       timerRef.current = Date.now();
       try {
@@ -536,7 +534,6 @@ const RoadMapPage = () => {
       }
 
       try {
-        // Gọi song song kiểm tra ghi danh + trang ngày đầu tiên để tránh waterfall tuần tự
         const [checkResult, daysResult] = await Promise.allSettled([
           fetchEnrollmentStatus(userId),
           fetchUserDayStatuses(userId, { page: 1, append: false }),

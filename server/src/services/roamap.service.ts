@@ -71,7 +71,6 @@ export class RoadmapService {
     const now = new Date();
     const skip = (page - 1) * limit;
 
-    // ✅ Các truy vấn độc lập chạy song song thay vì tuần tự (giảm tổng độ trễ)
     const [enrollment, subscription, roadmap, daysAndTotal, progresses, prevPageLastDays] =
       await Promise.all([
         roadmapEnrollementRepository.findOne({
@@ -105,22 +104,18 @@ export class RoadmapService {
           skip,
           take: limit,
         }),
-        // ✅ Chỉ lấy progress thuộc roadmap này (lọc ở SQL)
         userProgressRepository.find({
           where: { user: { id: userId }, activity: { day: { roadmap: { id: roadmapId } } } },
           relations: ["activity"],
         }),
-        // ✅ Ngày cuối của trang TRƯỚC để check khóa cho ngày đầu trang hiện tại.
-        // Fix bug: trước đây chỉ check prev day trong cùng trang nên ngày đầu
-        // mỗi trang (từ trang 2 trở đi) luôn được mở khóa dù ngày trước đó chưa hoàn thành.
         skip > 0
           ? dayRepository.find({
-              where: { roadmap: { id: roadmapId } },
-              relations: ["activities"],
-              order: { dayNumber: "ASC" },
-              skip: skip - 1,
-              take: 1,
-            })
+            where: { roadmap: { id: roadmapId } },
+            relations: ["activities"],
+            order: { dayNumber: "ASC" },
+            skip: skip - 1,
+            take: 1,
+          })
           : Promise.resolve([]),
       ]);
 
@@ -139,22 +134,15 @@ export class RoadmapService {
     const progressMap = buildProgressMap(progresses);
     const prevPageLastDay = prevPageLastDays[0] ?? null;
 
-    // ✅ Duyệt qua từng day để tính status
     const dayStatuses = days.map((day, index) => {
       let status: "locked" | "not_started" | "in_progress" | "completed" | "vip_required" =
         getDayProgressStatus(day, progressMap);
 
-      // ✅ Khóa ngày nếu ngày liền trước chưa từng hoàn thành.
-      // completedAt != null = đã từng hoàn thành (kể cả khi đã reset để làm lại):
-      // tiêu chí này chỉ dùng để MỞ KHÓA; hiển thị "completed" vẫn dựa vào isCompleted.
-      // Với ngày đầu trang (index === 0, page > 1) dùng ngày cuối của trang trước.
       const prevDay = index > 0 ? days[index - 1] : prevPageLastDay;
       if (prevDay && !isDayEverCompleted(prevDay, progressMap)) {
         status = "locked";
       }
 
-      // ✅ Khóa ngày nếu quá hạn mức free và chưa mua gói
-      // freeDayCount = -1 nghĩa là roadmap free hoàn toàn, bỏ qua check này
       if (!isSubscribed && freeDayCount !== -1 && day.dayNumber > freeDayCount) {
         status = "vip_required";
       }
@@ -168,7 +156,6 @@ export class RoadmapService {
       };
     });
 
-    // ✅ Trả kết quả phân trang
     return {
       data: dayStatuses,
       total,
