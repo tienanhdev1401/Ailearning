@@ -28,8 +28,7 @@ l2artic_model/.venv/
 .env.production.local
 /server/.env
 
-# Thư mục node_modules (có thể cài lại bằng npm/yarn)
-echo "# dependencies
+# dependencies
 node_modules/
 /.pnp
 .pnp.js
@@ -43,12 +42,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Thư mục cache
+# Cache
 .cache/
 .next/
 out/
 
-# Các file hệ thống không cần thiết
+# OS files
 .DS_Store
 Thumbs.db
 

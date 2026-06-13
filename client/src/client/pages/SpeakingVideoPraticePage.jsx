@@ -352,7 +352,7 @@ export default function SpeakingVideoPraticePage() {
 
         const data = await response.json();
         setApiResult(data);
-        console.log("[GOP score v2]", data);
+
 
         const allGood = Boolean(data?.summary?.all_words_good);
         setSegmentSuccess(allGood);

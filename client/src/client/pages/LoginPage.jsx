@@ -207,7 +207,7 @@ const LoginPage = () => {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
       const firstConfirm = !res.data.completed;
-      console.log('First confirm status:', firstConfirm);
+
       if (firstConfirm) {
         navigate('/welcome/reason');
         return true;

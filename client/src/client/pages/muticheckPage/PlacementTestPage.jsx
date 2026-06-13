@@ -275,7 +275,7 @@ const PlacementTestPage = () => {
 
     try {
       const response = await api.post("/confirm/", confirmData);
-      console.log("Setup data submitted successfully:", response.data);
+
       toast.success("Welcome aboard! Your proficiency profile has been recorded successfully.");
     } catch (error) {
       console.error("Error submitting setup data:", error);

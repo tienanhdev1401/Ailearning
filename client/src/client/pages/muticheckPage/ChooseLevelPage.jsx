@@ -50,7 +50,7 @@ const ChooseLevelPage = () => {
 
     try {
       const response = await api.post("/confirm/", confirmData);
-      console.log("Gửi dữ liệu thành công:", response.data);
+
       toast.success("Cảm ơn bạn đã dành thời gian xác thực!");
     } catch (error) {
       console.error("Lỗi khi gửi dữ liệu:", error);

@@ -17,7 +17,6 @@
     "chart.js": "^4.4.6",
     "diff": "^8.0.2",
     "dompurify": "^3.3.0",
-    "feather-icons": "^4.29.2",
     "hls.js": "^1.6.15",
     "jwt-decode": "^4.0.0",
     "react": "^19.1.0",
@@ -31,10 +30,7 @@
     "react-router-dom": "^7.6.3",
     "react-scripts": "5.0.1",
     "recordrtc": "^5.6.2",
-    "simplebar": "^6.3.2",
-    "simplebar-react": "^3.3.2",
-    "socket.io-client": "^4.8.1",
-    "web-vitals": "^2.1.4"
+    "socket.io-client": "^4.8.1"
   },
   "scripts": {
     "start": "react-scripts start",

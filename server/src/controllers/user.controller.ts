@@ -160,15 +160,13 @@ class UserController {
         return;
       }
   
-      // Mã hóa mật khẩu mới
-      // const hashedNewPassword = await authRepository.hashPassword(newPassword);
+
   
       // Cập nhật mật khẩu
       if (!user.id) {
         throw new Error('User ID không hợp lệ');
       }
   
-      console.log(user)
       await UserService.updatePassword(user.id, newPassword);
   
       // Xóa mã OTP sau khi đổi mật khẩu thành công

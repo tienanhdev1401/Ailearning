@@ -1,0 +1,22 @@
+services:
+  client:
+    build:
+      context: ./client
+    container_name: ailearning-client
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  server:
+    build:
+      context: ./server
+    container_name: ailearning-server
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./server/.env
+    volumes:
+      - ./server/uploads:/app/uploads
+    restart: unless-stopped

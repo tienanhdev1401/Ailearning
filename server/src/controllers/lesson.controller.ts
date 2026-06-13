@@ -101,7 +101,7 @@ class LessonController {
         }
       }
 
-      console.log(lesson);
+
       res.status(HttpStatusCode.Ok).json(lesson);
     } catch (error) {
       next(error);

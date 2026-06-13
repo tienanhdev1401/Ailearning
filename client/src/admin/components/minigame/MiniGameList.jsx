@@ -1038,7 +1038,6 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 												});
 
 												if (res.data) {
-													console.log(res.data);
 													setWatchVideoHls(res.data.hlsUrl.replace("http://", "https://"));
 													setWatchVideoMp4(res.data.fallbackUrl);
 												}
@@ -1168,7 +1167,6 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 	// save từ modal -> gọi API PUT, reload list và cập nhật selected
 	const handleSaveDetail = async (id, payload) => {
 		try {
-			console.log("Saving minigame", id, payload);
 			const resp = await api.put(`/minigames/${id}`, payload);
 			// cập nhật selected với dữ liệu trả về (nếu server trả)
 			setSelected(resp.data ?? { ...selected, ...payload });

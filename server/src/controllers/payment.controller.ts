@@ -43,8 +43,7 @@ export const createPaymentUrl = async (req: Request, res: Response): Promise<voi
 
 export const vnpayIpn = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log("--- VNPAY IPN RECEIVED ---");
-    console.log("Query:", req.query);
+
     const query = req.query as Record<string, string>;
     await paymentService.handleVnpayIpn(query);
 

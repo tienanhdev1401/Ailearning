@@ -69,7 +69,6 @@ export class PaymentService {
   }
 
   async handleVnpayIpn(query: Record<string, string>): Promise<{ RspCode: string; Message: string }> {
-    console.log("query", query);
     const verifyResult = this.vnpayService.verifyReturnUrl(query);
 
     if (!verifyResult.isValid) {
@@ -85,11 +84,9 @@ export class PaymentService {
 
     const transaction = await transactionRepo.findOne({ where: { id: transactionId } });
     if (!transaction) {
-      console.log(`[IPN] Transaction ID ${transactionId} not found`);
       return { RspCode: "01", Message: "Order not found" };
     }
 
-    console.log(`[IPN] Comparing Amount: DB=${transaction.amount} (type: ${typeof transaction.amount}), VNPAY=${vnpAmount} (type: ${typeof vnpAmount})`);
 
     if (transaction.status !== TRANSACTION_STATUS.PENDING) {
       return { RspCode: "02", Message: "Order already confirmed" };
@@ -97,7 +94,6 @@ export class PaymentService {
 
     // Use Number() to ensure type consistency and Math.abs for precision issues if any
     if (Math.abs(Number(transaction.amount) - Number(vnpAmount)) > 0.01) {
-      console.log(`[IPN] Amount mismatch: Result=${vnpAmount}, Expected=${transaction.amount}`);
       return { RspCode: "04", Message: "Invalid amount" };
     }
 

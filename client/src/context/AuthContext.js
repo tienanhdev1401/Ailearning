@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.post('/auth/refresh'); // Cookie HttpOnly tự gửi
       setAccessToken(res.data.accessToken);       // Cập nhật token mới
-      console.log('AUTO refresh token');
+
     } catch (err) {
       if (err.response?.status === 401) {
         setAccessToken(null);
