@@ -171,7 +171,7 @@ ${contextNote}` : basePrompt;
     });
     await this.messageRepo.save(userMessage);
 
-    const aiMessage = await this.processUserTurnAndGetAiReply(conversation, userMessage, payload.userId);
+    const aiMessage = await this.processUserTurnAndGetAiReply(conversation, userMessage);
 
     return {
       userMessage: this.toMessagePayload(userMessage),
@@ -256,7 +256,7 @@ ${contextNote}` : basePrompt;
       duration: transcription.duration ?? null,
     });
 
-    const aiMessage = await this.processUserTurnAndGetAiReply(conversation, userMessage, payload.userId);
+    const aiMessage = await this.processUserTurnAndGetAiReply(conversation, userMessage);
 
     return {
       userMessage: this.toMessagePayload(userMessage),
@@ -438,7 +438,6 @@ ${contextNote}` : basePrompt;
   private async processUserTurnAndGetAiReply(
     conversation: AiConversation,
     userMessage: AiMessage,
-    userId: number,
   ): Promise<AiMessage> {
     emitAiChatEvent(conversation.id, "user_message", this.toMessagePayload(userMessage));
 
