@@ -325,15 +325,54 @@ ${contextNote}` : basePrompt;
   }
 
   async listConversations(userId: number) {
-    const conversations = await this.conversationRepo.find({
-      where: { user: { id: userId } },
-      relations: ["scenario", "messages", "evaluation"],
-      order: { createdAt: "DESC", messages: { createdAt: "ASC" } },
+    // Load conversation rows + scenario only. Message count and the presence
+    // of an evaluation are mapped via COUNT subqueries so we never hydrate
+    // message/evaluation rows just to summarise them.
+    const conversations = await this.conversationRepo
+      .createQueryBuilder("conversation")
+      .leftJoinAndSelect("conversation.scenario", "scenario")
+      .loadRelationCountAndMap("conversation.messageCount", "conversation.messages")
+      .loadRelationCountAndMap("conversation.evaluationCount", "conversation.evaluation")
+      .where("conversation.user = :userId", { userId })
+      .orderBy("conversation.createdAt", "DESC")
+      .getMany();
+
+    if (conversations.length === 0) {
+      return [];
+    }
+
+    // Fetch only the lightweight columns needed for the preview of the most
+    // recent message per listed conversation, then reduce in memory. This
+    // avoids hydrating full AiMessage entities (longtext pronunciation data,
+    // audio paths, etc.).
+    const conversationIds = conversations.map((conversation) => conversation.id);
+    const previewRows = await this.messageRepo
+      .createQueryBuilder("message")
+      .select([
+        "message.id",
+        "message.content",
+        "message.transcript",
+        "message.createdAt",
+      ])
+      .addSelect("message.conversationId", "message_conversationId")
+      .where("message.conversationId IN (:...conversationIds)", { conversationIds })
+      .orderBy("message.conversationId", "ASC")
+      .addOrderBy("message.createdAt", "DESC")
+      .getRawAndEntities();
+
+    // Keep the first (most recent) message seen per conversation.
+    const lastMessageByConversation = new Map<number, AiMessage>();
+    previewRows.raw.forEach((raw: any, index: number) => {
+      const conversationId = Number(raw.message_conversationId);
+      if (!lastMessageByConversation.has(conversationId)) {
+        lastMessageByConversation.set(conversationId, previewRows.entities[index]);
+      }
     });
 
     return conversations.map((conversation) => {
-      const messages = conversation.messages ?? [];
-      const lastMessage = messages.length ? messages[messages.length - 1] : null;
+      const lastMessage = lastMessageByConversation.get(conversation.id) ?? null;
+      const messageCount = (conversation as any).messageCount ?? 0;
+      const hasEvaluation = ((conversation as any).evaluationCount ?? 0) > 0;
 
       return {
         id: conversation.id,
@@ -344,14 +383,14 @@ ${contextNote}` : basePrompt;
         scenarioTitle: conversation.scenario?.title ?? null,
         mode: conversation.mode,
         status: conversation.status,
-        messageCount: messages.length,
+        messageCount,
         lastMessagePreview: lastMessage
           ? this.truncateText(
               (lastMessage.transcript ?? lastMessage.content ?? "").replace(/[\r\n]+/g, " "),
               120
             )
           : null,
-        hasEvaluation: Boolean(conversation.evaluation),
+        hasEvaluation,
         endedAt: conversation.endedAt,
         createdAt: conversation.createdAt,
         updatedAt: conversation.updatedAt,
