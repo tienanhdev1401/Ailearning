@@ -5,6 +5,7 @@ import {
   listScenarios,
   createScenario,
   startSession,
+  listSessions,
   postTextMessage,
   postAudioMessage,
   getSessionHistory,
@@ -23,6 +24,7 @@ router.get("/scenarios", verifyTokenAndRole(), listScenarios);
 router.post("/scenarios", verifyTokenAndRole(), createScenario);
 
 router.post("/sessions", verifyTokenAndRole(), startSession);
+router.get("/sessions", verifyTokenAndRole(), listSessions);
 router.get("/sessions/:id/history", verifyTokenAndRole(), getSessionHistory);
 router.post("/sessions/:id/messages", verifyTokenAndRole(), postTextMessage);
 router.post(

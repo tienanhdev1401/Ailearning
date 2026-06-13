@@ -324,20 +324,54 @@ ${contextNote}` : basePrompt;
     return this.toEvaluationPayload(evaluation);
   }
 
-  async getConversationWithMessages(conversationId: number, userId: number) {
-    const conversation = await this.conversationRepo.findOne({
-      where: { id: conversationId, user: { id: userId } },
+  async listConversations(userId: number) {
+    const conversations = await this.conversationRepo.find({
+      where: { user: { id: userId } },
       relations: ["scenario", "messages", "evaluation"],
-      // Let the database order messages chronologically instead of sorting the
-      // full set in memory on every load.
-      order: { messages: { createdAt: "ASC" } },
+      order: { createdAt: "DESC", messages: { createdAt: "ASC" } },
     });
 
-    if (!conversation) {
-      throw new Error("Conversation not found");
-    }
+    return conversations.map((conversation) => {
+      const messages = conversation.messages ?? [];
+      const lastMessage = messages.length ? messages[messages.length - 1] : null;
 
-    conversation.messages = conversation.messages ?? [];
+      return {
+        id: conversation.id,
+        title:
+          conversation.scenario?.title ??
+          conversation.customTitle ??
+          "Cuộc trò chuyện",
+        scenarioTitle: conversation.scenario?.title ?? null,
+        mode: conversation.mode,
+        status: conversation.status,
+        messageCount: messages.length,
+        lastMessagePreview: lastMessage
+          ? this.truncateText(
+              (lastMessage.transcript ?? lastMessage.content ?? "").replace(/[\r\n]+/g, " "),
+              120
+            )
+          : null,
+        hasEvaluation: Boolean(conversation.evaluation),
+        endedAt: conversation.endedAt,
+        createdAt: conversation.createdAt,
+        updatedAt: conversation.updatedAt,
+      };
+    });
+  }
+
+  async getConversationWithMessages(conversationId: number, userId: number) {
+    // assertConversationOwner already loads the owner, scenario and
+    // DB-ordered messages in a single query; reuse it instead of issuing a
+    // second near-identical query. It also enforces ownership.
+    const conversation = await this.assertConversationOwner(conversationId, userId);
+
+    // assertConversationOwner does not load the evaluation relation, so attach
+    // it here for callers that need it (snapshot / evaluation lookups).
+    if (conversation.evaluation === undefined) {
+      conversation.evaluation = await this.evaluationRepo.findOne({
+        where: { conversation: { id: conversation.id } },
+      });
+    }
 
     return conversation;
   }

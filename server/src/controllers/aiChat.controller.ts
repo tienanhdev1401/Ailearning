@@ -154,6 +154,20 @@ export const postAudioMessage = async (req: Request, res: Response) => {
   }
 };
 
+export const listSessions = async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const conversations = await aiChatService.listConversations(userId);
+    res.json(conversations);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message ?? "Failed to load conversations" });
+  }
+};
+
 export const getSessionHistory = async (req: Request, res: Response) => {
   try {
     const userId = getUserId(req);

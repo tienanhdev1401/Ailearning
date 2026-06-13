@@ -1,5 +1,4 @@
 import axios from "axios";
-import fs from "fs";
 
 export interface DeepgramTranscriptionResult {
   text: string;
@@ -39,10 +38,6 @@ class DeepgramService {
     if (!this.apiKey) {
       throw new Error("Deepgram API key is not configured. Set DEEPGRAM_API_KEY in environment variables.");
     }
-  }
-
-  async transcribe(filePath: string): Promise<DeepgramTranscriptionResult> {
-    return this.transcribeBuffer(fs.readFileSync(filePath));
   }
 
   async transcribeBuffer(

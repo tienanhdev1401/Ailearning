@@ -32,6 +32,11 @@ export const AiChatService = {
     return data;
   },
 
+  listSessions: async () => {
+    const { data } = await api.get("/ai-chat/sessions");
+    return data;
+  },
+
   getHistory: async (sessionId) => {
     const { data } = await api.get(`/ai-chat/sessions/${sessionId}/history`);
     return data;
