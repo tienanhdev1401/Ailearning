@@ -13,24 +13,24 @@ const DailyChallengeWidget = ({ roadmapId, isCompact = false, isFloating = false
   const hasAnimated = useRef(false);
 
   useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        setLoading(true);
+        const data = await dailyChallengeService.getStatus(roadmapId);
+        if (data) {
+          setStatus(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch challenge status:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (roadmapId) {
       fetchStatus();
     }
   }, [roadmapId]);
-
-  const fetchStatus = async () => {
-    try {
-      setLoading(true);
-      const data = await dailyChallengeService.getStatus(roadmapId);
-      if (data) {
-        setStatus(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch challenge status:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return <div className={styles.skeleton}></div>;
