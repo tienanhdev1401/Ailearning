@@ -1041,7 +1041,7 @@ const AiChatExperience = () => {
           className={styles.historyLink}
           onClick={() => navigate("/experience/ai-chat/history")}
         >
-          L\u1ecbch s\u1eed
+          Lịch sử
         </button>
         <div className={styles.modeToggle}>
           {Object.values(AI_CONVERSATION_MODE).map((itemMode) => (

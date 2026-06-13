@@ -5,13 +5,13 @@ import LoadingSpinner from "../../component/LoadingSpinner";
 import styles from "../styles/AiChatHistoryPage.module.css";
 
 const statusLabels = {
-  active: "\u0110ang di\u1ec5n ra",
-  completed: "\u0110\u00e3 k\u1ebft th\u00fac",
+  active: "Đang diễn ra",
+  completed: "Đã kết thúc",
 };
 
 const modeLabels = {
-  voice: "Gi\u1ecdng n\u00f3i",
-  text: "V\u0103n b\u1ea3n",
+  voice: "Giọng nói",
+  text: "Văn bản",
 };
 
 const formatDateTime = (value) => {
@@ -52,7 +52,7 @@ const AiChatHistoryPage = () => {
       setSessions(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to load AI conversation history", error);
-      setListError("Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c l\u1ecbch s\u1eed tr\u00f2 chuy\u1ec7n. Vui l\u00f2ng th\u1eed l\u1ea1i.");
+      setListError("Không tải được lịch sử trò chuyện. Vui lòng thử lại.");
     } finally {
       setLoadingList(false);
     }
@@ -72,7 +72,7 @@ const AiChatHistoryPage = () => {
       setDetail(data);
     } catch (error) {
       console.error("Failed to load conversation detail", error);
-      setDetailError("Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c n\u1ed9i dung cu\u1ed9c tr\u00f2 chuy\u1ec7n n\u00e0y.");
+      setDetailError("Không tải được nội dung cuộc trò chuyện này.");
     } finally {
       setLoadingDetail(false);
     }
@@ -84,20 +84,20 @@ const AiChatHistoryPage = () => {
   );
 
   if (loadingList) {
-    return <LoadingSpinner text="\u0110ang t\u1ea3i l\u1ecbch s\u1eed tr\u00f2 chuy\u1ec7n..." />;
+    return <LoadingSpinner text="Đang tải lịch sử trò chuyện..." />;
   }
 
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <div>
-          <h1 className={styles.title}>L\u1ecbch s\u1eed tr\u00f2 chuy\u1ec7n AI</h1>
+          <h1 className={styles.title}>Lịch sử trò chuyện AI</h1>
           <p className={styles.subtitle}>
-            Xem l\u1ea1i c\u00e1c bu\u1ed5i nh\u1eadp vai \u0111\u00e3 qua, nghe l\u1ea1i ghi \u00e2m c\u1ee7a b\u1ea1n v\u00e0 \u0111\u1ecdc l\u1ea1i \u0111\u00e1nh gi\u00e1.
+            Xem lại các buổi nhập vai đã qua, nghe lại ghi âm của bạn và đọc lại đánh giá.
           </p>
         </div>
         <button className={styles.backButton} onClick={() => navigate("/experience/ai-chat")}>
-          \u2190 Quay l\u1ea1i tr\u00f2 chuy\u1ec7n
+          ← Quay lại trò chuyện
         </button>
       </header>
 
@@ -105,15 +105,15 @@ const AiChatHistoryPage = () => {
         <div className={styles.emptyState}>
           <p>{listError}</p>
           <button className={styles.retryButton} onClick={loadSessions}>
-            Th\u1eed l\u1ea1i
+            Thử lại
           </button>
         </div>
       ) : sessions.length === 0 ? (
         <div className={styles.emptyState}>
-          <h3>Ch\u01b0a c\u00f3 cu\u1ed9c tr\u00f2 chuy\u1ec7n n\u00e0o</h3>
-          <p>H\u00e3y b\u1eaft \u0111\u1ea7u m\u1ed9t bu\u1ed5i nh\u1eadp vai \u0111\u1ec3 l\u01b0u l\u1ea1i t\u1ea1i \u0111\u00e2y.</p>
+          <h3>Chưa có cuộc trò chuyện nào</h3>
+          <p>Hãy bắt đầu một buổi nhập vai để lưu lại tại đây.</p>
           <button className={styles.retryButton} onClick={() => navigate("/experience/ai-chat")}>
-            B\u1eaft \u0111\u1ea7u ngay
+            Bắt đầu ngay
           </button>
         </div>
       ) : (
@@ -142,7 +142,7 @@ const AiChatHistoryPage = () => {
                 )}
                 <div className={styles.sessionMeta}>
                   <span>{modeLabels[session.mode] ?? session.mode}</span>
-                  <span>{session.messageCount} tin nh\u1eafn</span>
+                  <span>{session.messageCount} tin nhắn</span>
                   <span>{formatDateTime(session.createdAt)}</span>
                 </div>
               </button>
@@ -152,21 +152,21 @@ const AiChatHistoryPage = () => {
           <section className={styles.detailPanel}>
             {!selectedId ? (
               <div className={styles.detailPlaceholder}>
-                Ch\u1ecdn m\u1ed9t cu\u1ed9c tr\u00f2 chuy\u1ec7n \u1edf b\u00ean tr\u00e1i \u0111\u1ec3 xem l\u1ea1i n\u1ed9i dung.
+                Chọn một cuộc trò chuyện ở bên trái để xem lại nội dung.
               </div>
             ) : loadingDetail ? (
-              <LoadingSpinner text="\u0110ang t\u1ea3i n\u1ed9i dung..." />
+              <LoadingSpinner text="Đang tải nội dung..." />
             ) : detailError ? (
               <div className={styles.emptyState}>
                 <p>{detailError}</p>
                 <button className={styles.retryButton} onClick={() => openSession(selectedId)}>
-                  Th\u1eed l\u1ea1i
+                  Thử lại
                 </button>
               </div>
             ) : detail ? (
               <>
                 <div className={styles.detailHeader}>
-                  <h2>{selectedSummary?.title ?? "Cu\u1ed9c tr\u00f2 chuy\u1ec7n"}</h2>
+                  <h2>{selectedSummary?.title ?? "Cuộc trò chuyện"}</h2>
                   <span className={styles.detailDate}>{formatDateTime(detail.createdAt)}</span>
                 </div>
 
@@ -191,7 +191,7 @@ const AiChatHistoryPage = () => {
                           )}
                         </div>
                         <div className={styles.messageMeta}>
-                          {isUser ? "B\u1ea1n" : "AelanG AI"}
+                          {isUser ? "Bạn" : "AelanG AI"}
                         </div>
                       </div>
                     );
@@ -200,7 +200,7 @@ const AiChatHistoryPage = () => {
 
                 {detail.evaluation?.summary && (
                   <div className={styles.evaluationBox}>
-                    <h3>T\u00f3m t\u1eaft \u0111\u00e1nh gi\u00e1</h3>
+                    <h3>Tóm tắt đánh giá</h3>
                     <p>{detail.evaluation.summary}</p>
                   </div>
                 )}
