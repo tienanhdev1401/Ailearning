@@ -51,14 +51,6 @@ export const startSession = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // Check and consume credit
-    const hasCredit = await creditService.consumeCredit(userId, "AI_CONVERSATION");
-    if (!hasCredit) {
-      return res.status(402).json({ 
-        message: "You've used all your free credits for today. Upgrade to continue learning without limits." 
-      });
-    }
-
     const {
       scenarioId,
       customTitle,
@@ -67,6 +59,23 @@ export const startSession = async (req: Request, res: Response) => {
       scenarioContext,
       scenarioContextLabel,
     } = req.body;
+
+    // Validate the conversation mode against the supported enum before doing
+    // any work so an invalid value never reaches the database layer.
+    const resolvedMode = mode ?? AI_CONVERSATION_MODE.TEXT;
+    if (!Object.values(AI_CONVERSATION_MODE).includes(resolvedMode)) {
+      return res.status(400).json({
+        message: `Invalid mode. Allowed values: ${Object.values(AI_CONVERSATION_MODE).join(", ")}`,
+      });
+    }
+
+    // Check and consume credit
+    const hasCredit = await creditService.consumeCredit(userId, "AI_CONVERSATION");
+    if (!hasCredit) {
+      return res.status(402).json({ 
+        message: "You've used all your free credits for today. Upgrade to continue learning without limits." 
+      });
+    }
 
     const normalizedContext =
       typeof scenarioContext === "string" ? scenarioContext.trim() || undefined : undefined;
@@ -80,13 +89,20 @@ export const startSession = async (req: Request, res: Response) => {
       scenarioId: scenarioId ? Number(scenarioId) : undefined,
       customTitle,
       customPrompt,
-      mode: mode ?? AI_CONVERSATION_MODE.TEXT,
+      mode: resolvedMode,
       scenarioContext: normalizedContext,
       scenarioContextLabel: normalizedContextLabel,
     };
 
-    const data = await aiChatService.startConversation(payload);
-    res.status(201).json(data);
+    try {
+      const data = await aiChatService.startConversation(payload);
+      res.status(201).json(data);
+    } catch (startError) {
+      // The credit was already consumed above; refund it so the user is not
+      // charged for a session that never started.
+      await creditService.refundCredit(userId, "AI_CONVERSATION");
+      throw startError;
+    }
   } catch (error: any) {
     res.status(400).json({ message: error.message ?? "Failed to start session" });
   }

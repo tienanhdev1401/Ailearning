@@ -76,6 +76,30 @@ export class CreditService {
     return false;
   }
 
+  /**
+   * Refund 1 credit of a specific type. Used to roll back a consumed credit
+   * when the action it was charged for fails to start. The balance is capped
+   * at the user's total limit so a refund can never exceed the daily quota.
+   */
+  async refundCredit(userId: number, type: "AI_CONVERSATION" | "GRAMMAR_CHECKER"): Promise<void> {
+    const credit = await this.creditRepo.findOne({ where: { userId } });
+    if (!credit) return;
+
+    if (type === "AI_CONVERSATION") {
+      credit.aiConversationCredits = Math.min(
+        credit.aiConversationCredits + 1,
+        credit.totalAiConversationCredits
+      );
+    } else if (type === "GRAMMAR_CHECKER") {
+      credit.grammarCheckerCredits = Math.min(
+        credit.grammarCheckerCredits + 1,
+        credit.totalGrammarCheckerCredits
+      );
+    }
+
+    await this.creditRepo.save(credit);
+  }
+
   async getRemainingCredits(userId: number) {
     const credit = await this.resetDailyCreditsIfNecessary(userId);
     if (credit) {

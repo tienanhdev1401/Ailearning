@@ -15,6 +15,7 @@ import { emitAiChatEvent } from "../../socket";
 import { deepgramService } from "./deepgram.service";
 import type { DeepgramTranscriptionResult } from "./deepgram.service";
 import { promptService } from "../ai/prompt.service";
+import { uploadRepository } from "../../repositories/upload.repository";
 import {
   scenarioGuidanceService,
   GuidanceView,
@@ -224,13 +225,25 @@ ${contextNote}` : basePrompt;
       );
     }
 
+    // Persist the original recording so users can replay it later and the
+    // audio can be re-analysed. Failures must not break the chat turn.
+    let audioPath: string | null = null;
+    try {
+      audioPath = await uploadRepository.uploadAudio(buffer, filename);
+    } catch (error) {
+      console.warn(
+        `[AiChat] Failed to upload voice recording for conversation ${conversation.id}:`,
+        error instanceof Error ? error.message : error
+      );
+    }
+
     const userMessage = this.messageRepo.create({
       conversation,
       role: AI_MESSAGE_ROLE.USER,
       content: transcriptText,
       transcript: transcriptText,
       durationSeconds: transcription.duration ?? null,
-      audioPath: null,
+      audioPath,
       pronunciationScore: pronunciationScoreJson,
     });
     await this.messageRepo.save(userMessage);
@@ -255,6 +268,18 @@ ${contextNote}` : basePrompt;
 
   async markConversationCompleted(conversationId: number, userId: number) {
     const conversation = await this.assertConversationOwner(conversationId, userId);
+
+    // Guard against double-completion: if the session is already completed,
+    // return the existing evaluation instead of re-running the scoring and
+    // Gemini pipeline (which costs API calls and would overwrite results).
+    if (conversation.status === AI_CONVERSATION_STATUS.COMPLETED) {
+      const existing = await this.evaluationRepo.findOne({
+        where: { conversation: { id: conversation.id } },
+        relations: ["conversation"],
+      });
+      return this.toEvaluationPayload(existing ?? null);
+    }
+
     conversation.status = AI_CONVERSATION_STATUS.COMPLETED;
     conversation.endedAt = new Date();
     await this.conversationRepo.save(conversation);
@@ -302,21 +327,17 @@ ${contextNote}` : basePrompt;
   async getConversationWithMessages(conversationId: number, userId: number) {
     const conversation = await this.conversationRepo.findOne({
       where: { id: conversationId, user: { id: userId } },
-      relations: [
-        "scenario",
-        "messages",
-        "messages.conversation",
-        "evaluation",
-      ],
+      relations: ["scenario", "messages", "evaluation"],
+      // Let the database order messages chronologically instead of sorting the
+      // full set in memory on every load.
+      order: { messages: { createdAt: "ASC" } },
     });
 
     if (!conversation) {
       throw new Error("Conversation not found");
     }
 
-    conversation.messages = conversation.messages
-      ? conversation.messages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-      : [];
+    conversation.messages = conversation.messages ?? [];
 
     return conversation;
   }
@@ -381,7 +402,13 @@ ${contextNote}` : basePrompt;
   ): Promise<AiMessage> {
     emitAiChatEvent(conversation.id, "user_message", this.toMessagePayload(userMessage));
 
-    const updatedConversation = await this.getConversationWithMessages(conversation.id, userId);
+    // Reuse the conversation we already loaded and append the freshly saved
+    // user message, instead of reloading the entire conversation on each turn.
+    const updatedConversation = conversation;
+    updatedConversation.messages = [
+      ...(conversation.messages ?? []),
+      userMessage,
+    ];
     const userText = userMessage.transcript ?? userMessage.content;
     const aiResponseText = await this.generateFollowUp(updatedConversation, userText);
 
