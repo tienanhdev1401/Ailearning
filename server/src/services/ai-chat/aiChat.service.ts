@@ -381,12 +381,18 @@ ${contextNote}` : basePrompt;
   private async assertConversationOwner(conversationId: number, userId: number) {
     const conversation = await this.conversationRepo.findOne({
       where: { id: conversationId },
-      relations: ["user"],
+      // Load messages + scenario so callers (text/voice turns) can build the
+      // follow-up prompt with full history from this single query, instead of
+      // reloading the conversation again afterwards.
+      relations: ["user", "scenario", "messages"],
+      order: { messages: { createdAt: "ASC" } },
     });
 
     if (!conversation || conversation.user.id !== userId) {
       throw new Error("Conversation not found or access denied");
     }
+
+    conversation.messages = conversation.messages ?? [];
 
     return conversation;
   }
