@@ -22,7 +22,6 @@ import VideoPraticePage from "./client/pages/VideoPraticePage";
 import SpeakingVideoPraticePage from "./client/pages/SpeakingVideoPraticePage";
 
 import AiChatExperience from "./client/pages/AiChatExperience";
-import AiChatHistoryPage from "./client/pages/AiChatHistoryPage";
 
 import ReasonPage from "./client/pages/muticheckPage/ReasonPage";
 import GoalPage from "./client/pages/muticheckPage/GoalPage";
@@ -128,14 +127,6 @@ function App() {
           element={
             <ProtectedRoute>
               <ClientLayout><AiChatExperience /></ClientLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/experience/ai-chat/history"
-          element={
-            <ProtectedRoute>
-              <ClientLayout><AiChatHistoryPage /></ClientLayout>
             </ProtectedRoute>
           }
         />
