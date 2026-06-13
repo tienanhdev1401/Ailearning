@@ -70,6 +70,39 @@ class UploadRepository {
     });
   }
 
+  /**
+   * Delete an uploaded audio file from Cloudinary given its secure URL.
+   * Audio is stored under the "video" resource type (see uploadAudio), so the
+   * public_id is derived from the URL path (folder + filename without the
+   * version prefix and extension). Returns true if a delete was attempted.
+   */
+  async deleteAudio(secureUrl: string): Promise<boolean> {
+    const publicId = this.extractPublicId(secureUrl);
+    if (!publicId) {
+      return false;
+    }
+
+    await cloudinary.uploader.destroy(publicId, { resource_type: "video" });
+    return true;
+  }
+
+  /**
+   * Extract the Cloudinary public_id from a secure URL, e.g.
+   * https://res.cloudinary.com/<cloud>/video/upload/v123/ailearning/ai-chat/turn.wav
+   * -> ailearning/ai-chat/turn
+   */
+  private extractPublicId(secureUrl: string): string | null {
+    if (!secureUrl || typeof secureUrl !== "string") {
+      return null;
+    }
+    const match = secureUrl.match(/\/upload\/(?:v\d+\/)?(.+)$/);
+    if (!match) {
+      return null;
+    }
+    // Strip the file extension from the last path segment.
+    return match[1].replace(/\.[^/.]+$/, "");
+  }
+
   async uploadVideo(
     buffer: Buffer,
     filename: string,

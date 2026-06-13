@@ -191,6 +191,21 @@ ${contextNote}` : basePrompt;
     const filename = payload.file.originalname || `turn-${Date.now()}.wav`;
     const contentType = payload.file.mimetype || "audio/wav";
 
+    // Start the Cloudinary upload immediately. It only needs the raw buffer
+    // and its result (audioPath) is not required to generate the AI reply, so
+    // we let it run concurrently with transcription + scoring and await it
+    // just before persisting the message. This overlaps the upload latency
+    // instead of adding it sequentially. Errors must not break the turn.
+    const uploadPromise: Promise<string | null> = uploadRepository
+      .uploadAudio(buffer, filename)
+      .catch((error) => {
+        console.warn(
+          `[AiChat] Failed to upload voice recording for conversation ${conversation.id}:`,
+          error instanceof Error ? error.message : error
+        );
+        return null;
+      });
+
     let transcription: DeepgramTranscriptionResult;
     try {
       transcription = await deepgramService.transcribeBuffer(buffer, {
@@ -225,17 +240,9 @@ ${contextNote}` : basePrompt;
       );
     }
 
-    // Persist the original recording so users can replay it later and the
-    // audio can be re-analysed. Failures must not break the chat turn.
-    let audioPath: string | null = null;
-    try {
-      audioPath = await uploadRepository.uploadAudio(buffer, filename);
-    } catch (error) {
-      console.warn(
-        `[AiChat] Failed to upload voice recording for conversation ${conversation.id}:`,
-        error instanceof Error ? error.message : error
-      );
-    }
+    // Await the recording upload that was kicked off earlier (runs
+    // concurrently with transcription + scoring above).
+    const audioPath = await uploadPromise;
 
     const userMessage = this.messageRepo.create({
       conversation,
@@ -441,6 +448,36 @@ ${contextNote}` : basePrompt;
       messages: conversation.messages.map((message) => this.toMessagePayload(message)),
       evaluation: this.toEvaluationPayload(conversation.evaluation ?? null),
     };
+  }
+
+  /**
+   * Delete a conversation and best-effort remove any stored voice recordings
+   * from Cloudinary so they do not linger as orphaned files. Messages are
+   * removed via the cascade/onDelete on the AiMessage relation.
+   */
+  async deleteConversation(conversationId: number, userId: number) {
+    const conversation = await this.assertConversationOwner(conversationId, userId);
+
+    const audioPaths = (conversation.messages ?? [])
+      .map((message) => message.audioPath)
+      .filter((path): path is string => Boolean(path));
+
+    await Promise.all(
+      audioPaths.map(async (path) => {
+        try {
+          await uploadRepository.deleteAudio(path);
+        } catch (error) {
+          // Best-effort: a failed Cloudinary delete must not block DB removal.
+          console.warn(
+            `[AiChat] Failed to delete Cloudinary audio ${path}:`,
+            error instanceof Error ? error.message : error
+          );
+        }
+      })
+    );
+
+    await this.conversationRepo.remove(conversation);
+    return { id: conversationId, deleted: true };
   }
 
   async getEvaluation(conversationId: number, userId: number) {
