@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "../styles/AiChatExperience.module.css";
 import AiChatService from "../../services/aiChatService";
 import userService from "../../services/userService";
@@ -40,6 +41,7 @@ function parseEvaluationDetails(evaluation) {
 }
 
 const AiChatExperience = () => {
+  const navigate = useNavigate();
   const [scenarios, setScenarios] = useState([]);
   const [selectedScenarioId, setSelectedScenarioId] = useState(null);
   const [mode, setMode] = useState(AI_CONVERSATION_MODE.VOICE);
@@ -1034,6 +1036,13 @@ const AiChatExperience = () => {
             ngữ pháp và từ vựng. Bạn có thể thu âm trực tiếp hoặc gõ tin nhắn tùy thích.
           </p>
         </div>
+        <button
+          type="button"
+          className={styles.historyLink}
+          onClick={() => navigate("/experience/ai-chat/history")}
+        >
+          L\u1ecbch s\u1eed
+        </button>
         <div className={styles.modeToggle}>
           {Object.values(AI_CONVERSATION_MODE).map((itemMode) => (
             <button
