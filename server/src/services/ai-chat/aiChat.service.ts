@@ -22,6 +22,24 @@ import {
 } from "../ai/scenarioGuidance.service";
 import { FEATURE_AI_CHAT, type ScenarioKey } from "./constants";
 
+/** Strip markdown formatting artifacts (*italic*, **bold**, etc.) from AI output. */
+function stripMarkdownArtifacts(text: string): string {
+  return text
+    // **bold** or __bold__
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/__(.+?)__/g, "$1")
+    // *italic* or _italic_
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/(?<=\s|^)_(.+?)_(?=\s|$|[.,!?])/g, "$1")
+    // Remove stray markdown heading markers
+    .replace(/^#{1,3}\s+/gm, "")
+    // Collapse runs of multiple quotation marks into single
+    .replace(/"{2,}/g, '"')
+    .trim();
+}
+
+const FORMAT_RULE = "CRITICAL: Output plain conversational text only. Never use markdown syntax such as asterisks, underscores, hashtags, bold, or italic. Do not wrap words in quotation marks for emphasis. Keep your reply concise (2-4 sentences). Sound natural like a real person, not an AI assistant.";
+
 interface StartConversationPayload {
   userId: number;
   scenarioId?: number;
@@ -339,20 +357,31 @@ ${contextNote}` : basePrompt;
       .createQueryBuilder("conversation")
       .leftJoinAndSelect("conversation.scenario", "scenario")
       .loadRelationCountAndMap("conversation.messageCount", "conversation.messages")
-      .loadRelationCountAndMap("conversation.evaluationCount", "conversation.evaluation")
+      .addSelect(
+        `(SELECT COUNT(*) > 0 FROM ai_evaluations eval WHERE eval.conversationId = conversation.id)`,
+        "hasEvaluation"
+      )
       .where("conversation.user = :userId", { userId })
       .orderBy("conversation.createdAt", "DESC")
-      .getMany();
+      .getRawAndEntities();
 
-    if (conversations.length === 0) {
+    const conversationEntities = conversations.entities;
+    if (conversationEntities.length === 0) {
       return [];
     }
+
+    // Build a lookup for the hasEvaluation subquery result from raw rows.
+    const evaluationMap = new Map<number, boolean>();
+    conversations.raw.forEach((raw: any) => {
+      const convId = Number(raw.conversation_id);
+      evaluationMap.set(convId, Boolean(Number(raw.hasEvaluation)));
+    });
 
     // Fetch only the lightweight columns needed for the preview of the most
     // recent message per listed conversation, then reduce in memory. This
     // avoids hydrating full AiMessage entities (longtext pronunciation data,
     // audio paths, etc.).
-    const conversationIds = conversations.map((conversation) => conversation.id);
+    const conversationIds = conversationEntities.map((conversation) => conversation.id);
     const previewRows = await this.messageRepo
       .createQueryBuilder("message")
       .select([
@@ -376,10 +405,10 @@ ${contextNote}` : basePrompt;
       }
     });
 
-    return conversations.map((conversation) => {
+    return conversationEntities.map((conversation) => {
       const lastMessage = lastMessageByConversation.get(conversation.id) ?? null;
       const messageCount = (conversation as any).messageCount ?? 0;
-      const hasEvaluation = ((conversation as any).evaluationCount ?? 0) > 0;
+      const hasEvaluation = evaluationMap.get(conversation.id) ?? false;
 
       return {
         id: conversation.id,
@@ -552,6 +581,7 @@ ${contextNote}` : basePrompt;
         scenarioPrompt: prompt,
         extraFocus: contextNote ?? "(no additional context)",
         openingObjective: guidance.opening,
+        formatRule: FORMAT_RULE,
       },
       "opening"
     );
@@ -560,14 +590,14 @@ ${contextNote}` : basePrompt;
 
     try {
       const response = await geminiService.generate({
-        prompt: rendered.text,
+        prompt: rendered.text + "\n\n" + FORMAT_RULE,
         temperature: rendered.resolved.config.temperature ?? 0.7,
         topP: rendered.resolved.config.topP ?? undefined,
-        maxOutputTokens: rendered.resolved.config.maxOutputTokens ?? 600,
+        maxOutputTokens: rendered.resolved.config.maxOutputTokens ?? 300,
       });
 
-      const trimmed = response?.trim();
-      return trimmed?.length ? trimmed : fallback;
+      const trimmed = stripMarkdownArtifacts(response ?? "");
+      return trimmed.length ? trimmed : fallback;
     } catch (error) {
       console.error("Gemini opening line failed", error);
       return fallback;
@@ -632,6 +662,7 @@ ${contextNote}` : basePrompt;
         learnerWantsToClose: learnerWantsToClose ? "yes" : "no",
         closureDirective,
         avoidRepetitionInstruction,
+        formatRule: FORMAT_RULE,
       },
       "followUp"
     );
@@ -639,13 +670,13 @@ ${contextNote}` : basePrompt;
 
     try {
       const response = await geminiService.generate({
-        prompt: rendered.text,
+        prompt: rendered.text + "\n\n" + FORMAT_RULE,
         temperature: rendered.resolved.config.temperature ?? 0.68,
         topP: rendered.resolved.config.topP ?? 0.85,
-        maxOutputTokens: rendered.resolved.config.maxOutputTokens ?? 700,
+        maxOutputTokens: rendered.resolved.config.maxOutputTokens ?? 400,
       });
 
-      const trimmed = response?.trim();
+      const trimmed = stripMarkdownArtifacts(response ?? "");
       if (trimmed?.length) {
         return trimmed;
       }

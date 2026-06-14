@@ -116,6 +116,29 @@
   color: #ffffff;
 }
 
+/* ---------- Header action buttons ---------- */
+.historyLink {
+  appearance: none;
+  border: 1px solid var(--pp-border-strong);
+  background: var(--pp-surface);
+  color: var(--pp-text);
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.historyLink:hover {
+  background: var(--pp-surface-strong);
+  border-color: var(--pp-accent-border);
+  color: var(--pp-accent);
+  transform: translateY(-1px);
+}
+
 /* ---------- Layout ---------- */
 .layout {
   display: grid;
@@ -339,6 +362,7 @@
   gap: 12px;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--pp-border);
+  flex-wrap: wrap;
 }
 
 .chatHeader h2 {
@@ -346,6 +370,29 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--pp-text-strong);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chatHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.historyLinkPrimary {
+  border-color: var(--pp-accent-border);
+  color: var(--pp-accent);
+  background: var(--pp-accent-soft);
+}
+
+.historyLinkPrimary:hover {
+  background: rgba(45, 212, 191, 0.18);
+  border-color: var(--pp-accent);
 }
 
 .sessionStatus {
@@ -448,6 +495,12 @@
   opacity: 0.4;
   cursor: not-allowed;
   transform: none;
+}
+
+.speechButtonDisabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .speechButtonActive {

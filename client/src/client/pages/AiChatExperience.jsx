@@ -182,6 +182,20 @@ const AiChatExperience = () => {
         return cache.get(key);
       }
 
+      // User messages: play back the original recording, never TTS.
+      if (message.role === "user") {
+        if (message.audioPath) {
+          cache.set(key, message.audioPath);
+          return message.audioPath;
+        }
+        // No recording available for this user message — do nothing.
+        if (!silent) {
+          pushSystemMessage("Tin nhắn này không có bản ghi âm gốc để phát lại.");
+        }
+        return null;
+      }
+
+      // AI messages: synthesize via TTS.
       const text = (message.transcript || message.content || "").trim();
       if (!text) {
         if (!silent) {
@@ -678,6 +692,27 @@ const AiChatExperience = () => {
     setEvaluation(null);
   }, [resetSpeechState]);
 
+  const handleDeleteSession = useCallback(
+    async (sessionId) => {
+      if (!sessionId) return;
+      // eslint-disable-next-line no-restricted-globals
+      const confirmed = window.confirm("Bạn có chắc muốn xóa cuộc trò chuyện này? Thao tác này không thể hoàn tác.");
+      if (!confirmed) return;
+      try {
+        await AiChatService.deleteSession(sessionId);
+        // If the deleted session is the one being viewed, reset the view.
+        if (viewingHistoryId === sessionId) {
+          handleNewConversation();
+        }
+        pushSystemMessage("Đã xóa cuộc trò chuyện thành công.");
+      } catch (error) {
+        console.error("Delete session failed", error);
+        pushSystemMessage("Không thể xóa cuộc trò chuyện. Vui lòng thử lại.");
+      }
+    },
+    [viewingHistoryId, handleNewConversation, pushSystemMessage]
+  );
+
   const handleCompleteSession = async () => {
     if (!conversation?.id || isFinalizing) return;
     setIsFinalizing(true);
@@ -734,7 +769,12 @@ const AiChatExperience = () => {
     const messageKey = getMessageKey(message);
     const isLoadingSpeech = loadingSpeechId === messageKey;
     const isPlayingSpeech = playingSpeechId === messageKey;
-    const canReplaySpeech = Boolean(displayText.trim()) && typeof playMessageAudio === "function";
+    // Disable speech for this message when any other message is currently playing or loading.
+    const isSpeechBusy = Boolean(playingSpeechId || loadingSpeechId);
+    const canShowSpeechButton = isUser
+      ? Boolean(message.audioPath)
+      : Boolean(displayText.trim());
+    const speechDisabled = isLoadingSpeech || (isSpeechBusy && !isPlayingSpeech);
 
     return (
       <div
@@ -744,14 +784,14 @@ const AiChatExperience = () => {
         <div className={styles.messageBubble}>
           <div className={styles.messageBubbleContent}>
             <span className={styles.messageText}>{displayText}</span>
-            {canReplaySpeech && (
+            {canShowSpeechButton && (
               <button
                 type="button"
                 className={`${styles.speechButton} ${
                   isPlayingSpeech ? styles.speechButtonActive : ""
-                }`}
+                } ${speechDisabled ? styles.speechButtonDisabled : ""}`}
                 onClick={() => playMessageAudio(message)}
-                disabled={isLoadingSpeech}
+                disabled={speechDisabled}
                 aria-label="Nghe lại tin nhắn này"
               >
                 {isLoadingSpeech ? "…" : isPlayingSpeech ? "🔈" : "🔊"}
@@ -1083,22 +1123,6 @@ const AiChatExperience = () => {
             ngữ pháp và từ vựng. Bạn có thể thu âm trực tiếp hoặc gõ tin nhắn tùy thích.
           </p>
         </div>
-        <button
-          type="button"
-          className={styles.historyLink}
-          onClick={() => setShowHistory((prev) => !prev)}
-        >
-          Lịch sử
-        </button>
-        {viewingHistoryId && (
-          <button
-            type="button"
-            className={styles.historyLink}
-            onClick={handleNewConversation}
-          >
-            + Trò chuyện mới
-          </button>
-        )}
         <div className={styles.modeToggle}>
           {Object.values(AI_CONVERSATION_MODE).map((itemMode) => (
             <button
@@ -1112,13 +1136,15 @@ const AiChatExperience = () => {
         </div>
       </div>
 
+      <ConversationHistorySidebar
+        open={showHistory}
+        onClose={() => setShowHistory(false)}
+        onSelectSession={handleOpenHistorySession}
+        onDelete={handleDeleteSession}
+        activeId={viewingHistoryId}
+      />
+
       <div className={styles.layout}>
-        <ConversationHistorySidebar
-          open={showHistory}
-          onClose={() => setShowHistory(false)}
-          onSelectSession={handleOpenHistorySession}
-          activeId={viewingHistoryId}
-        />
         <aside className={styles.scenarioPanel}>
           <div className={styles.scenarioHeader}>
             <h2>Tình huống</h2>
@@ -1183,8 +1209,26 @@ const AiChatExperience = () => {
         <section className={styles.chatPanel}>
           <div className={styles.chatHeader}>
             <h2>{conversation?.customTitle || conversation?.scenario?.title || "Chưa có phiên"}</h2>
-            <div className={styles.sessionStatus}>
-              {conversation ? (conversation.status === "completed" ? "Đã kết thúc" : "Đang diễn ra") : "Chưa bắt đầu"}
+            <div className={styles.chatHeaderActions}>
+              <button
+                type="button"
+                className={styles.historyLink}
+                onClick={() => setShowHistory((prev) => !prev)}
+              >
+                📋 Lịch sử
+              </button>
+              {viewingHistoryId && (
+                <button
+                  type="button"
+                  className={`${styles.historyLink} ${styles.historyLinkPrimary}`}
+                  onClick={handleNewConversation}
+                >
+                  + Mới
+                </button>
+              )}
+              <div className={styles.sessionStatus}>
+                {conversation ? (conversation.status === "completed" ? "Đã kết thúc" : "Đang diễn ra") : "Chưa bắt đầu"}
+              </div>
             </div>
           </div>
 
@@ -1199,6 +1243,12 @@ const AiChatExperience = () => {
                 placeholder="Nhập tin nhắn..."
                 value={textMessage}
                 onChange={(event) => setTextMessage(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey && !sendDisabled) {
+                    event.preventDefault();
+                    handleSendText();
+                  }
+                }}
                 disabled={!conversation || conversation.status === "completed"}
               />
               <button
