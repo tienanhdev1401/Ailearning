@@ -1,13 +1,9 @@
 import { useMemo, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import {
-  CUSTOMER_ACQUISITION_SERIES,
-  DEFAULT_KPIS,
   DEFAULT_RECENT_REPORTS,
-  DEFAULT_TOP_PRODUCTS,
   REGION_SALES_SERIES,
   REGIONS,
-  REVENUE_TRENDS_SERIES,
   WEEK_DAYS
 } from '../data/reports';
 import { useToast } from '../../context/ToastContext';
@@ -15,10 +11,7 @@ import { useDashboardData } from '../hooks/useDashboardData';
 
 const formatCurrency = (value) => `$${value.toLocaleString()}`;
 
-const getRandomChange = (base, variance) => {
-  const delta = Math.floor(Math.random() * variance) * (Math.random() > 0.5 ? 1 : -1);
-  return Math.max(0, base + delta);
-};
+
 
 const ReportsPage = () => {
   const toast = useToast();
@@ -27,8 +20,7 @@ const ReportsPage = () => {
     userGrowthDataset,
     statsCards,
     salesByLocation,
-    recentOrders,
-    loading
+    recentOrders
   } = useDashboardData();
 
   const [dateRange, setDateRange] = useState('30d');
@@ -101,7 +93,7 @@ const ReportsPage = () => {
       tooltip: { y: { formatter: (value) => `$${value.toLocaleString()}` } },
       legend: { position: 'top' }
     }),
-    [revenueDataset.labels]
+    []
   );
 
   const revenueSeries = useMemo(() => [

@@ -4,15 +4,15 @@ import { shuffleArray } from "../../../utils/array";
 
 const MiniGameListenSelect = ({ data, onNext, onFail }) => {
   const resources = data?.resources || {};
-  const originalOptions = Array.isArray(resources.options) ? resources.options : [];
   const audioUrl = resources.audioUrl || "";
   const correctIndex = Number(resources.correctIndex ?? 0);
 
   // Shuffle options and keep track of original indices
   const options = useMemo(() => {
+    const originalOptions = Array.isArray(resources.options) ? resources.options : [];
     const zipped = originalOptions.map((opt, idx) => ({ ...opt, originalIndex: idx }));
     return shuffleArray(zipped);
-  }, [originalOptions]);
+  }, [resources.options]);
 
   const [playing, setPlaying] = useState(false);
   const [selected, setSelected] = useState(null); // stores index in the SHUFFLED array

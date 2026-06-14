@@ -63,26 +63,6 @@ const FinancePage = () => {
     }
   };
 
-  const refreshActiveTab = async () => {
-    setLoading(true);
-    try {
-      if (activeTab === 'transactions') {
-        const data = await dashboardService.getTransactions();
-        setTransactions(Array.isArray(data) ? data : []);
-      } else if (activeTab === 'subscriptions') {
-        const data = await dashboardService.getSubscriptions();
-        setSubscriptions(Array.isArray(data) ? data : []);
-      } else {
-        const data = await dashboardService.getTopCustomers();
-        setTopCustomers(Array.isArray(data) ? data : []);
-      }
-    } catch (err) {
-      setError('Failed to refresh data.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const filteredTransactions = transactions.filter(t => {
     const matchesSearch = t.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
       t.id?.toLowerCase().includes(search.toLowerCase());

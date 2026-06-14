@@ -49,7 +49,7 @@ const ChooseLevelPage = () => {
     };
 
     try {
-      const response = await api.post("/confirm/", confirmData);
+      await api.post("/confirm/", confirmData);
 
       toast.success("Cảm ơn bạn đã dành thời gian xác thực!");
     } catch (error) {

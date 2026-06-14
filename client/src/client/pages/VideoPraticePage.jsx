@@ -211,7 +211,7 @@ export default function VideoPraticePage() {
       }
     }
     fetchLessonData();
-  }, [lessonId]);
+  }, [lessonId, toast]);
 
   useEffect(() => {
     if (lesson && (lesson?.subtitles?.length || 0) > 0) {

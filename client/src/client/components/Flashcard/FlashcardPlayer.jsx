@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback, useContext } from "react";
-import { ThemeContext } from "../../../context/ThemeContext";
+import React, { useState, useEffect, useCallback } from "react";
 import { VolumeUp, Star, StarFill, Lightbulb, ChevronLeft, ChevronRight, Shuffle } from "react-bootstrap-icons";
 import styles from "../../styles/FlashcardPlayer.module.css";
 import { speak as ttsSpeak } from "../../../utils/tts";

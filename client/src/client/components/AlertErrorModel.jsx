@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import '../styles/AlertErrorModel.css';
 
 // SVG Icons for different status codes
@@ -44,16 +44,16 @@ const ErrorModal = ({ error, onClose, autoClose = 5000 }) => {
   const [isExiting, setIsExiting] = useState(false);
   const { title, message, color, icon } = getErrorInfo(error);
 
+  const handleClose = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(onClose, 300); // Match animation duration
+  }, [onClose]);
+
   useEffect(() => {
     if (!autoClose) return;
     const timer = setTimeout(() => handleClose(), autoClose);
     return () => clearTimeout(timer);
-  }, [autoClose]);
-
-  const handleClose = () => {
-    setIsExiting(true);
-    setTimeout(onClose, 300); // Match animation duration
-  };
+  }, [autoClose, handleClose]);
 
   return (
     <div className={`modalOverlay ${isExiting ? 'fadeOut' : ''}`} onClick={handleClose}>

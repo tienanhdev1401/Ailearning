@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useCallback, useContext } from "react";
-import { ThemeContext } from "../../../context/ThemeContext";
+import React, { useState, useEffect, useCallback } from "react";
 import { PlayFill, ArrowCounterclockwise } from "react-bootstrap-icons";
 import styles from "../../styles/MatchingGame.module.css";
 import { shuffleArray } from "../../../utils/array";
 
 const MatchingGame = ({ cards }) => {
-  const { isDarkMode } = useContext(ThemeContext);
   
   const [gameCards, setGameCards] = useState([]);
   const [selectedId, setSelectedId] = useState(null);

@@ -3,7 +3,9 @@ import styles from "../../styles/MiniGameMatchImageWord.module.css";
 import { shuffleArray } from "../../../utils/array";
 
 const MiniGameMatchImageWord = ({ data, onNext, onFail }) => {
-  const imageList = Array.isArray(data?.resources?.images) ? data.resources.images : [];
+  const imageList = useMemo(() => {
+    return Array.isArray(data?.resources?.images) ? data.resources.images : [];
+  }, [data?.resources?.images]);
   
   const [shuffledImages, setShuffledImages] = useState([]);
   const [shuffledWords, setShuffledWords] = useState([]);
@@ -20,7 +22,7 @@ const MiniGameMatchImageWord = ({ data, onNext, onFail }) => {
     setSelectedImage(null);
     setSelectedWord("");
     setFeedback(null);
-  }, [data]);
+  }, [imageList]);
 
   const handleSelectImage = (img) => {
     if (completedPairs.includes(img.id)) return;

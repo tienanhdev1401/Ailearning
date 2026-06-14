@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useCallback, useContext } from "react";
-import { ThemeContext } from "../../../context/ThemeContext";
+import React, { useState, useEffect, useCallback } from "react";
 import { CheckCircleFill, XCircleFill, ArrowRight, VolumeUp } from "react-bootstrap-icons";
 import styles from "../../styles/ABCDGame.module.css";
 import { speak as ttsSpeak } from "../../../utils/tts";
 import { shuffleArray } from "../../../utils/array";
 
 const ABCDGame = ({ cards }) => {
-  const { isDarkMode } = useContext(ThemeContext);
   const [shuffledCards] = useState(() => shuffleArray(cards));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [options, setOptions] = useState([]);

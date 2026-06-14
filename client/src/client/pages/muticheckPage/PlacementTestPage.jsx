@@ -274,7 +274,7 @@ const PlacementTestPage = () => {
     };
 
     try {
-      const response = await api.post("/confirm/", confirmData);
+      await api.post("/confirm/", confirmData);
 
       toast.success("Welcome aboard! Your proficiency profile has been recorded successfully.");
     } catch (error) {

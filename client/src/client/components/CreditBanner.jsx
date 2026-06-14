@@ -26,10 +26,6 @@ const CreditBanner = ({ type, credits, isDarkMode = false }) => {
   const total = isAi
     ? credits.totalAiConversationCredits ?? 0
     : credits.totalGrammarCheckerCredits ?? 0;
-
-  const safeTotal = Math.max(total, 1);
-  const percent = Math.min(100, (remaining / safeTotal) * 100);
-
   const isExhausted = remaining <= 0;
 
   const icon = isAi ? <BsRobot /> : <FiEdit3 />;

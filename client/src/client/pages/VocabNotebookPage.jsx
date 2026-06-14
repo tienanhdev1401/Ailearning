@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import { Container, Card, Form, InputGroup, Button, Spinner, Modal } from "react-bootstrap";
 import LoadingSpinner from "../../component/LoadingSpinner";
 import {
@@ -51,45 +51,7 @@ const VocabNotebookPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // Auto-lookup when user stops typing
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (newCard.term.trim() && !newCard.definition.trim()) {
-        handleLookup();
-      }
-    }, 1200);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [newCard.term]);
-
-  const handleAddCard = async (e) => {
-    e.preventDefault();
-    if (!newCard.term.trim() || !newCard.definition.trim()) return;
-    try {
-      setSubmitting(true);
-      // Update this call to include new fields
-      await notebookService.addCard(
-        id, 
-        newCard.term, 
-        newCard.definition, 
-        "Cá nhân", // source
-        newCard.phonetic, 
-        newCard.partOfSpeech
-      );
-      setNewCard({ term: "", definition: "", phonetic: "", partOfSpeech: "" });
-      setShowAddModal(false);
-      toast.success("Đã thêm từ mới thành công!");
-      fetchNotebook();
-    } catch (error) {
-      console.error("Failed to add card:", error);
-      const message = error.response?.data?.message || "Đã có lỗi xảy ra khi thêm từ.";
-      toast.error(message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleLookup = async () => {
+  const handleLookup = useCallback(async () => {
     if (!newCard.term.trim()) return;
     try {
       setLookupLoading(true);
@@ -137,6 +99,44 @@ const VocabNotebookPage = () => {
       toast.error("Không thể lấy dữ liệu tra cứu.");
     } finally {
       setLookupLoading(false);
+    }
+  }, [newCard.term, toast]);
+
+  // Auto-lookup when user stops typing
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (newCard.term.trim() && !newCard.definition.trim()) {
+        handleLookup();
+      }
+    }, 1200);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [newCard.term, newCard.definition, handleLookup]);
+
+  const handleAddCard = async (e) => {
+    e.preventDefault();
+    if (!newCard.term.trim() || !newCard.definition.trim()) return;
+    try {
+      setSubmitting(true);
+      // Update this call to include new fields
+      await notebookService.addCard(
+        id, 
+        newCard.term, 
+        newCard.definition, 
+        "Cá nhân", // source
+        newCard.phonetic, 
+        newCard.partOfSpeech
+      );
+      setNewCard({ term: "", definition: "", phonetic: "", partOfSpeech: "" });
+      setShowAddModal(false);
+      toast.success("Đã thêm từ mới thành công!");
+      fetchNotebook();
+    } catch (error) {
+      console.error("Failed to add card:", error);
+      const message = error.response?.data?.message || "Đã có lỗi xảy ra khi thêm từ.";
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
     }
   };
 

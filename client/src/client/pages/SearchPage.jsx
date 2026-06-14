@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { FiSearch, FiVideo, FiBook, FiChevronRight, FiClock, FiEye, FiInbox } from 'react-icons/fi';
+import { FiVideo, FiBook, FiChevronRight, FiEye, FiInbox } from 'react-icons/fi';
 import { searchLessonsApi } from '../services/lessonService';
 import { searchFlashcardsApi } from '../services/flashcardService';
 import styles from '../styles/SearchPage.module.css';
@@ -13,7 +13,6 @@ const SearchPage = () => {
     const [lessons, setLessons] = useState([]);
     const [flashcards, setFlashcards] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
 
     const fetchResults = useCallback(async () => {
         if (!query.trim()) {
@@ -22,7 +21,6 @@ const SearchPage = () => {
         }
 
         setIsLoading(true);
-        setError(null);
 
         try {
             const [lessonsRes, flashcardsRes] = await Promise.all([
@@ -34,7 +32,6 @@ const SearchPage = () => {
             setFlashcards(flashcardsRes.data || []);
         } catch (err) {
             console.error("Search error:", err);
-            setError("Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại sau.");
         } finally {
             setIsLoading(false);
         }

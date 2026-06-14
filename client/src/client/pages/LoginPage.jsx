@@ -58,7 +58,6 @@ const LoginPage = () => {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
@@ -72,7 +71,6 @@ const LoginPage = () => {
     setOtp(Array(6).fill(''));
     setShowPassword(false);
     setShowConfirmPassword(false);
-    setError('');
     setOtpCountdown(60);
   };
 
@@ -134,10 +132,9 @@ const LoginPage = () => {
   // -------- SIGN UP --------
   const signUp = async (e) => {
     e.preventDefault();
-    setError('');
 
     if (password !== confirmPassword) {
-      setError('Mật khẩu và xác nhận mật khẩu không khớp.');
+      toast.error('Mật khẩu và xác nhận mật khẩu không khớp.');
       return;
     }
 

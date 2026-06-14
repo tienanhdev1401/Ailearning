@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
-import { ThemeContext } from "../../../context/ThemeContext";
+import React, { useState, useEffect, useRef } from "react";
 import { CheckCircleFill, XCircleFill, ArrowRight, VolumeUp, Lightbulb } from "react-bootstrap-icons";
 import styles from "../../styles/WritingGame.module.css";
 import { speak as ttsSpeak } from "../../../utils/tts";
 import { shuffleArray } from "../../../utils/array";
 
 const WritingGame = ({ cards }) => {
-  const { isDarkMode } = useContext(ThemeContext);
   const [shuffledCards, setShuffledCards] = useState(() => shuffleArray(cards));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userInput, setUserInput] = useState("");

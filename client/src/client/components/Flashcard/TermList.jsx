@@ -1,10 +1,8 @@
-import React, { useContext } from "react";
-import { ThemeContext } from "../../../context/ThemeContext";
-import { VolumeUp, Star, StarFill } from "react-bootstrap-icons";
+import React from "react";
+import { VolumeUp, Star } from "react-bootstrap-icons";
 import styles from "../../styles/TermList.module.css";
 
 const TermList = ({ cards }) => {
-  const { isDarkMode } = useContext(ThemeContext);
 
   const speak = (text) => {
     if (!text) return;

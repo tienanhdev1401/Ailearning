@@ -7,8 +7,6 @@ import LoadingSpinner from "../../component/LoadingSpinner";
 import { useAuth } from "../../context/AuthContext";
 import Cropper from "react-easy-crop";
 import { getCroppedImage } from "../../utils/imageCropper";
-import subscriptionService from "../../services/subscriptionService";
-import CountdownCircle from "../../component/CountdownCircle";
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
@@ -457,15 +455,6 @@ const ProfilePage = () => {
   useEffect(() => {
     fetchActiveRoadmap();
   }, [fetchActiveRoadmap]);
-
-  const calculateRemainingDays = (endDate) => {
-    if (!endDate) return null; // Permanent
-    const now = new Date();
-    const end = new Date(endDate);
-    const diffTime = end - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
 
   const activeRoadmap = activeRoadmapState.data;
 
