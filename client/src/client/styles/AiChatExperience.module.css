@@ -122,7 +122,7 @@
   border: 1px solid var(--pp-border-strong);
   background: var(--pp-surface);
   color: var(--pp-text);
-  padding: 9px 18px;
+  padding: 8px 16px;
   border-radius: 999px;
   font-size: 0.85rem;
   font-weight: 600;
@@ -130,6 +130,9 @@
   backdrop-filter: blur(8px);
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .historyLink:hover {

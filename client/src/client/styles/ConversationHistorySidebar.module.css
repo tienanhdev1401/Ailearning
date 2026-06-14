@@ -286,10 +286,19 @@
   overflow: hidden;
 }
 
+.itemBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
 .meta {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  flex: 1;
 }
 
 .metaChip {
@@ -305,11 +314,8 @@
   white-space: nowrap;
 }
 
-/* ----- Delete button (top-right corner of card) ----- */
+/* ----- Delete button (horizontal with meta) ----- */
 .deleteButton {
-  position: absolute;
-  top: 10px;
-  right: 10px;
   width: 28px;
   height: 28px;
   border-radius: 8px;
@@ -321,6 +327,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   opacity: 0;
   transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
 }

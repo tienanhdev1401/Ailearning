@@ -142,29 +142,31 @@ const ConversationHistorySidebar = ({ open, onClose, onSelectSession, onDelete, 
                     {session.lastMessagePreview && (
                       <p className={styles.preview}>{session.lastMessagePreview}</p>
                     )}
-                    <div className={styles.meta}>
-                      <span className={styles.metaChip}>
-                        {session.mode === "voice" ? "🎙️" : "⌨️"} {modeLabels[session.mode] ?? session.mode}
-                      </span>
-                      <span className={styles.metaChip}>
-                        💬 {session.messageCount} tin nhắn
-                      </span>
-                      <span className={styles.metaChip}>
-                        🕐 {formatDate(session.createdAt)}
-                      </span>
+                    <div className={styles.itemBottom}>
+                      <div className={styles.meta}>
+                        <span className={styles.metaChip}>
+                          {session.mode === "voice" ? "🎙️" : "⌨️"} {modeLabels[session.mode] ?? session.mode}
+                        </span>
+                        <span className={styles.metaChip}>
+                          💬 {session.messageCount} tin nhắn
+                        </span>
+                        <span className={styles.metaChip}>
+                          🕐 {formatDate(session.createdAt)}
+                        </span>
+                      </div>
+                      {onDelete && (
+                        <button
+                          type="button"
+                          className={styles.deleteButton}
+                          onClick={(event) => handleDelete(event, session.id)}
+                          disabled={deletingId === session.id}
+                          aria-label="Xóa cuộc trò chuyện"
+                          title="Xóa cuộc trò chuyện"
+                        >
+                          {deletingId === session.id ? "..." : "🗑️"}
+                        </button>
+                      )}
                     </div>
-                    {onDelete && (
-                      <button
-                        type="button"
-                        className={styles.deleteButton}
-                        onClick={(event) => handleDelete(event, session.id)}
-                        disabled={deletingId === session.id}
-                        aria-label="Xóa cuộc trò chuyện"
-                        title="Xóa cuộc trò chuyện"
-                      >
-                        {deletingId === session.id ? "..." : "🗑️"}
-                      </button>
-                    )}
                   </button>
                 </li>
               ))}
