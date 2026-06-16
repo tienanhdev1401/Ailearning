@@ -52,9 +52,10 @@ const GoalPage = () => {
         {/* Illustration */}
         <div className={styles.illustrationWrapper}>
           <img
-            src="https://img.pikbest.com/png-images/qiantu/dart-target-icon-design_2688549.png!sw800"
+            src="/assets/img/icon/muctieu.png"
             alt="Target icon"
             className={styles.illustration}
+            style={{ width: "150px", height: "120px" }}
           />
         </div>
 

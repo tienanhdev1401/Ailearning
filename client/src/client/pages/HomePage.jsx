@@ -9,25 +9,25 @@ const HomePage = () => {
 
   const features = [
     {
-      icon: "👂",
+      icon: "/assets/img/icon/nghe.png",
       title: "Nghe",
       description: "Cải thiện khả năng nghe với các bài tập nghe thực tế",
       color: "#38bdf8"
     },
     {
-      icon: "🗣️",
+      icon: "/assets/img/icon/noi.png",
       title: "Nói",
       description: "Luyện tập phát âm chuẩn với AI tutor thông minh",
       color: "#f472b6"
     },
     {
-      icon: "📖",
+      icon: "/assets/img/icon/Doc.png",
       title: "Đọc",
       description: "Phát triển kỹ năng đọc hiểu qua các bài viết thú vị",
       color: "#a3e635"
     },
     {
-      icon: "✍️",
+      icon: "/assets/img/icon/viet.png",
       title: "Viết",
       description: "Rèn luyện kỹ năng viết và kiểm tra văn phạm tự động",
       color: "#facc15"
@@ -80,13 +80,13 @@ const HomePage = () => {
               Ứng dụng học tiếng Anh thông minh với công nghệ AI. Cải thiện các kỹ năng nghe, nói, đọc, viết của bạn hôm nay.
             </p>
             <div className={styles.heroCTA}>
-              <button 
+              <button
                 className={styles.primaryBtn}
                 onClick={() => document.getElementById('features-section').scrollIntoView({ behavior: 'smooth' })}
               >
                 Bắt Đầu Học Ngay
               </button>
-              <button 
+              <button
                 className={styles.secondaryBtn}
                 onClick={() => navigate("/about")}
               >
@@ -124,13 +124,19 @@ const HomePage = () => {
         </div>
         <div className={styles.featureGrid}>
           {features.map((feature, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className={styles.featureCard}
               onClick={() => handleStartLearning(feature)}
               style={{ '--feature-color': feature.color }}
             >
-              <div className={styles.featureIcon}>{feature.icon}</div>
+              <div className={styles.featureIcon}>
+                <img
+                  src={feature.icon}
+                  alt={feature.title}
+                  style={{ width: "120px", height: "120px", objectFit: "contain" }}
+                />
+              </div>
               <h3 className={styles.featureTitle}>{feature.title}</h3>
               <p className={styles.featureDesc}>{feature.description}</p>
               <button className={styles.featureBtn}>Bắt Đầu →</button>
@@ -173,7 +179,7 @@ const HomePage = () => {
               <li>✓ Đề xuất từ vựng được cá nhân hóa</li>
               <li>✓ Lộ trình học tập thích ứng</li>
             </ul>
-            <button 
+            <button
               className={styles.primaryBtn}
               onClick={() => navigate("/experience/ai-chat")}
             >
@@ -217,7 +223,7 @@ const HomePage = () => {
         <div className={styles.ctaContent}>
           <h2>Sẵn Sàng Bắt Đầu Hành Trình Của Bạn?</h2>
           <p>Hôm nay là ngày tốt nhất để bắt đầu học tiếng Anh. Với AelanG, bạn sẽ thấy sự tiến bộ chỉ trong vài tuần.</p>
-          <button 
+          <button
             className={styles.primaryBtn}
             onClick={() => document.getElementById('features-section').scrollIntoView({ behavior: 'smooth' })}
           >
@@ -226,22 +232,29 @@ const HomePage = () => {
         </div>
       </section>
       {/* Skill Selection Modal */}
-      <Modal 
-        show={!!selectedSkill} 
-        onHide={closeModal} 
+      <Modal
+        show={!!selectedSkill}
+        onHide={closeModal}
         centered
         contentClassName={styles.skillModal}
       >
         <Modal.Header closeButton className="border-0 pb-0">
-          <Modal.Title style={{ fontWeight: 700, color: selectedSkill?.color || '#00FFFF' }}>
-            {selectedSkill?.icon} Kỹ Năng {selectedSkill?.title}
+          <Modal.Title style={{ fontWeight: 700, color: selectedSkill?.color || '#00FFFF', display: "flex", alignItems: "center", gap: "10px" }}>
+            {selectedSkill?.icon && (
+              <img
+                src={selectedSkill.icon}
+                alt={selectedSkill.title}
+                style={{ width: "32px", height: "32px", objectFit: "contain" }}
+              />
+            )}
+            Kỹ Năng {selectedSkill?.title}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="pt-2 pb-4 px-4">
           <p className="text-secondary mb-4">Bạn muốn luyện tập kỹ năng {selectedSkill?.title} qua phương pháp nào dưới đây?</p>
           <div className="d-flex flex-column gap-3">
             {selectedSkill && skillOptions[selectedSkill.title]?.map((option) => (
-              <div 
+              <div
                 key={option.id}
                 className={styles.skillOptionCard}
                 onClick={() => {

@@ -53,7 +53,7 @@ export class InactiveUserService {
       `
         <p>Chào <b>${user.name || user.email}</b>,</p>
         <p>Có vẻ như bạn vẫn chưa bắt đầu bài học nào.</p>
-        <p>Hãy thử hoàn thành bài học đầu tiên để bắt đầu hành trình nhé! 🚀</p>
+        <p>Hãy thử hoàn thành bài học đầu tiên để bắt đầu hành trình nhé!</p>
       `
     );
   }
@@ -66,7 +66,7 @@ export class InactiveUserService {
       `
         <p>Chào <b>${user.name || user.email}</b>,</p>
         <p>Chúng tôi nhận thấy bạn đã <b>${diffDays} ngày</b> không học bài.</p>
-        <p>Hãy quay lại để duy trì phong độ và không đánh mất động lực nhé! 💪</p>
+        <p>Hãy quay lại để duy trì phong độ và không đánh mất động lực nhé!</p>
       `
     );
   }

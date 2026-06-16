@@ -37,43 +37,43 @@ const DailyChallengeWidget = ({ roadmapId, isCompact = false, isFloating = false
   }
 
   if (!status) {
-      return (
-        <div className={`${styles.widget} ${isDarkMode ? styles.dark : ''}`}>
-             <div className={styles.header}>
-                <h3 className={styles.title}>Daily Challenge</h3>
-            </div>
-            <p style={{ fontSize: '0.9rem', color: '#64748b', textAlign: 'center', padding: '10px' }}>
-                Hãy ghi danh vào lộ trình này để bắt đầu tham gia thử thách hàng ngày nhé!
-            </p>
+    return (
+      <div className={`${styles.widget} ${isDarkMode ? styles.dark : ''}`}>
+        <div className={styles.header}>
+          <h3 className={styles.title}>Daily Challenge</h3>
         </div>
-      );
+        <p style={{ fontSize: '0.9rem', color: '#64748b', textAlign: 'center', padding: '10px' }}>
+          Hãy ghi danh vào lộ trình này để bắt đầu tham gia thử thách hàng ngày nhé!
+        </p>
+      </div>
+    );
   }
 
-    const { progress, isEligible, streak, isCompletedToday, unlockRequirement } = status;
+  const { progress, isEligible, streak, isCompletedToday, unlockRequirement } = status;
 
   if (isCompact) {
     return (
       <div className={`${styles.compactWidget} ${isDarkMode ? styles.dark : ''}`} onClick={() => !isCompletedToday && isEligible && navigate(`/daily-challenge/${roadmapId}`)}>
         <div className={styles.compactHeader}>
           <div className={styles.compactStreak}>
-             <span className={styles.streakIcon}>🔥</span>
-             <span className={styles.streakCount}>{streak}</span>
+            <span className={styles.streakIcon}>🔥</span>
+            <span className={styles.streakCount}>{streak}</span>
           </div>
           <div className={styles.compactInfo}>
             <span className={styles.compactTitle}>Daily Challenge</span>
             {!isEligible ? (
-                <span className={styles.compactStatus}>Locked {progress}%</span>
+              <span className={styles.compactStatus}>Locked {progress}%</span>
             ) : isCompletedToday ? (
-                <span className={styles.compactStatus}>Completed</span>
+              <span className={styles.compactStatus}>Completed</span>
             ) : (
-                <span className={styles.compactStatusAction}>Play Now 🚀</span>
+              <span className={styles.compactStatusAction}>Play Now </span>
             )}
           </div>
         </div>
         {isEligible && !isCompletedToday && (
-            <div className={styles.compactProgressBar}>
-                <div className={styles.compactProgressFill} style={{ width: `${progress}%` }}></div>
-            </div>
+          <div className={styles.compactProgressBar}>
+            <div className={styles.compactProgressFill} style={{ width: `${progress}%` }}></div>
+          </div>
         )}
       </div>
     );
@@ -99,8 +99,8 @@ const DailyChallengeWidget = ({ roadmapId, isCompact = false, isFloating = false
             <span>{progress}% / {unlockRequirement}%</span>
           </div>
           <div className={styles.progressBar}>
-            <div 
-              className={styles.progressFill} 
+            <div
+              className={styles.progressFill}
               style={{ width: `${(progress / unlockRequirement) * 100}%` }}
             ></div>
           </div>
@@ -114,7 +114,7 @@ const DailyChallengeWidget = ({ roadmapId, isCompact = false, isFloating = false
             <div className={styles.completedState}>
               <div className={styles.checkDone}>✅</div>
               <p>Bạn đã hoàn thành thử thách hôm nay!</p>
-              <button 
+              <button
                 className={styles.disabledBtn}
                 disabled
               >
@@ -126,11 +126,11 @@ const DailyChallengeWidget = ({ roadmapId, isCompact = false, isFloating = false
               <p className={styles.readyText}>
                 Thử thách hôm nay đã sẵn sàng. Hãy bắt đầu ngay!
               </p>
-              <button 
+              <button
                 className={styles.startBtn}
                 onClick={() => navigate(`/daily-challenge/${roadmapId}`)}
               >
-                Bắt đầu ngay 🚀
+                Bắt đầu ngay
               </button>
             </div>
           )}
@@ -146,7 +146,7 @@ const DailyChallengeWidget = ({ roadmapId, isCompact = false, isFloating = false
     if (!hasAnimated.current) hasAnimated.current = true;
     return (
       <div className={`${styles.floatingWrapper} ${isCollapsed ? styles.collapsed : ''} ${animClass}`}>
-        <button 
+        <button
           className={styles.collapseBtn}
           onClick={() => setIsCollapsed(!isCollapsed)}
           title={isCollapsed ? "Mở rộng" : "Thu gọn"}

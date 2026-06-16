@@ -126,7 +126,7 @@ const MiniGameFlipCard = ({ data, onNext }) => {
                 onClick={() => navigate(`/flashcards/${data.id}`)}
                 style={{ fontSize: '12px' }}
               >
-                🚀 Mở trang Flashcard học tập
+                Mở trang Flashcard học tập
               </button>
             )}
             {mode === "practice" && <span className={styles.progressText}>Điểm: {score}</span>}

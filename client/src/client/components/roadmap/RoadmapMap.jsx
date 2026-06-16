@@ -284,17 +284,14 @@ const RoadmapMap = ({
                 </text>
               )}
               {node.status === 'vip_required' && (
-                <g
+                <image
+                  href="/assets/img/icon/vip2.png"
+                  x={20}
+                  y={-49}
+                  width="30"
+                  height="30"
                   className={styles.vipBadge}
-                  transform="translate(26, -22) rotate(180)"
-                >
-                  <path
-                    d="M 0,-12 L 8,-4 L 12,0 L 8,8 L 0,12 L -8,8 L -12,0 L -8,-4 Z"
-                    fill="#FF9800"
-                    stroke="#FFF"
-                    strokeWidth="1"
-                  />
-                </g>
+                />
               )}
               {isCompleted && (
                 <text className={styles.nodeStar} x={18} y={-22}>

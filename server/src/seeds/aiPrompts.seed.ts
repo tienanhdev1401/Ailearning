@@ -59,6 +59,7 @@ Pronunciation evidence:
 {{pronunciationEvidence}}
 
 Return a JSON object containing numeric scores from 0 to 10 for each dimension using whole or half steps, a short summary (2-3 sentences) and an array of actionable suggestions. Use camelCase field names.
+CRITICAL: The "summary" and "suggestions" fields MUST be written in Vietnamese so the learner can easily understand the feedback.
 
 Conversation transcript:
 {{transcript}}`;

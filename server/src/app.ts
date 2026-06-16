@@ -173,20 +173,21 @@ async function ensureAiChatSchema() {
       }
     }
 
-    // Upgrade the legacy evaluation prompt so it consumes the W2V_GOP
-    // pronunciation evidence variable. Detect by missing placeholder; replace
-    // the whole template + variables list in one shot.
     const evalPromptRows: Array<{ id: number; template: string; variables: string | null }> =
       await AppDataSource.query(
         "SELECT id, template, variables FROM `ai_prompts` WHERE `feature` = 'ai_chat' AND `key` = 'evaluation' LIMIT 1"
       );
     const existing = evalPromptRows?.[0];
-    if (existing && !/\{\{\s*pronunciationEvidence\s*\}\}/i.test(existing.template ?? "")) {
+    if (
+      existing &&
+      (!/\{\{\s*pronunciationEvidence\s*\}\}/i.test(existing.template ?? "") ||
+        !/Vietnamese/i.test(existing.template ?? ""))
+    ) {
       await AppDataSource.query(
         "UPDATE `ai_prompts` SET `template` = ?, `variables` = ? WHERE id = ?",
         [EVALUATION_TEMPLATE, JSON.stringify(["transcript", "pronunciationEvidence"]), existing.id]
       );
-      console.log("[Schema] Upgraded ai_prompts.evaluation template to include pronunciationEvidence");
+      console.log("[Schema] Upgraded ai_prompts.evaluation template to include pronunciationEvidence and Vietnamese instructions");
     }
   } catch (error) {
     console.error("[Schema] ensureAiChatSchema failed:", error);

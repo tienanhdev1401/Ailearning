@@ -650,17 +650,16 @@ export default function SpeakingVideoPraticePage() {
                   <button type="button" className="btn-close" onClick={() => navigate(-1)} aria-label="Close"></button>
                 </div>
                 <div className="modal-body text-center pt-0 pb-4 px-4">
-                  <div
-                    className="d-inline-flex align-items-center justify-content-center text-white rounded-circle mb-4 shadow"
+                  <img
+                    src="/assets/img/icon/vip1.png"
+                    alt="VIP"
+                    className="mb-4"
                     style={{
                       width: "80px",
                       height: "80px",
-                      background: "linear-gradient(135deg, #ff9a00 0%, #ff5e00 100%)",
-                      fontSize: "2.5rem"
+                      objectFit: "contain"
                     }}
-                  >
-                    💎
-                  </div>
+                  />
                   <h3 className="fw-bold mb-3">Nâng cấp VIP</h3>
                   <p className="text-muted fs-5 mb-4">
                     Bạn cần sở hữu gói <strong>VIP</strong> để mở khóa bài học này và tận hưởng đầy đủ tính năng cao cấp.
