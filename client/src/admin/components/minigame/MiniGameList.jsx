@@ -239,11 +239,26 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 		};
 
 		// WATCH_VIDEO fields
+		const [watchVideoMode, setWatchVideoMode] = useState("upload"); // "upload" | "youtube"
 		const [watchVideoHls, setWatchVideoHls] = useState("");
 		const [watchVideoMp4, setWatchVideoMp4] = useState("");
+		const [watchVideoYoutube, setWatchVideoYoutube] = useState("");
 		const [watchVideoTitle, setWatchVideoTitle] = useState("");
 		const watchVideoFileInputRef = useRef(null);
 		const [watchVideoUploading, setWatchVideoUploading] = useState(false);
+
+		const extractYoutubeId = (url) => {
+			if (!url) return null;
+			const patterns = [
+				/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+				/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+			];
+			for (const re of patterns) {
+				const m = url.match(re);
+				if (m) return m[1];
+			}
+			return null;
+		};
 
 		// LESSON fields
 		const [content, setContent] = useState("");
@@ -557,15 +572,23 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 					}))
 				};
 			} else if (type === "watch_video") {
-				if (!watchVideoHls && !watchVideoMp4) {
-					return toast.warning("Video không được rỗng");
+				if (watchVideoMode === "youtube") {
+					const ytId = extractYoutubeId(watchVideoYoutube);
+					if (!ytId) return toast.warning("YouTube URL không hợp lệ. Ví dụ: https://youtu.be/abc123");
+					resources = {
+						youtubeUrl: watchVideoYoutube.trim(),
+						...(watchVideoTitle.trim() ? { title: watchVideoTitle.trim() } : {}),
+					};
+				} else {
+					if (!watchVideoHls && !watchVideoMp4) {
+						return toast.warning("Video không được rỗng");
+					}
+					resources = {
+						hlsUrl: watchVideoHls || undefined,
+						fallbackUrl: watchVideoMp4 || undefined,
+						...(watchVideoTitle.trim() ? { title: watchVideoTitle.trim() } : {}),
+					};
 				}
-
-				resources = {
-					hlsUrl: watchVideoHls || undefined,
-					fallbackUrl: watchVideoMp4 || undefined,
-					title: watchVideoTitle.trim() || undefined,
-				};
 			}
 
 			try {
@@ -982,86 +1005,140 @@ const MiniGameList = ({ activityId, onRefresh }) => {
 
 					{type === "watch_video" && (
 						<div>
-							<div className="mb-3">
-								<label className="form-label">Video (Nhập URL hoặc Tải lên) (*)</label>
-
-								<div className="input-group mb-2">
-									<input
-										type="text"
-										className="form-control"
-										placeholder="Nhập URL video"
-										value={watchVideoHls || watchVideoMp4}
-										onChange={(e) => {
-											const value = e.target.value;
-
-											if (value.includes(".m3u8")) {
-												setWatchVideoHls(value);
-												setWatchVideoMp4("");
-											} else {
-												setWatchVideoMp4(value);
-												setWatchVideoHls("");
-											}
-										}}
-									/>
-
+							{/* Tab switcher */}
+							<ul className="nav nav-tabs mb-3">
+								<li className="nav-item">
 									<button
-										type="button"
-										className="btn btn-outline-secondary"
-										onClick={() => watchVideoFileInputRef.current?.click()}
-										disabled={watchVideoUploading}
+										className={`nav-link ${watchVideoMode === "upload" ? "active" : ""}`}
+										onClick={() => setWatchVideoMode("upload")}
 									>
-										{watchVideoUploading ? "Đang tải..." : "Tải lên"}
+										📁 Upload / URL video
 									</button>
+								</li>
+								<li className="nav-item">
+									<button
+										className={`nav-link ${watchVideoMode === "youtube" ? "active" : ""}`}
+										onClick={() => setWatchVideoMode("youtube")}
+									>
+										🎬 YouTube URL
+									</button>
+								</li>
+							</ul>
 
-									<input
-										type="file"
-										accept="video/*"
-										className="d-none"
-										ref={watchVideoFileInputRef}
-										onChange={async (e) => {
-											const file = e.target.files?.[0];
-											if (!file) return;
+							{/* Upload / URL tab */}
+							{watchVideoMode === "upload" && (
+								<div className="mb-3">
+									<label className="form-label">Video (Nhập URL hoặc Tải lên) (*)</label>
 
-											if (!file.type.startsWith("video/")) {
-												toast.warning("Chọn file video hợp lệ");
-												return;
-											}
-
-											const formData = new FormData();
-											formData.append("video", file);
-
-											try {
-												setWatchVideoUploading(true);
-
-												const res = await api.post("/uploads/video", formData, {
-													headers: { "Content-Type": "multipart/form-data" },
-												});
-
-												if (res.data) {
-													setWatchVideoHls(res.data.hlsUrl.replace("http://", "https://"));
-													setWatchVideoMp4(res.data.fallbackUrl);
+									<div className="input-group mb-2">
+										<input
+											type="text"
+											className="form-control"
+											placeholder="Nhập URL video (.m3u8 hoặc .mp4)"
+											value={watchVideoHls || watchVideoMp4}
+											onChange={(e) => {
+												const value = e.target.value;
+												if (value.includes(".m3u8")) {
+													setWatchVideoHls(value);
+													setWatchVideoMp4("");
+												} else {
+													setWatchVideoMp4(value);
+													setWatchVideoHls("");
 												}
-											} catch (err) {
-												console.error(err);
-												toast.error("Upload video thất bại");
-											} finally {
-												setWatchVideoUploading(false);
-												if (watchVideoFileInputRef.current)
-													watchVideoFileInputRef.current.value = "";
-											}
-										}}
-									/>
-								</div>
+											}}
+										/>
 
-								{(watchVideoHls || watchVideoMp4) && (
-									<div className="mt-2">
-										<HLSPlayer
-											hlsUrl={watchVideoHls}
-											fallbackUrl={watchVideoMp4}
+										<button
+											type="button"
+											className="btn btn-outline-secondary"
+											onClick={() => watchVideoFileInputRef.current?.click()}
+											disabled={watchVideoUploading}
+										>
+											{watchVideoUploading ? "Đang tải..." : "📤 Tải lên"}
+										</button>
+
+										<input
+											type="file"
+											accept="video/*"
+											className="d-none"
+											ref={watchVideoFileInputRef}
+											onChange={async (e) => {
+												const file = e.target.files?.[0];
+												if (!file) return;
+
+												if (!file.type.startsWith("video/")) {
+													toast.warning("Chọn file video hợp lệ");
+													return;
+												}
+
+												const formData = new FormData();
+												formData.append("video", file);
+
+												try {
+													setWatchVideoUploading(true);
+
+													const res = await api.post("/uploads/video", formData, {
+														headers: { "Content-Type": "multipart/form-data" },
+													});
+
+													if (res.data) {
+														setWatchVideoHls(res.data.hlsUrl.replace("http://", "https://"));
+														setWatchVideoMp4(res.data.fallbackUrl);
+													}
+												} catch (err) {
+													console.error(err);
+													toast.error("Upload video thất bại");
+												} finally {
+													setWatchVideoUploading(false);
+													if (watchVideoFileInputRef.current)
+														watchVideoFileInputRef.current.value = "";
+												}
+											}}
 										/>
 									</div>
-								)}
-							</div>
+
+									{(watchVideoHls || watchVideoMp4) && (
+										<div className="mt-2">
+											<HLSPlayer
+												hlsUrl={watchVideoHls}
+												fallbackUrl={watchVideoMp4}
+											/>
+										</div>
+									)}
+								</div>
+							)}
+
+							{/* YouTube tab */}
+							{watchVideoMode === "youtube" && (
+								<div className="mb-3">
+									<label className="form-label">YouTube URL (*)</label>
+									<div className="input-group mb-2">
+										<span className="input-group-text">🔗</span>
+										<input
+											className="form-control"
+											placeholder="https://youtu.be/... hoặc https://www.youtube.com/watch?v=..."
+											value={watchVideoYoutube}
+											onChange={(e) => setWatchVideoYoutube(e.target.value)}
+										/>
+									</div>
+									{extractYoutubeId(watchVideoYoutube) ? (
+										<div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: 10, overflow: "hidden", marginTop: 8 }}>
+											<iframe
+												src={`https://www.youtube.com/embed/${extractYoutubeId(watchVideoYoutube)}`}
+												title="YouTube preview"
+												frameBorder="0"
+												allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+												allowFullScreen
+												style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+											/>
+										</div>
+									) : watchVideoYoutube ? (
+										<p className="text-danger mt-1" style={{ fontSize: "0.875rem" }}>⚠️ URL chưa đúng định dạng YouTube</p>
+									) : (
+										<p className="text-muted mt-1" style={{ fontSize: "0.875rem" }}>Paste link YouTube để xem preview.</p>
+									)}
+								</div>
+							)}
 
 							<div className="mb-3">
 								<label className="form-label">Tiêu đề video (Tùy chọn)</label>
