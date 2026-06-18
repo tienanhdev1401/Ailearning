@@ -71,6 +71,8 @@ const AiChatExperience = () => {
   const speechCacheRef = useRef(new Map());
   const audioElementRef = useRef(null);
   const hasAutoplayedIntroRef = useRef(false);
+  const streamRef = useRef(null);
+  const lastPlayedAiMessageIdRef = useRef(null);
 
   const formatMessageTime = useCallback((value) => {
     if (!value) {
@@ -155,6 +157,7 @@ const AiChatExperience = () => {
     setPlayingSpeechId(null);
     setLoadingSpeechId(null);
     hasAutoplayedIntroRef.current = false;
+    lastPlayedAiMessageIdRef.current = null;
   }, []);
 
   const pushSystemMessage = useCallback((text) => {
@@ -318,10 +321,38 @@ const AiChatExperience = () => {
     }
 
     hasAutoplayedIntroRef.current = true;
+    const key = getMessageKey(firstAiMessage);
+    lastPlayedAiMessageIdRef.current = key;
     playMessageAudio(firstAiMessage, { auto: true }).catch((error) => {
       console.warn("Auto speech playback failed", error);
     });
-  }, [conversation, messages, playMessageAudio]);
+  }, [conversation, messages, playMessageAudio, getMessageKey]);
+
+  useEffect(() => {
+    if (!conversation || conversation.status !== "active") {
+      return;
+    }
+
+    if (mode !== AI_CONVERSATION_MODE.VOICE) {
+      return;
+    }
+
+    const aiMessages = messages.filter((msg) => msg.role === "ai");
+    if (aiMessages.length === 0) {
+      return;
+    }
+
+    const latestAiMessage = aiMessages[aiMessages.length - 1];
+    const key = getMessageKey(latestAiMessage);
+
+    if (lastPlayedAiMessageIdRef.current !== key) {
+      lastPlayedAiMessageIdRef.current = key;
+      hasAutoplayedIntroRef.current = true;
+      playMessageAudio(latestAiMessage, { auto: true }).catch((error) => {
+        console.warn("Auto speech playback failed", error);
+      });
+    }
+  }, [conversation, messages, mode, playMessageAudio, getMessageKey]);
 
   const fetchCredits = useCallback(async () => {
     try {
@@ -404,6 +435,15 @@ const AiChatExperience = () => {
       if (audioElementRef.current) {
         audioElementRef.current.pause();
         audioElementRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
       }
     };
   }, []);
@@ -580,6 +620,8 @@ const AiChatExperience = () => {
     }
   };
 
+
+
   const startRecording = async () => {
     if (!conversation?.id) {
       const message = "Hãy bắt đầu phiên trước khi thu âm.";
@@ -588,6 +630,7 @@ const AiChatExperience = () => {
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
       const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
       mediaRecorderRef.current = recorder;
       chunksRef.current = [];
@@ -599,7 +642,10 @@ const AiChatExperience = () => {
       };
 
       recorder.onstop = async () => {
-        stream.getTracks().forEach((track) => track.stop());
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((track) => track.stop());
+          streamRef.current = null;
+        }
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         if (blob.size === 0) {
           setIsRecording(false);
@@ -614,6 +660,8 @@ const AiChatExperience = () => {
           } catch (conversionError) {
             console.error("WAV conversion failed", conversionError);
             pushSystemMessage("Trình duyệt chưa chuyển được bản ghi sang định dạng WAV. Bạn hãy thử lại nhé.");
+            setIsUploadingAudio(false);
+            setIsRecording(false);
             return;
           }
           const result = await AiChatService.sendAudioMessage(conversation.id, file);
@@ -647,6 +695,10 @@ const AiChatExperience = () => {
     const recorder = mediaRecorderRef.current;
     if (recorder && recorder.state !== "inactive") {
       recorder.stop();
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     }
   };
 
@@ -1319,7 +1371,6 @@ const AiChatExperience = () => {
                   💡
                 </button>
               </div>
-              {isRecording && <span className={styles.recIndicator}>Đang ghi...</span>}
             </div>
           )}
 

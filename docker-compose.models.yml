@@ -1,9 +1,33 @@
 services:
   gop-model:
     build:
-      context: ./W2V_GOP
+      context: ../W2V_GOP
     image: ailearning/gop-model:latest
     container_name: gop-model
     restart: unless-stopped
     ports:
       - "127.0.0.1:5005:5005"
+    mem_limit: 8g
+    volumes:
+      - ./logs/gop-model:/app/logs
+    networks:
+      - default
+
+  translation-service:
+    build:
+      context: ../ModelDichThuat
+    image: ailearning/translation-service:latest
+    container_name: translation-service
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5001:5001"
+    mem_limit: 4g
+    volumes:
+      - ./logs/translation-service:/app/logs
+    networks:
+      - default
+
+networks:
+  default:
+    name: ailearning_default
+    external: true

@@ -691,14 +691,6 @@
   cursor: not-allowed;
 }
 
-.recIndicator {
-  position: absolute;
-  bottom: -22px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--pp-danger);
-  letter-spacing: 0.04em;
-}
 
 /* ---------- Evaluation panel ---------- */
 .evaluationPanel {
