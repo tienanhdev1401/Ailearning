@@ -251,7 +251,7 @@ const HomePage = () => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="pt-2 pb-4 px-4">
-          <p className="text-secondary mb-4">Bạn muốn luyện tập kỹ năng {selectedSkill?.title} qua phương pháp nào dưới đây?</p>
+          <p className={styles.skillModalDesc}>Bạn muốn luyện tập kỹ năng {selectedSkill?.title} qua phương pháp nào dưới đây?</p>
           <div className="d-flex flex-column gap-3">
             {selectedSkill && skillOptions[selectedSkill.title]?.map((option) => (
               <div

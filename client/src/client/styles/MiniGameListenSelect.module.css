@@ -17,8 +17,45 @@
 .listenTitle { font-size:20px; font-weight:700; margin:0 }
 .listenSubtitle { color: var(--roadmap-lesson-muted); margin:0 }
 
-.playerRow { display:flex; gap:12px; align-items:center; margin-top:12px }
-.playBtn { border:none; padding:10px 14px; border-radius:999px; cursor:pointer; background:linear-gradient(120deg,#15f4c4,#00a8ff); color:#041422; font-weight:700 }
+.playerRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.playBtn {
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  cursor: pointer;
+  background: linear-gradient(120deg, #15f4c4, #00a8ff);
+  color: #041422;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 15px rgba(21, 244, 196, 0.3);
+}
+
+.playBtn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(21, 244, 196, 0.45);
+}
+
+.playBtnPlaying {
+  animation: pulsePlay 1.5s infinite alternate;
+}
+
+@keyframes pulsePlay {
+  0% {
+    box-shadow: 0 0 0 0 rgba(21, 244, 196, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 10px rgba(21, 244, 196, 0);
+  }
+}
 
 .optionsGrid { display:grid; grid-template-columns: repeat(2,1fr); gap:12px; margin-top:16px }
 .optionCard { border:1px solid var(--roadmap-lesson-border); border-radius:14px; padding:12px; background: var(--roadmap-lesson-body); cursor:pointer; display:flex; gap:10px; align-items:center; transition: border 0.2s ease, background 0.2s ease, transform 0.2s ease }

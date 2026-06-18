@@ -518,7 +518,7 @@
   }
 }
 /* Premium Modal Styles */
-:global(.modal-content) {
+.otpModal {
   background: rgba(255, 255, 255, 0.9) !important;
   backdrop-filter: blur(20px) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
@@ -527,22 +527,43 @@
   overflow: hidden;
 }
 
-:global(.modal-header) {
+.otpModal :global(.modal-header) {
   border-bottom: none !important;
   padding: 30px 30px 10px !important;
 }
 
-:global(.modal-title) {
+.otpModal :global(.modal-title) {
   font-weight: 700 !important;
   color: #1a1a1a !important;
   font-size: 1.5rem !important;
 }
 
-:global(.modal-body) {
+.otpModal :global(.modal-body) {
   padding: 20px 30px 30px !important;
+  color: #1e293b !important;
 }
 
-:global(.modal-footer) {
+.otpModal :global(.modal-body p) {
+  color: #1e293b !important;
+}
+
+.otpModal :global(.modal-body b) {
+  color: #0f172a !important;
+}
+
+.formTitle {
+  color: #f8fafc;
+  font-weight: 700;
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+
+[data-theme="light"] .formTitle {
+  color: #0f172a;
+}
+
+.otpModal :global(.modal-footer) {
   border-top: none !important;
   padding: 10px 30px 30px !important;
 }

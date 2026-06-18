@@ -126,7 +126,17 @@ export class AiChatService {
       throw new Error("Scenario prompt is required");
     }
 
-    const contextNote = payload.scenarioContext?.trim() || null;
+    let contextNote = payload.scenarioContext?.trim() || null;
+    if (contextNote) {
+      contextNote = await this.translateOrEnsureEnglish(contextNote);
+    }
+
+    let contextLabel = payload.scenarioContextLabel?.trim() || undefined;
+    if (contextLabel) {
+      const translatedLabel = await this.translateOrEnsureEnglish(contextLabel);
+      contextLabel = translatedLabel || undefined;
+    }
+
     const appliedPrompt = contextNote ? `${basePrompt}
 
 Learner focus or additional context:
@@ -153,7 +163,7 @@ ${contextNote}` : basePrompt;
         prompt: appliedPrompt,
         scenarioTitle: scenario?.title ?? conversation.customTitle ?? undefined,
         contextNote,
-        contextLabel: payload.scenarioContextLabel ?? scenario?.title ?? conversation.customTitle ?? undefined,
+        contextLabel: contextLabel ?? scenario?.title ?? conversation.customTitle ?? undefined,
         scenarioKey,
       });
       openingMessage = this.messageRepo.create({
@@ -811,6 +821,26 @@ ${contextNote}` : basePrompt;
       return text;
     }
     return `${text.slice(0, maxLength - 3)}...`;
+  }
+
+  private async translateOrEnsureEnglish(text: string): Promise<string> {
+    // Optimization: If the input is already purely English characters, bypass Gemini translation.
+    const isPureEnglish = /^[a-zA-Z0-9\s,.\-()]+$/.test(text);
+    if (isPureEnglish) {
+      return text;
+    }
+
+    try {
+      const response = await geminiService.generate({
+        prompt: `Translate the following text to English. If it contains non-English words or phrases, translate them to appropriate English. Keep the structure and tone of the original sentence as much as possible, but ensure the vocabulary is entirely English. If the text is already completely in English, return it exactly as is, without any modifications. Do not add any conversational filler, notes, markdown formatting, or quotation marks. Return ONLY the translated or original text.\n\nText: "${text}"`,
+        temperature: 0.1,
+        maxOutputTokens: 150,
+      });
+      return response.trim().replace(/^"|"$/g, "");
+    } catch (error) {
+      console.warn("Failed to translate context to English:", error);
+      return text;
+    }
   }
 }
 

@@ -1377,7 +1377,7 @@ const RoadMapPage = () => {
         </div>
       )}
       {overviewOpen && hasOverview && (
-        <div className={styles.drawerOverlay} onClick={closeOverview}>
+        <div className={classNames(styles.drawerOverlay, styles.centerOverlay)} onClick={closeOverview}>
           <div
             className={classNames(styles.popupShell, styles.overviewPopup)}
             onClick={(event) => event.stopPropagation()}

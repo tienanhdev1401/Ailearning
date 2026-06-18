@@ -29,6 +29,9 @@ RUN npm ci --omit=dev
 # Copy compiled output from build stage
 COPY --from=build /app/dist ./dist
 
+# Copy non-TypeScript assets (like seed JSON files)
+COPY --from=build /app/src/seeds/data ./dist/seeds/data
+
 # Create uploads directory
 RUN mkdir -p uploads
 

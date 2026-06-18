@@ -1044,16 +1044,36 @@
 
 /* ============ SKILL MODAL ============ */
 .skillModal {
-  background: linear-gradient(135deg, #19212b 0%, #1a2f3f 100%);
-  border: 1px solid rgba(0, 255, 255, 0.2);
-  border-radius: 16px;
-  color: #e0e6eb;
+  background: linear-gradient(135deg, #19212b 0%, #1a2f3f 100%) !important;
+  border: 1px solid rgba(0, 255, 255, 0.25) !important;
+  border-radius: 24px !important;
+  color: #e0e6eb !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45) !important;
+}
+
+.skillModal :global(.btn-close) {
+  filter: invert(1) grayscale(1) brightness(2) !important;
 }
 
 [data-theme='light'] .skillModal {
-  background: #ffffff;
-  border: 1px solid rgba(0, 150, 150, 0.2);
-  color: #333;
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 150, 150, 0.25) !important;
+  color: #1e293b !important;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.15) !important;
+}
+
+[data-theme='light'] .skillModal :global(.btn-close) {
+  filter: none !important;
+}
+
+.skillModalDesc {
+  color: #94a3b8;
+  font-size: 15px;
+  margin-bottom: 24px;
+}
+
+[data-theme='light'] .skillModalDesc {
+  color: #475569;
 }
 
 .skillOptionCard {

@@ -88,25 +88,40 @@
 .createBtn {
   display: inline-flex !important;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   height: 46px;
-  padding: 0 22px !important;
-  background: linear-gradient(135deg, var(--pp-accent), var(--pp-accent-2)) !important;
-  color: #06302a !important;
+  padding: 0 24px !important;
+  background: linear-gradient(135deg, #2dd4bf, #0ea5e9) !important;
+  color: #041220 !important;
   font-weight: 700 !important;
   border: none !important;
   border-radius: 12px !important;
-  box-shadow: 0 8px 20px rgba(45, 212, 191, 0.35) !important;
+  box-shadow: 0 8px 20px rgba(45, 212, 191, 0.3) !important;
   transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease !important;
 }
 
 .createBtn:hover,
 .createBtn:focus {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
-  box-shadow: 0 12px 26px rgba(45, 212, 191, 0.5) !important;
-  background: linear-gradient(135deg, var(--pp-accent), var(--pp-accent-2)) !important;
-  color: #06302a !important;
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 12px 26px rgba(45, 212, 191, 0.45) !important;
+  background: linear-gradient(135deg, #2dd4bf, #0ea5e9) !important;
+  color: #041220 !important;
+}
+
+/* Light mode button styling */
+:global([data-theme='light']) .createBtn {
+  background: linear-gradient(135deg, #0d9488, #0284c7) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 20px rgba(13, 148, 136, 0.25) !important;
+}
+
+:global([data-theme='light']) .createBtn:hover,
+:global([data-theme='light']) .createBtn:focus {
+  background: linear-gradient(135deg, #0d9488, #0284c7) !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 26px rgba(13, 148, 136, 0.35) !important;
 }
 
 /* ---------- Card ---------- */
@@ -261,12 +276,13 @@
   justify-content: center;
 }
 
-/* ---------- Modal (dark-aware) ---------- */
+/* ---------- Modal (theme-aware) ---------- */
 .darkModal {
-  background: var(--pp-bg-2) !important;
-  border: 1px solid var(--pp-border) !important;
-  border-radius: 18px !important;
-  color: var(--pp-text-strong);
+  background: #111a2e !important;
+  border: 1px solid rgba(148, 163, 184, 0.15) !important;
+  border-radius: 24px !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4) !important;
   overflow: hidden;
 }
 
@@ -275,30 +291,78 @@
 .darkModal :global(.modal-footer) {
   background: transparent !important;
   border: none !important;
-  color: var(--pp-text-strong);
+  color: #f1f5f9 !important;
+}
+
+.darkModal :global(.modal-title) {
+  font-weight: 700 !important;
 }
 
 .darkModal :global(.form-label) {
-  color: var(--pp-text);
+  color: #cbd5e1 !important;
   font-weight: 600;
   font-size: 0.92rem;
 }
 
 .darkModal :global(.form-control) {
-  background: var(--pp-surface-2) !important;
-  border: 1px solid var(--pp-border-strong) !important;
-  color: var(--pp-text-strong) !important;
-  border-radius: 10px !important;
-  padding: 10px 14px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  color: #f1f5f9 !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  transition: all 0.2s ease;
 }
 
 .darkModal :global(.form-control:focus) {
-  border-color: var(--pp-accent-border) !important;
-  box-shadow: 0 0 0 3px var(--pp-accent-soft) !important;
+  border-color: #2dd4bf !important;
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
 }
 
 .darkModal :global(.form-control::placeholder) {
-  color: var(--pp-muted) !important;
+  color: #94a3b8 !important;
+}
+
+/* Light theme support */
+:global([data-theme='light']) .darkModal {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.1) !important;
+}
+
+:global([data-theme='light']) .darkModal :global(.modal-header),
+:global([data-theme='light']) .darkModal :global(.modal-body),
+:global([data-theme='light']) .darkModal :global(.modal-footer) {
+  color: #0f172a !important;
+}
+
+:global([data-theme='light']) .darkModal :global(.form-label) {
+  color: #475569 !important;
+}
+
+:global([data-theme='light']) .darkModal :global(.form-control) {
+  background: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+:global([data-theme='light']) .darkModal :global(.form-control:focus) {
+  border-color: #0d9488 !important;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15) !important;
+  background: #ffffff !important;
+}
+
+:global([data-theme='light']) .darkModal :global(.form-control::placeholder) {
+  color: #64748b !important;
+}
+
+.darkModal :global(.btn-close) {
+  filter: invert(1) grayscale(1) brightness(2) !important;
+}
+
+:global([data-theme='light']) .darkModal :global(.btn-close) {
+  filter: none !important;
 }
 
 @media (max-width: 768px) {

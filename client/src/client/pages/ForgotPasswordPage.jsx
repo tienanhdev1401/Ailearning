@@ -131,7 +131,7 @@ const ForgotPasswordPage = () => {
 
         {/* Cột phải */}
         <div className={styles.rightPane}>
-          <h3 className="text-center text-dark fw-bold">Đặt lại mật khẩu</h3>
+          <h3 className={styles.formTitle}>Đặt lại mật khẩu</h3>
           <form className={styles.form} onSubmit={handleSendOtp}>
             <label className={styles.fieldLabel} htmlFor="email">
               Email
@@ -219,7 +219,7 @@ const ForgotPasswordPage = () => {
       </div>
 
       {/* POPUP OTP */}
-      <Modal show={showOtpModal} onHide={() => setShowOtpModal(false)} centered>
+      <Modal show={showOtpModal} onHide={() => setShowOtpModal(false)} backdrop="static" keyboard={false} contentClassName={styles.otpModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>Nhập mã OTP</Modal.Title>
         </Modal.Header>

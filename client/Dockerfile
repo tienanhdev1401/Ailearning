@@ -4,13 +4,17 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 # Copy package files first for better caching
-COPY package.json package-lock.json ./
+COPY package.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
+
+# Pass build arg to build process
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL="https://api.aelang.online"
 
 # Build the React app
 RUN npm run build

@@ -300,7 +300,7 @@ const LoginPage = () => {
         </div>
       </div>
 
-      <Modal show={showOtpModal} onHide={() => setShowOtpModal(false)} centered>
+      <Modal show={showOtpModal} onHide={() => setShowOtpModal(false)} backdrop="static" keyboard={false} contentClassName={styles.otpModal} centered>
         <Modal.Header closeButton><Modal.Title>Nhập mã OTP</Modal.Title></Modal.Header>
         <Modal.Body>
           <p>Nhập 6 chữ số OTP đã được gửi tới email: <b>{email}</b></p>

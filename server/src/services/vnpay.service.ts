@@ -121,15 +121,19 @@ export class VnpayService {
     }
 
     private formatDate(d: Date): string {
+        // VNPay yêu cầu múi giờ Việt Nam (GMT+7). Chuyển đổi giờ từ hệ thống sang GMT+7
+        const utcTime = d.getTime() + (d.getTimezoneOffset() * 60000);
+        const vnDate = new Date(utcTime + (7 * 60 * 60 * 1000));
+
         const pad = (n: number) => n.toString().padStart(2, "0");
 
         return (
-            d.getFullYear() +
-            pad(d.getMonth() + 1) +
-            pad(d.getDate()) +
-            pad(d.getHours()) +
-            pad(d.getMinutes()) +
-            pad(d.getSeconds())
+            vnDate.getFullYear() +
+            pad(vnDate.getMonth() + 1) +
+            pad(vnDate.getDate()) +
+            pad(vnDate.getHours()) +
+            pad(vnDate.getMinutes()) +
+            pad(vnDate.getSeconds())
         );
     }
 
