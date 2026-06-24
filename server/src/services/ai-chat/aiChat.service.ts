@@ -48,7 +48,21 @@ interface StartConversationPayload {
   mode: AI_CONVERSATION_MODE;
   scenarioContext?: string;
   scenarioContextLabel?: string;
+  difficultyLevel?: string;
 }
+
+const DIFFICULTY_INSTRUCTIONS: Record<string, string> = {
+  novice:
+    "IMPORTANT LANGUAGE LEVEL: The learner is a COMPLETE BEGINNER. Use only very simple, common words (A1-A2 level). Keep sentences very short (5-8 words). Avoid idioms, phrasal verbs, and complex grammar. Speak slowly and clearly. Repeat key words when helpful.",
+  intermediate:
+    "IMPORTANT LANGUAGE LEVEL: The learner is at INTERMEDIATE level. Use everyday conversational vocabulary (B1 level). Keep sentences moderate length. You may use common phrasal verbs and simple idioms. Avoid highly technical or literary language.",
+  advanced:
+    "IMPORTANT LANGUAGE LEVEL: The learner is at ADVANCED level. Use rich, varied vocabulary (B2-C1 level). Include phrasal verbs, idioms, and more complex sentence structures. Challenge the learner but remain clear.",
+  superior:
+    "IMPORTANT LANGUAGE LEVEL: The learner is at SUPERIOR level. Use sophisticated vocabulary and complex grammar (C1-C2 level). Include nuanced expressions, academic language, and cultural references. Push the learner's abilities.",
+  expert:
+    "IMPORTANT LANGUAGE LEVEL: The learner is at NATIVE-LIKE level. Speak completely naturally as you would to a native English speaker. Use colloquialisms, slang, humor, cultural references, and complex rhetorical structures without simplification.",
+};
 
 interface TextMessagePayload {
   conversationId: number;
@@ -137,10 +151,9 @@ export class AiChatService {
       contextLabel = translatedLabel || undefined;
     }
 
-    const appliedPrompt = contextNote ? `${basePrompt}
+    const difficultyInstruction = DIFFICULTY_INSTRUCTIONS[payload.difficultyLevel ?? ""] ?? "";
 
-Learner focus or additional context:
-${contextNote}` : basePrompt;
+    const appliedPrompt = [basePrompt, contextNote ? `Learner focus or additional context:\n${contextNote}` : "", difficultyInstruction].filter(Boolean).join("\n\n");
 
     const conversation = this.conversationRepo.create({
       user,

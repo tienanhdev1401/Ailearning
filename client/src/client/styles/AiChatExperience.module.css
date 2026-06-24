@@ -1457,3 +1457,161 @@
     gap: 16px;
   }
 }
+
+/* ---------- Difficulty selector ---------- */
+.difficultyField {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--pp-surface-2);
+  border: 1px solid var(--pp-border);
+}
+
+.difficultyLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--pp-text-strong);
+}
+
+.difficultyGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.difficultyChip {
+  appearance: none;
+  border: 1px solid var(--pp-border);
+  background: var(--pp-surface);
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+  text-align: left;
+}
+
+.difficultyChip:hover {
+  border-color: var(--pp-border-strong);
+  background: var(--pp-surface-strong);
+  transform: translateY(-1px);
+}
+
+.difficultyChipActive {
+  border-color: var(--pp-accent-border);
+  background: var(--pp-accent-soft);
+  box-shadow: 0 4px 12px rgba(45, 212, 191, 0.15);
+}
+
+.difficultyChipActive:hover {
+  border-color: var(--pp-accent);
+}
+
+.difficultyChipLabel {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--pp-text-strong);
+  white-space: nowrap;
+}
+
+.difficultyChipDesc {
+  font-size: 0.72rem;
+  color: var(--pp-muted);
+  white-space: nowrap;
+}
+
+/* ---------- Speed control ---------- */
+.speedControlWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.speedToggleBtn {
+  appearance: none;
+  border: 1px solid var(--pp-border-strong);
+  background: var(--pp-surface);
+  color: var(--pp-text);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.speedToggleBtn:hover {
+  background: var(--pp-surface-strong);
+  border-color: var(--pp-accent-border);
+  color: var(--pp-accent);
+  transform: translateY(-1px);
+}
+
+.speedDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--pp-bg-2);
+  border: 1px solid var(--pp-border-strong);
+  border-radius: 12px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  z-index: 50;
+  min-width: 90px;
+  animation: speedDropdownIn 0.15s ease;
+}
+
+[data-theme="light"] .speedDropdown {
+  background: #ffffff;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes speedDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.speedOption {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--pp-text);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.speedOption:hover {
+  background: var(--pp-surface-strong);
+  color: var(--pp-text-strong);
+}
+
+.speedOptionActive {
+  background: var(--pp-accent-soft);
+  color: var(--pp-accent);
+}
+
+.speedOptionActive:hover {
+  background: rgba(45, 212, 191, 0.18);
+}

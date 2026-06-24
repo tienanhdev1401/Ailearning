@@ -3,10 +3,49 @@ import styles from "../styles/AiChatExperience.module.css";
 import AiChatService from "../../services/aiChatService";
 import ConversationHistorySidebar from "../components/ConversationHistorySidebar";
 import userService from "../../services/userService";
+import api from "../../api/api";
 import { createAiChatSocket } from "../../utils/aiChatSocket";
 import { convertBlobToWav16k } from "../../utils/audioToWav";
 import AI_CONVERSATION_MODE from "../../enums/aiConversationMode.enum";
 import CreditBanner from "../components/CreditBanner";
+
+const SpeakerIcon = ({ size = 16, className = "" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    width={size}
+    height={size}
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z"
+    />
+  </svg>
+);
+
+const SpeakerPlayingIcon = ({ size = 16, className = "" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    width={size}
+    height={size}
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z"
+    />
+  </svg>
+);
 
 const modeLabels = {
   [AI_CONVERSATION_MODE.VOICE]: "Voice",
@@ -18,6 +57,22 @@ const defaultScores = [
   { key: "prosodyScore", label: "Prosody" },
   { key: "grammarScore", label: "Grammar" },
   { key: "vocabularyScore", label: "Vocabulary" },
+];
+
+const DIFFICULTY_LEVELS = [
+  { value: "novice", label: "Lính mới", desc: "Từ vựng đơn giản, câu ngắn" },
+  { value: "intermediate", label: "Tập sự", desc: "Giao tiếp hàng ngày" },
+  { value: "advanced", label: "Chiến binh", desc: "Nâng cao, đa dạng" },
+  { value: "superior", label: "Cao thủ", desc: "Phức tạp, chuyên sâu" },
+  { value: "expert", label: "Người bản xứ", desc: "Tự nhiên như native" },
+];
+
+const SPEED_OPTIONS = [
+  { value: 0.5, label: "0.5x" },
+  { value: 0.75, label: "0.75x" },
+  { value: 1.0, label: "1x" },
+  { value: 1.25, label: "1.25x" },
+  { value: 1.5, label: "1.5x" },
 ];
 
 const initialCustomScenario = {
@@ -61,6 +116,13 @@ const AiChatExperience = () => {
   const [playingSpeechId, setPlayingSpeechId] = useState(null);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [credits, setCredits] = useState(null);
+  const [difficultyLevel, setDifficultyLevel] = useState("intermediate");
+  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [showDifficultyPicker, setShowDifficultyPicker] = useState(false);
+  const [suggestedDifficulty, setSuggestedDifficulty] = useState(null);
+  const [suggestedRoadmapName, setSuggestedRoadmapName] = useState(null);
+  const speedMenuRef = useRef(null);
 
   const messagesContainerRef = useRef(null);
   const shouldAutoScrollRef = useRef(true);
@@ -130,9 +192,8 @@ const AiChatExperience = () => {
   const startDisabled = loading || isConversationActive || isInterviewIndustryMissing || isCreditsExhausted;
   const sendDisabled = !isConversationActive || isSendingText || isUploadingAudio;
   const micDisabled = !isConversationActive || isUploadingAudio;
-  const contextInputClassName = `${styles.contextInput} ${
-    isInterviewIndustryMissing ? styles.contextInputError : ""
-  }`;
+  const contextInputClassName = `${styles.contextInput} ${isInterviewIndustryMissing ? styles.contextInputError : ""
+    }`;
 
   const getMessageKey = useCallback((message) => {
     if (!message) {
@@ -248,6 +309,7 @@ const AiChatExperience = () => {
         }
 
         const audio = new Audio(audioUrl);
+        audio.playbackRate = playbackSpeed;
         audioElementRef.current = audio;
         setPlayingSpeechId(key);
 
@@ -291,8 +353,23 @@ const AiChatExperience = () => {
         }
       }
     },
-    [ensureSpeechUrl, getMessageKey, pushSystemMessage]
+    [ensureSpeechUrl, getMessageKey, pushSystemMessage, playbackSpeed]
   );
+
+  // Close speed menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (speedMenuRef.current && !speedMenuRef.current.contains(event.target)) {
+        setShowSpeedMenu(false);
+      }
+    };
+    if (showSpeedMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showSpeedMenu]);
 
   useEffect(() => {
     if (!isJobInterview) {
@@ -554,6 +631,7 @@ const AiChatExperience = () => {
     try {
       const payload = {
         mode,
+        difficultyLevel,
       };
 
       if (selectedScenarioId) {
@@ -839,14 +917,13 @@ const AiChatExperience = () => {
             {canShowSpeechButton && (
               <button
                 type="button"
-                className={`${styles.speechButton} ${
-                  isPlayingSpeech ? styles.speechButtonActive : ""
-                } ${speechDisabled ? styles.speechButtonDisabled : ""}`}
+                className={`${styles.speechButton} ${isPlayingSpeech ? styles.speechButtonActive : ""
+                  } ${speechDisabled ? styles.speechButtonDisabled : ""}`}
                 onClick={() => playMessageAudio(message)}
                 disabled={speechDisabled}
                 aria-label="Nghe lại tin nhắn này"
               >
-                {isLoadingSpeech ? "…" : isPlayingSpeech ? "🔈" : "🔊"}
+                {isLoadingSpeech ? "…" : isPlayingSpeech ? <SpeakerPlayingIcon size={15} /> : <SpeakerIcon size={15} />}
               </button>
             )}
           </div>
@@ -958,8 +1035,8 @@ const AiChatExperience = () => {
       overallScore100 !== null
         ? overallScore100
         : overallScore5 !== null
-        ? overallScore5 * 20
-        : null;
+          ? overallScore5 * 20
+          : null;
 
     const turns = Array.isArray(report.turns) ? report.turns : [];
     const weakWords = Array.isArray(report.weakWords) ? report.weakWords : [];
@@ -976,7 +1053,7 @@ const AiChatExperience = () => {
             </div>
             <div className={styles.reportHeroChips}>
               {typeof report.processedTurnCount === "number" &&
-              typeof report.turnCount === "number" ? (
+                typeof report.turnCount === "number" ? (
                 <span className={styles.reportChip}>
                   <span className={styles.reportChipDot} />
                   <strong>{report.processedTurnCount}</strong>/{report.turnCount} lượt được chấm
@@ -1005,8 +1082,8 @@ const AiChatExperience = () => {
                   typeof turn.score_0_100 === "number"
                     ? turn.score_0_100
                     : typeof turn.score_0_5 === "number"
-                    ? turn.score_0_5 * 20
-                    : null;
+                      ? turn.score_0_5 * 20
+                      : null;
                 const band = bandFromScore100(score100);
                 const percent = score100 !== null ? Math.max(0, Math.min(100, Math.round(score100))) : 0;
                 const text = turn.text ? `“${turn.text}”` : `Lượt ${index + 1}`;
@@ -1211,9 +1288,8 @@ const AiChatExperience = () => {
             {scenarios.map((scenario) => (
               <div
                 key={scenario.id}
-                className={`${styles.scenarioCard} ${
-                  selectedScenarioId === scenario.id ? styles.active : ""
-                }`}
+                className={`${styles.scenarioCard} ${selectedScenarioId === scenario.id ? styles.active : ""
+                  }`}
                 onClick={() => setSelectedScenarioId(scenario.id)}
               >
                 <div className={styles.scenarioTitle}>{scenario.title}</div>
@@ -1245,6 +1321,24 @@ const AiChatExperience = () => {
               )}
             </div>
           )}
+          <div className={styles.difficultyField}>
+            <label className={styles.difficultyLabel}>Độ khó AI</label>
+            <div className={styles.difficultyGrid}>
+              {DIFFICULTY_LEVELS.map((level) => (
+                <button
+                  key={level.value}
+                  type="button"
+                  className={`${styles.difficultyChip} ${difficultyLevel === level.value ? styles.difficultyChipActive : ""
+                    }`}
+                  onClick={() => setDifficultyLevel(level.value)}
+                  title={level.desc}
+                >
+                  <span className={styles.difficultyChipLabel}>{level.label}</span>
+                  <span className={styles.difficultyChipDesc}>{level.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
           <button
             className={styles.startButton}
             onClick={handleStart}
@@ -1253,8 +1347,8 @@ const AiChatExperience = () => {
             {loading
               ? "Đang khởi tạo..."
               : conversation?.status === "active"
-              ? "Đang trò chuyện"
-              : "Bắt đầu nhập vai"}
+                ? "Đang trò chuyện"
+                : "Bắt đầu nhập vai"}
           </button>
         </aside>
 
@@ -1262,6 +1356,42 @@ const AiChatExperience = () => {
           <div className={styles.chatHeader}>
             <h2>{conversation?.customTitle || conversation?.scenario?.title || "Chưa có phiên"}</h2>
             <div className={styles.chatHeaderActions}>
+              <div className={styles.speedControlWrap} ref={speedMenuRef}>
+                <button
+                  type="button"
+                  className={styles.speedToggleBtn}
+                  onClick={() => setShowSpeedMenu((prev) => !prev)}
+                  title="Tốc độ phát âm thanh"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <span>{playbackSpeed}x</span>
+                </button>
+                {showSpeedMenu && (
+                  <div className={styles.speedDropdown}>
+                    {SPEED_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`${styles.speedOption} ${playbackSpeed === opt.value ? styles.speedOptionActive : ""
+                          }`}
+                        onClick={() => {
+                          setPlaybackSpeed(opt.value);
+                          setShowSpeedMenu(false);
+                          // Update current playing audio speed in real-time
+                          if (audioElementRef.current) {
+                            audioElementRef.current.playbackRate = opt.value;
+                          }
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
                 className={styles.historyLink}
@@ -1336,15 +1466,15 @@ const AiChatExperience = () => {
                 onMouseLeave={isRecording ? stopRecording : undefined}
                 onTouchStart={!micDisabled
                   ? ((event) => {
-                      event.preventDefault();
-                      startRecording();
-                    })
+                    event.preventDefault();
+                    startRecording();
+                  })
                   : undefined}
                 onTouchEnd={!micDisabled
                   ? ((event) => {
-                      event.preventDefault();
-                      stopRecording();
-                    })
+                    event.preventDefault();
+                    stopRecording();
+                  })
                   : undefined}
                 onTouchCancel={!micDisabled ? stopRecording : undefined}
                 disabled={micDisabled}
