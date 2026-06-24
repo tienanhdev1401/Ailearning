@@ -9,6 +9,7 @@ import { convertBlobToWav16k } from "../../utils/audioToWav";
 import AI_CONVERSATION_MODE from "../../enums/aiConversationMode.enum";
 import CreditBanner from "../components/CreditBanner";
 import useCurrentUser from "../hooks/useCurrentUser";
+import { useNavigate } from "react-router-dom";
 
 const SpeakerIcon = ({ size = 16, className = "" }) => (
   <svg
@@ -134,6 +135,7 @@ function parseEvaluationDetails(evaluation) {
 
 const AiChatExperience = () => {
   const { userId } = useCurrentUser();
+  const navigate = useNavigate();
   const [scenarios, setScenarios] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
   const [viewingHistoryId, setViewingHistoryId] = useState(null);
@@ -160,8 +162,12 @@ const AiChatExperience = () => {
   const [showDifficultyPicker, setShowDifficultyPicker] = useState(false);
   const [suggestedDifficulty, setSuggestedDifficulty] = useState(null);
   const [suggestedRoadmapName, setSuggestedRoadmapName] = useState(null);
+  const [suggestedRoadmapId, setSuggestedRoadmapId] = useState(null);
+  const [suggestedRoadmapPercent, setSuggestedRoadmapPercent] = useState(0);
+  const [showTooltip, setShowTooltip] = useState(false);
   const speedMenuRef = useRef(null);
   const difficultyTouchedRef = useRef(false);
+  const tooltipRef = useRef(null);
 
   const messagesContainerRef = useRef(null);
   const shouldAutoScrollRef = useRef(true);
@@ -213,6 +219,11 @@ const AiChatExperience = () => {
   const selectedDifficultyMeta = useMemo(
     () => DIFFICULTY_LEVELS.find((level) => level.value === difficultyLevel) ?? DIFFICULTY_LEVELS[1],
     [difficultyLevel]
+  );
+
+  const isAiSuggested = useMemo(
+    () => suggestedDifficulty !== null && suggestedDifficulty !== undefined && difficultyLevel === suggestedDifficulty,
+    [suggestedDifficulty, difficultyLevel]
   );
 
   const isJobInterview = useMemo(() => {
@@ -415,6 +426,21 @@ const AiChatExperience = () => {
     };
   }, [showSpeedMenu]);
 
+  // Close difficulty recommendation tooltip when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+        setShowTooltip(false);
+      }
+    };
+    if (showTooltip) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showTooltip]);
+
   useEffect(() => {
     if (!isJobInterview) {
       setInterviewIndustry("");
@@ -492,6 +518,8 @@ const AiChatExperience = () => {
     if (!userId) {
       setSuggestedDifficulty(null);
       setSuggestedRoadmapName(null);
+      setSuggestedRoadmapId(null);
+      setSuggestedRoadmapPercent(0);
       return;
     }
 
@@ -514,9 +542,21 @@ const AiChatExperience = () => {
           roadmap?.title ||
           roadmap?.levelName ||
           null;
+        const roadmapId = roadmap?.id || null;
+
+        const summary = payload.progressSummary || payload.progress_summary || {};
+        const totalDays =
+          Number(summary.totalDays) ||
+          roadmap?.totalDays ||
+          roadmap?.days?.length ||
+          0;
+        const completedDays = Number(summary.lastCompletedDay) || 0;
+        const percent = totalDays > 0 ? Math.min(100, Math.round((completedDays / totalDays) * 100)) : 0;
 
         setSuggestedDifficulty(inferredDifficulty);
         setSuggestedRoadmapName(roadmapName);
+        setSuggestedRoadmapId(roadmapId);
+        setSuggestedRoadmapPercent(percent);
 
         if (inferredDifficulty && !difficultyTouchedRef.current && !isConversationActive) {
           setDifficultyLevel(inferredDifficulty);
@@ -525,6 +565,8 @@ const AiChatExperience = () => {
         if (!cancelled) {
           setSuggestedDifficulty(null);
           setSuggestedRoadmapName(null);
+          setSuggestedRoadmapId(null);
+          setSuggestedRoadmapPercent(0);
           console.warn("Failed to load active roadmap for AI chat difficulty", error);
         }
       }
@@ -1417,43 +1459,132 @@ const AiChatExperience = () => {
             </div>
           )}
           <div className={styles.difficultyField}>
-            <label className={styles.difficultyLabel}>Độ khó AI</label>
-            <button
-              type="button"
-              className={styles.difficultySummary}
-              onClick={() => setShowDifficultyPicker((prev) => !prev)}
-              aria-expanded={showDifficultyPicker}
-            >
-              <span className={styles.difficultySummaryText}>
-                <span className={styles.difficultyCurrent}>
-                  {selectedDifficultyMeta.label}
-                  {suggestedRoadmapName && suggestedDifficulty === difficultyLevel
-                    ? ` - theo ${suggestedRoadmapName}`
-                    : ""}
-                </span>
-              </span>
-              <span className={styles.difficultyChevron}>{showDifficultyPicker ? "Thu gọn" : "Chỉnh"}</span>
-            </button>
-            {showDifficultyPicker && (
-            <div className={styles.difficultyGrid}>
-              {DIFFICULTY_LEVELS.map((level) => (
-                <button
-                  key={level.value}
-                  type="button"
-                  className={`${styles.difficultyChip} ${difficultyLevel === level.value ? styles.difficultyChipActive : ""
-                    }`}
-                  onClick={() => {
-                    difficultyTouchedRef.current = true;
-                    setDifficultyLevel(level.value);
-                    setShowDifficultyPicker(false);
-                  }}
-                  title={level.desc}
-                >
-                  <span className={styles.difficultyChipLabel}>{level.label}</span>
-                  <span className={styles.difficultyChipDesc}>{level.desc}</span>
-                </button>
-              ))}
+            <div className={styles.difficultyHeader}>
+              <label className={styles.difficultyLabel}>Độ khó AI</label>
+              {isAiSuggested && (
+                <span className={styles.systemBadge}>Hệ thống đề xuất</span>
+              )}
             </div>
+
+            <div className={styles.difficultyCard}>
+              <div className={styles.difficultyCardBody}>
+                <div className={styles.difficultyLevelTitle}>{selectedDifficultyMeta.label}</div>
+                <div className={styles.difficultyLevelDesc}>{selectedDifficultyMeta.desc}</div>
+              </div>
+
+              <div className={styles.difficultyActions}>
+                {isAiSuggested && suggestedRoadmapName && (
+                  <div className={styles.tooltipWrapper} ref={tooltipRef}>
+                    <button
+                      type="button"
+                      className={styles.infoBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowTooltip((prev) => !prev);
+                      }}
+                      aria-label="Xem chi tiết đề xuất"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="lucide lucide-info-icon lucide-info"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 16v-4" />
+                        <path d="M12 8h.01" />
+                      </svg>
+                    </button>
+
+                    {showTooltip && (
+                      <div className={styles.tooltipPopover}>
+                        <div className={styles.tooltipContent}>
+                          <p className={styles.tooltipText}>
+                            Độ khó này được đề xuất theo trình độ hiện tại của bạn.
+                          </p>
+                          <div className={styles.tooltipDivider} />
+                          <div className={styles.tooltipSourceBlock}>
+                            <div className={styles.tooltipSourceTitle}>Nguồn đánh giá:</div>
+                            <ul className={styles.tooltipSourceList}>
+                              <li>{suggestedRoadmapName}</li>
+                              <li>
+                                Tiến độ hoàn thành: <strong>{suggestedRoadmapPercent}%</strong>
+                              </li>
+                            </ul>
+                          </div>
+                          {suggestedRoadmapId && (
+                            <button
+                              type="button"
+                              className={styles.tooltipLinkBtn}
+                              onClick={() => {
+                                setShowTooltip(false);
+                                navigate(`/roadmaps/${suggestedRoadmapId}/days`);
+                              }}
+                            >
+                              Mở lộ trình
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  className={`${styles.changeDifficultyBtn} ${showDifficultyPicker ? styles.changeActive : ""}`}
+                  onClick={() => setShowDifficultyPicker((prev) => !prev)}
+                  aria-expanded={showDifficultyPicker}
+                  title={showDifficultyPicker ? "Thu gọn" : "Thay đổi độ khó"}
+                  aria-label={showDifficultyPicker ? "Thu gọn" : "Thay đổi độ khó"}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-settings2-icon lucide-settings-2"
+                  >
+                    <path d="M14 17H5" />
+                    <path d="M19 7h-9" />
+                    <circle cx="17" cy="17" r="3" />
+                    <circle cx="7" cy="7" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {showDifficultyPicker && (
+              <div className={styles.difficultyGrid}>
+                {DIFFICULTY_LEVELS.map((level) => (
+                  <button
+                    key={level.value}
+                    type="button"
+                    className={`${styles.difficultyChip} ${difficultyLevel === level.value ? styles.difficultyChipActive : ""
+                      }`}
+                    onClick={() => {
+                      difficultyTouchedRef.current = true;
+                      setDifficultyLevel(level.value);
+                      setShowDifficultyPicker(false);
+                    }}
+                    title={level.desc}
+                  >
+                    <span className={styles.difficultyChipLabel}>{level.label}</span>
+                    <span className={styles.difficultyChipDesc}>{level.desc}</span>
+                  </button>
+                ))}
+              </div>
             )}
           </div>
           <button

@@ -1462,61 +1462,287 @@
 .difficultyField {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px;
-  border-radius: 14px;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
   background: var(--pp-surface-2);
   border: 1px solid var(--pp-border);
 }
 
-.difficultyLabel {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--pp-text-strong);
+.difficultyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
 }
 
-.difficultySummary {
-  appearance: none;
+.difficultyLabel {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--pp-text-strong);
+  letter-spacing: 0.2px;
+}
+
+.systemBadge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--pp-accent);
+  background: var(--pp-accent-soft);
+  border: 1px solid var(--pp-accent-border);
+  padding: 2.5px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.difficultyCard {
   width: 100%;
-  border: 1px solid var(--pp-border);
   background: var(--pp-surface);
-  color: var(--pp-text);
+  border: 1px solid var(--pp-border);
   border-radius: 12px;
-  padding: 10px 12px;
-  cursor: pointer;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   text-align: left;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
 
-.difficultySummary:hover {
-  border-color: var(--pp-accent-border);
+.difficultyCard:hover {
+  border-color: var(--pp-border-strong);
   background: var(--pp-surface-strong);
 }
 
-.difficultySummaryText {
+.difficultyCardBody {
   min-width: 0;
-  display: grid;
-  gap: 2px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.difficultyCurrent {
+.difficultyLevelTitle {
   color: var(--pp-text-strong);
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.difficultyLevelDesc {
+  color: var(--pp-muted);
+  font-size: 0.76rem;
+  line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.difficultyChevron {
+.difficultyActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
+}
+
+.infoBtn {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--pp-muted);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.infoBtn:hover {
+  color: var(--pp-text-strong);
+  background: var(--pp-surface-strong);
+}
+
+.infoBtn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.changeDifficultyBtn {
+  appearance: none;
+  background: var(--pp-surface-strong);
+  border: 1px solid var(--pp-border-strong);
+  color: var(--pp-text-strong);
+  cursor: pointer;
+  padding: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.changeDifficultyBtn:hover,
+.changeDifficultyBtn.changeActive {
+  background: var(--pp-accent-soft);
+  border-color: var(--pp-accent-border);
   color: var(--pp-accent);
-  font-size: 0.76rem;
+}
+
+.changeDifficultyBtn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  display: block;
+}
+
+/* Tooltip Popover */
+.tooltipWrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.tooltipPopover {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: -10px;
+  width: 250px;
+  z-index: 100;
+  background: var(--pp-bg-2);
+  border: 1px solid var(--pp-border-strong);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: tooltipFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+}
+
+[data-theme="light"] .tooltipPopover {
+  background: #ffffff;
+}
+
+.tooltipPopover::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 17px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: var(--pp-border-strong) transparent transparent transparent;
+}
+
+.tooltipPopover::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 18px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: var(--pp-bg-2) transparent transparent transparent;
+  z-index: 1;
+  margin-top: -1px;
+}
+
+[data-theme="light"] .tooltipPopover::before {
+  border-color: #ffffff transparent transparent transparent;
+}
+
+.tooltipContent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tooltipText {
+  font-size: 0.8rem;
+  color: var(--pp-text);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.tooltipDivider {
+  height: 1px;
+  background: var(--pp-border);
+}
+
+.tooltipSourceBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tooltipSourceTitle {
+  font-size: 0.72rem;
   font-weight: 700;
+  color: var(--pp-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tooltipSourceList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.8rem;
+  color: var(--pp-text-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tooltipSourceList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.tooltipSourceList li::before {
+  content: "•";
+  color: var(--pp-accent);
+  font-weight: bold;
+}
+
+.tooltipLinkBtn {
+  appearance: none;
+  width: 100%;
+  border: 1px solid var(--pp-accent-border);
+  background: var(--pp-accent-soft);
+  color: var(--pp-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  display: inline-block;
+}
+
+.tooltipLinkBtn:hover {
+  background: var(--pp-accent);
+  color: var(--pp-bg);
+  border-color: var(--pp-accent);
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .difficultyGrid {
