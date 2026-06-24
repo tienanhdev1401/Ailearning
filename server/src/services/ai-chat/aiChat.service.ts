@@ -21,6 +21,7 @@ import {
   GuidanceView,
 } from "../ai/scenarioGuidance.service";
 import { FEATURE_AI_CHAT, type ScenarioKey } from "./constants";
+import { RoadmapEnrollment } from "../../models/roadmapEnrollment";
 
 /** Strip markdown formatting artifacts (*italic*, **bold**, etc.) from AI output. */
 function stripMarkdownArtifacts(text: string): string {
@@ -38,7 +39,41 @@ function stripMarkdownArtifacts(text: string): string {
     .trim();
 }
 
-const FORMAT_RULE = "CRITICAL: Output plain conversational text only. Never use markdown syntax such as asterisks, underscores, hashtags, bold, or italic. Do not wrap words in quotation marks for emphasis. Keep your reply concise (2-4 sentences). Sound natural like a real person, not an AI assistant.";
+const FORMAT_RULE = "CRITICAL: Output plain conversational text only. Never use markdown syntax such as asterisks, underscores, hashtags, bold, or italic. Do not wrap words in quotation marks for emphasis. Keep your reply concise and directly useful. Sound natural like a real person, not an AI assistant.";
+
+const RESPONSE_LIMITS: Record<string, { sentences: number; chars: number }> = {
+  novice: { sentences: 2, chars: 180 },
+  intermediate: { sentences: 3, chars: 260 },
+  advanced: { sentences: 4, chars: 380 },
+  superior: { sentences: 4, chars: 460 },
+  expert: { sentences: 5, chars: 560 },
+};
+
+function compactAiReply(text: string, difficultyLevel?: string): string {
+  const limit = RESPONSE_LIMITS[difficultyLevel ?? ""] ?? RESPONSE_LIMITS.intermediate;
+  const cleaned = stripMarkdownArtifacts(text).replace(/\s+/g, " ").trim();
+  if (!cleaned) return cleaned;
+
+  const sentences = cleaned.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [cleaned];
+  let compact = sentences.slice(0, limit.sentences).join(" ").trim();
+
+  if (compact.length <= limit.chars) {
+    return compact;
+  }
+
+  const sliced = compact.slice(0, limit.chars).trim();
+  const lastPunctuation = Math.max(
+    sliced.lastIndexOf("."),
+    sliced.lastIndexOf("!"),
+    sliced.lastIndexOf("?")
+  );
+  if (lastPunctuation >= Math.floor(limit.chars * 0.55)) {
+    return sliced.slice(0, lastPunctuation + 1).trim();
+  }
+
+  const lastSpace = sliced.lastIndexOf(" ");
+  return `${sliced.slice(0, lastSpace > 40 ? lastSpace : limit.chars).trim()}...`;
+}
 
 interface StartConversationPayload {
   userId: number;
@@ -49,19 +84,21 @@ interface StartConversationPayload {
   scenarioContext?: string;
   scenarioContextLabel?: string;
   difficultyLevel?: string;
+  learnerRoadmapName?: string;
+  difficultySource?: string;
 }
 
 const DIFFICULTY_INSTRUCTIONS: Record<string, string> = {
   novice:
-    "IMPORTANT LANGUAGE LEVEL: The learner is a COMPLETE BEGINNER. Use only very simple, common words (A1-A2 level). Keep sentences very short (5-8 words). Avoid idioms, phrasal verbs, and complex grammar. Speak slowly and clearly. Repeat key words when helpful.",
+    "IMPORTANT LANGUAGE LEVEL: The learner is a COMPLETE BEGINNER. Use only very simple, common words (A1-A2 level). Keep sentences very short (5-8 words). Avoid idioms, phrasal verbs, and complex grammar. Ask only one easy question at a time. Maximum 2 short sentences.",
   intermediate:
-    "IMPORTANT LANGUAGE LEVEL: The learner is at INTERMEDIATE level. Use everyday conversational vocabulary (B1 level). Keep sentences moderate length. You may use common phrasal verbs and simple idioms. Avoid highly technical or literary language.",
+    "IMPORTANT LANGUAGE LEVEL: The learner is at INTERMEDIATE level. Use everyday conversational vocabulary (B1 level). Keep sentences moderate length. Ask one focused follow-up question. Avoid highly technical or literary language. Maximum 3 sentences.",
   advanced:
-    "IMPORTANT LANGUAGE LEVEL: The learner is at ADVANCED level. Use rich, varied vocabulary (B2-C1 level). Include phrasal verbs, idioms, and more complex sentence structures. Challenge the learner but remain clear.",
+    "IMPORTANT LANGUAGE LEVEL: The learner is at ADVANCED level. Use rich, varied vocabulary (B2-C1 level). Include some phrasal verbs, idioms, and more complex sentence structures. Challenge the learner but remain clear. Maximum 4 sentences.",
   superior:
-    "IMPORTANT LANGUAGE LEVEL: The learner is at SUPERIOR level. Use sophisticated vocabulary and complex grammar (C1-C2 level). Include nuanced expressions, academic language, and cultural references. Push the learner's abilities.",
+    "IMPORTANT LANGUAGE LEVEL: The learner is at SUPERIOR level. Use sophisticated vocabulary and complex grammar (C1-C2 level). Include nuanced expressions when relevant. Push the learner's abilities without over-explaining. Maximum 4 sentences.",
   expert:
-    "IMPORTANT LANGUAGE LEVEL: The learner is at NATIVE-LIKE level. Speak completely naturally as you would to a native English speaker. Use colloquialisms, slang, humor, cultural references, and complex rhetorical structures without simplification.",
+    "IMPORTANT LANGUAGE LEVEL: The learner is at NATIVE-LIKE level. Speak naturally as you would to a native English speaker. Use colloquialisms, humor, and cultural references when relevant. Maximum 5 sentences.",
 };
 
 interface TextMessagePayload {
@@ -82,6 +119,7 @@ export class AiChatService {
   private messageRepo: Repository<AiMessage>;
   private evaluationRepo: Repository<AiEvaluation>;
   private userRepo: Repository<User>;
+  private enrollmentRepo: Repository<RoadmapEnrollment>;
 
   constructor() {
     this.scenarioRepo = AppDataSource.getRepository(AiScenario);
@@ -89,6 +127,7 @@ export class AiChatService {
     this.messageRepo = AppDataSource.getRepository(AiMessage);
     this.evaluationRepo = AppDataSource.getRepository(AiEvaluation);
     this.userRepo = AppDataSource.getRepository(User);
+    this.enrollmentRepo = AppDataSource.getRepository(RoadmapEnrollment);
   }
 
   async listScenarios(userId: number) {
@@ -151,15 +190,33 @@ export class AiChatService {
       contextLabel = translatedLabel || undefined;
     }
 
-    const difficultyInstruction = DIFFICULTY_INSTRUCTIONS[payload.difficultyLevel ?? ""] ?? "";
+    const activeEnrollment = await this.getActiveEnrollmentForDifficulty(payload.userId);
+    const activeRoadmapName =
+      payload.learnerRoadmapName?.trim() ||
+      activeEnrollment?.roadmap?.levelName?.trim() ||
+      null;
+    const resolvedDifficultyLevel = this.resolveDifficultyLevel(
+      payload.difficultyLevel,
+      activeRoadmapName
+    );
+    const difficultyInstruction = DIFFICULTY_INSTRUCTIONS[resolvedDifficultyLevel] ?? "";
+    const learnerProfileInstruction = activeRoadmapName
+      ? `LEARNER PROFILE: The learner is currently enrolled in "${activeRoadmapName}". Use this only to calibrate difficulty and topic relevance. Do not make a long announcement about it.`
+      : "";
 
-    const appliedPrompt = [basePrompt, contextNote ? `Learner focus or additional context:\n${contextNote}` : "", difficultyInstruction].filter(Boolean).join("\n\n");
+    const sessionInstruction = [
+      contextNote ? `Learner focus or additional context:\n${contextNote}` : "",
+      learnerProfileInstruction,
+      difficultyInstruction,
+    ].filter(Boolean).join("\n\n");
+
+    const appliedPrompt = [basePrompt, sessionInstruction].filter(Boolean).join("\n\n");
 
     const conversation = this.conversationRepo.create({
       user,
       scenario,
       customTitle: scenario ? null : payload.customTitle ?? "Custom scenario",
-      customPrompt: scenario ? (contextNote ?? null) : appliedPrompt,
+      customPrompt: scenario ? (sessionInstruction || null) : appliedPrompt,
       mode: payload.mode,
       status: AI_CONVERSATION_STATUS.ACTIVE,
     });
@@ -178,6 +235,7 @@ export class AiChatService {
         contextNote,
         contextLabel: contextLabel ?? scenario?.title ?? conversation.customTitle ?? undefined,
         scenarioKey,
+        difficultyLevel: resolvedDifficultyLevel,
       });
       openingMessage = this.messageRepo.create({
         conversation: saved,
@@ -590,8 +648,8 @@ export class AiChatService {
     return aiMessage;
   }
 
-  private async generateOpeningLine(options: { prompt: string; scenarioTitle?: string; contextNote?: string | null; contextLabel?: string; scenarioKey: ScenarioKey; }) {
-    const { prompt, scenarioTitle, contextNote, contextLabel, scenarioKey } = options;
+  private async generateOpeningLine(options: { prompt: string; scenarioTitle?: string; contextNote?: string | null; contextLabel?: string; scenarioKey: ScenarioKey; difficultyLevel?: string; }) {
+    const { prompt, scenarioTitle, contextNote, contextLabel, scenarioKey, difficultyLevel } = options;
     const guidance = await scenarioGuidanceService.resolve(scenarioKey);
 
     // Per-scenario override falls back to the generic "opening" prompt.
@@ -619,11 +677,11 @@ export class AiChatService {
         maxOutputTokens: rendered.resolved.config.maxOutputTokens ?? 300,
       });
 
-      const trimmed = stripMarkdownArtifacts(response ?? "");
-      return trimmed.length ? trimmed : fallback;
+      const trimmed = compactAiReply(response ?? "", difficultyLevel);
+      return trimmed.length ? trimmed : compactAiReply(fallback, difficultyLevel);
     } catch (error) {
       console.error("Gemini opening line failed", error);
-      return fallback;
+      return compactAiReply(fallback, difficultyLevel);
     }
   }
 
@@ -642,6 +700,7 @@ export class AiChatService {
     const scenarioBrief = scenarioBriefParts.length
       ? scenarioBriefParts.join("\n\n")
       : "(No additional briefing provided.)";
+    const resolvedDifficultyLevel = this.resolveDifficultyLevel(undefined, scenarioBrief);
     const orderedMessages = [...conversation.messages].sort(
       (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
     );
@@ -689,7 +748,7 @@ export class AiChatService {
       },
       "followUp"
     );
-    const fallback = this.buildFollowUpFallback(conversation, latestUserText, guidance);
+    const fallback = this.buildFollowUpFallback(conversation, latestUserText, guidance, resolvedDifficultyLevel);
 
     try {
       const response = await geminiService.generate({
@@ -699,28 +758,28 @@ export class AiChatService {
         maxOutputTokens: rendered.resolved.config.maxOutputTokens ?? 400,
       });
 
-      const trimmed = stripMarkdownArtifacts(response ?? "");
+      const trimmed = compactAiReply(response ?? "", resolvedDifficultyLevel);
       if (trimmed?.length) {
         return trimmed;
       }
       console.warn(
         `[AiChat] Gemini follow-up returned empty for conversation ${conversation.id}. Using fallback.`
       );
-      return fallback;
+      return compactAiReply(fallback, resolvedDifficultyLevel);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(
         `[AiChat] Gemini follow-up failed for conversation ${conversation.id}: ${message}`
       );
-      return fallback;
+      return compactAiReply(fallback, resolvedDifficultyLevel);
     }
   }
 
-  private buildFollowUpFallback(_conversation: AiConversation, latestUserText: string, guidance: GuidanceView) {
+  private buildFollowUpFallback(_conversation: AiConversation, latestUserText: string, guidance: GuidanceView, difficultyLevel?: string) {
     const trimmedLatest = latestUserText.replace(/[\r\n]+/g, " ").trim();
 
     if (!trimmedLatest) {
-      return "Could you tell me a bit more so we can keep the conversation moving?";
+      return compactAiReply("Could you tell me a bit more so we can keep the conversation moving?", difficultyLevel);
     }
 
     // Use scenario guidance fallbacks from database only. No hardcoded templates.
@@ -730,11 +789,11 @@ export class AiChatService {
       ).length;
       const jitter = Math.floor(Math.random() * guidance.fallbackFollowUps.length);
       const index = (userTurns + jitter) % guidance.fallbackFollowUps.length;
-      return guidance.fallbackFollowUps[index];
+      return compactAiReply(guidance.fallbackFollowUps[index], difficultyLevel);
     }
 
     // Ultra-generic fallback when no DB guidance available (should not happen in production)
-    return "Thanks for sharing. Could you expand on that a bit more?";
+    return compactAiReply("Thanks for sharing. Could you expand on that a bit more?", difficultyLevel);
   }
 
   private applyFallbackTemplate(
@@ -834,6 +893,72 @@ export class AiChatService {
       return text;
     }
     return `${text.slice(0, maxLength - 3)}...`;
+  }
+
+  private async getActiveEnrollmentForDifficulty(userId: number) {
+    return this.enrollmentRepo.findOne({
+      where: { user: { id: userId }, status: "active" },
+      relations: ["roadmap"],
+      order: { started_at: "DESC" },
+    });
+  }
+
+  private resolveDifficultyLevel(requestedLevel?: string, roadmapName?: string | null) {
+    const normalizedRequested = requestedLevel?.trim().toLowerCase();
+    if (normalizedRequested && DIFFICULTY_INSTRUCTIONS[normalizedRequested]) {
+      return normalizedRequested;
+    }
+
+    const source = (roadmapName ?? "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+    if (!source) {
+      return "intermediate";
+    }
+
+    if (
+      source.includes("complete beginner") ||
+      source.includes("zero") ||
+      source.includes("starter") ||
+      source.includes("newbie") ||
+      source.includes("a1") ||
+      source.includes("300")
+    ) {
+      return "novice";
+    }
+
+    if (
+      source.includes("expert") ||
+      source.includes("native") ||
+      source.includes("c2") ||
+      source.includes("950") ||
+      source.includes("990")
+    ) {
+      return "expert";
+    }
+
+    if (
+      source.includes("superior") ||
+      source.includes("c1") ||
+      source.includes("850") ||
+      source.includes("900")
+    ) {
+      return "superior";
+    }
+
+    if (
+      source.includes("advanced") ||
+      source.includes("b2") ||
+      source.includes("700") ||
+      source.includes("750") ||
+      source.includes("800")
+    ) {
+      return "advanced";
+    }
+
+    return "intermediate";
   }
 
   private async translateOrEnsureEnglish(text: string): Promise<string> {

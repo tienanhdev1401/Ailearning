@@ -8,6 +8,7 @@ import { createAiChatSocket } from "../../utils/aiChatSocket";
 import { convertBlobToWav16k } from "../../utils/audioToWav";
 import AI_CONVERSATION_MODE from "../../enums/aiConversationMode.enum";
 import CreditBanner from "../components/CreditBanner";
+import useCurrentUser from "../hooks/useCurrentUser";
 
 const SpeakerIcon = ({ size = 16, className = "" }) => (
   <svg
@@ -75,6 +76,42 @@ const SPEED_OPTIONS = [
   { value: 1.5, label: "1.5x" },
 ];
 
+const ROADMAP_DIFFICULTY_RULES = [
+  { level: "novice", keywords: ["zero", "beginner", "starter", "newbie", "a1", "300"] },
+  { level: "intermediate", keywords: ["intermediate", "basic", "a2", "b1", "450", "500", "600"] },
+  { level: "advanced", keywords: ["advanced", "b2", "700", "750", "800"] },
+  { level: "superior", keywords: ["superior", "c1", "850", "900"] },
+  { level: "expert", keywords: ["expert", "native", "c2", "950", "990"] },
+];
+
+const normalizeForDifficulty = (value = "") =>
+  value
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+const inferDifficultyFromRoadmap = (roadmap) => {
+  const source = normalizeForDifficulty(
+    [
+      roadmap?.displayName,
+      roadmap?.title,
+      roadmap?.levelName,
+      roadmap?.description,
+    ]
+      .filter(Boolean)
+      .join(" ")
+  );
+
+  if (!source) return null;
+
+  const matchedRule = ROADMAP_DIFFICULTY_RULES.find((rule) =>
+    rule.keywords.some((keyword) => source.includes(keyword))
+  );
+
+  return matchedRule?.level ?? null;
+};
+
 const initialCustomScenario = {
   title: "",
   description: "",
@@ -96,6 +133,7 @@ function parseEvaluationDetails(evaluation) {
 }
 
 const AiChatExperience = () => {
+  const { userId } = useCurrentUser();
   const [scenarios, setScenarios] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
   const [viewingHistoryId, setViewingHistoryId] = useState(null);
@@ -123,6 +161,7 @@ const AiChatExperience = () => {
   const [suggestedDifficulty, setSuggestedDifficulty] = useState(null);
   const [suggestedRoadmapName, setSuggestedRoadmapName] = useState(null);
   const speedMenuRef = useRef(null);
+  const difficultyTouchedRef = useRef(false);
 
   const messagesContainerRef = useRef(null);
   const shouldAutoScrollRef = useRef(true);
@@ -169,6 +208,11 @@ const AiChatExperience = () => {
   const selectedScenario = useMemo(
     () => scenarios.find((item) => item.id === selectedScenarioId) ?? null,
     [scenarios, selectedScenarioId]
+  );
+
+  const selectedDifficultyMeta = useMemo(
+    () => DIFFICULTY_LEVELS.find((level) => level.value === difficultyLevel) ?? DIFFICULTY_LEVELS[1],
+    [difficultyLevel]
   );
 
   const isJobInterview = useMemo(() => {
@@ -445,6 +489,55 @@ const AiChatExperience = () => {
   }, [fetchCredits]);
 
   useEffect(() => {
+    if (!userId) {
+      setSuggestedDifficulty(null);
+      setSuggestedRoadmapName(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadActiveRoadmapDifficulty = async () => {
+      try {
+        const response = await api.get(`/roadmap_enrollments/user/${userId}/active`);
+        if (cancelled) return;
+
+        const payload = response.data ?? {};
+        const roadmap =
+          payload.roadmap ||
+          payload.enrollment?.roadmap ||
+          payload.roadmap_enrollement?.roadmap ||
+          null;
+        const inferredDifficulty = inferDifficultyFromRoadmap(roadmap);
+        const roadmapName =
+          roadmap?.displayName ||
+          roadmap?.title ||
+          roadmap?.levelName ||
+          null;
+
+        setSuggestedDifficulty(inferredDifficulty);
+        setSuggestedRoadmapName(roadmapName);
+
+        if (inferredDifficulty && !difficultyTouchedRef.current && !isConversationActive) {
+          setDifficultyLevel(inferredDifficulty);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setSuggestedDifficulty(null);
+          setSuggestedRoadmapName(null);
+          console.warn("Failed to load active roadmap for AI chat difficulty", error);
+        }
+      }
+    };
+
+    loadActiveRoadmapDifficulty();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, isConversationActive]);
+
+  useEffect(() => {
     const loadScenarios = async () => {
       try {
         const data = await AiChatService.fetchScenarios();
@@ -632,6 +725,8 @@ const AiChatExperience = () => {
       const payload = {
         mode,
         difficultyLevel,
+        learnerRoadmapName: suggestedRoadmapName || undefined,
+        difficultySource: suggestedDifficulty === difficultyLevel ? "roadmap" : "manual",
       };
 
       if (selectedScenarioId) {
@@ -1323,6 +1418,23 @@ const AiChatExperience = () => {
           )}
           <div className={styles.difficultyField}>
             <label className={styles.difficultyLabel}>Độ khó AI</label>
+            <button
+              type="button"
+              className={styles.difficultySummary}
+              onClick={() => setShowDifficultyPicker((prev) => !prev)}
+              aria-expanded={showDifficultyPicker}
+            >
+              <span className={styles.difficultySummaryText}>
+                <span className={styles.difficultyCurrent}>
+                  {selectedDifficultyMeta.label}
+                  {suggestedRoadmapName && suggestedDifficulty === difficultyLevel
+                    ? ` - theo ${suggestedRoadmapName}`
+                    : ""}
+                </span>
+              </span>
+              <span className={styles.difficultyChevron}>{showDifficultyPicker ? "Thu gọn" : "Chỉnh"}</span>
+            </button>
+            {showDifficultyPicker && (
             <div className={styles.difficultyGrid}>
               {DIFFICULTY_LEVELS.map((level) => (
                 <button
@@ -1330,7 +1442,11 @@ const AiChatExperience = () => {
                   type="button"
                   className={`${styles.difficultyChip} ${difficultyLevel === level.value ? styles.difficultyChipActive : ""
                     }`}
-                  onClick={() => setDifficultyLevel(level.value)}
+                  onClick={() => {
+                    difficultyTouchedRef.current = true;
+                    setDifficultyLevel(level.value);
+                    setShowDifficultyPicker(false);
+                  }}
                   title={level.desc}
                 >
                   <span className={styles.difficultyChipLabel}>{level.label}</span>
@@ -1338,6 +1454,7 @@ const AiChatExperience = () => {
                 </button>
               ))}
             </div>
+            )}
           </div>
           <button
             className={styles.startButton}

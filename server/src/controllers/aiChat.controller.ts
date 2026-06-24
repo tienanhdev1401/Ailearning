@@ -58,6 +58,8 @@ export const startSession = async (req: Request, res: Response, next: NextFuncti
       scenarioContext,
       scenarioContextLabel,
       difficultyLevel,
+      learnerRoadmapName,
+      difficultySource,
     } = req.body;
 
     // Validate the conversation mode against the supported enum before doing
@@ -95,6 +97,8 @@ export const startSession = async (req: Request, res: Response, next: NextFuncti
       scenarioContext: normalizedContext,
       scenarioContextLabel: normalizedContextLabel,
       difficultyLevel: typeof difficultyLevel === "string" ? difficultyLevel.trim() || undefined : undefined,
+      learnerRoadmapName: typeof learnerRoadmapName === "string" ? learnerRoadmapName.trim() || undefined : undefined,
+      difficultySource: typeof difficultySource === "string" ? difficultySource.trim() || undefined : undefined,
     };
 
     try {
