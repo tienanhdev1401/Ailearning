@@ -105,7 +105,7 @@ const ABCDGame = ({ cards }) => {
       <div className={styles.optionsGrid}>
         {options.map((option, idx) => {
           const isSelected = selectedOption === option;
-          const isCorrect = option === cards[currentIndex].definition;
+          const isCorrect = option === shuffledCards[currentIndex].definition;
           
           let cardClass = styles.optionCard;
           if (feedback) {
@@ -138,7 +138,7 @@ const ABCDGame = ({ cards }) => {
             {feedback === 'correct' ? "Chính xác! Làm tốt lắm." : `Chưa đúng. Đáp án là: ${shuffledCards[currentIndex].definition}`}
           </div>
           <button className={styles.nextBtn} onClick={handleNext}>
-            {currentIndex < cards.length - 1 ? "Tiếp theo" : "Xem kết quả"} <ArrowRight />
+            {currentIndex < shuffledCards.length - 1 ? "Tiếp theo" : "Xem kết quả"} <ArrowRight />
           </button>
         </div>
       )}

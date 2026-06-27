@@ -50,16 +50,23 @@ export class DailyChallengeService {
     // const isEligible = progress >= 0.2; // 20%
     const isEligible = true; // Bắt buộc là true để TEST (Gốc: progress >= 0.2)
 
-    // Logic kiểm tra streak và reset nếu quá 24h
+    // Logic kiểm tra streak: reset nếu bỏ lỡ ngày hôm qua
     let currentStreak = enrollment.streak;
     const now = new Date();
 
     if (enrollment.dailyChallengeCompletedAt) {
       const lastCompleted = new Date(enrollment.dailyChallengeCompletedAt);
-      const diffInHours = (now.getTime() - lastCompleted.getTime()) / (1000 * 60 * 60);
 
-      // Nếu quá 48h (bỏ lỡ cả ngày hôm qua) thì reset streak
-      if (diffInHours > 48) {
+      // So sánh theo ngày lịch (calendar day)
+      const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const lastDate = new Date(lastCompleted.getFullYear(), lastCompleted.getMonth(), lastCompleted.getDate());
+      const yesterdayDate = new Date(todayDate);
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+
+      const diffDays = Math.round((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      // Nếu lần cuối làm không phải hôm qua hoặc hôm nay → đã bỏ chuỗi → reset
+      if (diffDays > 1) {
         currentStreak = 0;
         enrollment.streak = 0;
         await roadmapEnrollementRepository.save(enrollment);
@@ -184,8 +191,26 @@ export class DailyChallengeService {
       return { streak: enrollment.streak, message: "Hôm nay bạn đã làm rồi!" };
     }
 
-    // Tăng streak
-    enrollment.streak += 1;
+    // Tăng hoặc reset streak dựa theo ngày lịch
+    const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (enrollment.dailyChallengeCompletedAt) {
+      const lastCompleted = new Date(enrollment.dailyChallengeCompletedAt);
+      const lastDate = new Date(lastCompleted.getFullYear(), lastCompleted.getMonth(), lastCompleted.getDate());
+      const diffDays = Math.round((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
+        // Làm đúng hôm sau → chuỗi liên tục → tăng
+        enrollment.streak += 1;
+      } else {
+        // Bỏ lỡ ≥ 1 ngày → reset chuỗi về 1
+        enrollment.streak = 1;
+      }
+    } else {
+      // Lần đầu làm
+      enrollment.streak = 1;
+    }
+
     enrollment.dailyChallengeCompletedAt = now;
     enrollment.lastActivityAt = now;
 
