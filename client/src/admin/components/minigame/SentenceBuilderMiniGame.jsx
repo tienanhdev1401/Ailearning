@@ -129,7 +129,7 @@ const SentenceBuilderMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
 
         <div className="mb-3">
           <h6>Preview</h6>
-          <div style={{ padding: 12, border: "1px solid #e9ecef", borderRadius: 6, background: "#fff" }}>
+          <div className="bg-body border rounded p-3">
             {tokens.length ? tokens.map(t => t.text).join(" ") : <span className="text-muted">No tokens</span>}
           </div>
         </div>
@@ -145,3 +145,4 @@ const SentenceBuilderMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
 };
 
 export default SentenceBuilderMiniGame;
+

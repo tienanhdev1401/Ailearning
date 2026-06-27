@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import DOMPurify from "dompurify";
 import { Editor } from "@tinymce/tinymce-react";
 import { useToast } from "../../../context/ToastContext";
+import { ThemeContext } from "../../../context/ThemeContext";
 
 const LessonMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
   const toast = useToast();
+  const { isDarkMode } = useContext(ThemeContext);
   const [prompt, setPrompt] = useState(minigame?.prompt ?? "");
   const [content, setContent] = useState(minigame?.resources?.content ?? "");
   const [saving, setSaving] = useState(false);
@@ -118,6 +120,8 @@ const LessonMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
                 plugins: "lists table paste link image code",
                 toolbar:
                   "undo redo | bold italic underline | bullist numlist | table | link image | alignleft aligncenter alignright | code",
+                skin: isDarkMode ? "oxide-dark" : "oxide",
+                content_css: isDarkMode ? "dark" : "default",
 
                 // Auto clean Word formatting
                 paste_data_images: false,
@@ -133,14 +137,7 @@ const LessonMiniGame = ({ minigame, onClose, onSave, onDelete }) => {
               onEditorChange={(val) => setContent(val)}
             />
           ) : (
-            <div
-              style={{
-                border: "1px solid #e9ecef",
-                borderRadius: 6,
-                padding: 12,
-                background: "#fff",
-              }}
-            >
+            <div className="bg-body border rounded p-3">
               <div dangerouslySetInnerHTML={{ __html: sanitized }} />
             </div>
           )}
